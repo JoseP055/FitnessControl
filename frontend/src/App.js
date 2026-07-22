@@ -78,7 +78,7 @@ function App() {
   const { session, loading } = useAuth();
 
   if (loading) {
-    return <p>Cargando autenticacion...</p>;
+    return <p>Cargando autenticacion....</p>;
   }
 
   return (
