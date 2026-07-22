@@ -17,6 +17,7 @@ Ejecutar en este orden:
 9. `009_routine_exercise_duration.sql` — Agrega `duration_minutes` a `routine_exercises` para ejercicios por tiempo.
 10. `010_social_profile.sql` — Perfil social: avatar/bio/visibilidad por sección en `profiles`, tabla `friendships` (solicitud + aceptación), `personal_records`, `favorite_foods`, `gym_schedule`, función `search_profiles` y bucket de Storage `avatars` + políticas.
 11. `011_profile_identity_and_pr_catalog.sql` — Agrega `public_id` (autogenerado) y `username` (elegido) a `profiles` para buscar amigos de forma precisa, agrega `exercise_id` a `personal_records` para estandarizar los PRs contra el catálogo de `exercises`, y actualiza `search_profiles` para buscar también por username/ID.
+12. `012_nutrition.sql` — Módulo de Nutrición: `nutrition_logs` (comidas por día con macros opcionales) y `water_logs` (agua acumulada por día), ambas con RLS solo-dueño.
 
 ## Qué verificar después de cada script (Table Editor)
 
@@ -31,6 +32,7 @@ Ejecutar en este orden:
 - Después de `009_routine_exercise_duration.sql`: columna `duration_minutes` en `routine_exercises`.
 - Después de `010_social_profile.sql`: columnas nuevas en `profiles` (`avatar_url`, `bio`, `*_visibility`), tablas `friendships`, `personal_records`, `favorite_foods`, `gym_schedule` (todas con RLS habilitado), función `search_profiles` y bucket `avatars` en Storage con sus 4 policies.
 - Después de `011_profile_identity_and_pr_catalog.sql`: columnas `public_id` (única, autogenerada) y `username` (única, nullable) en `profiles`; columna `exercise_id` en `personal_records`; función `search_profiles` devolviendo también `username`/`public_id`.
+- Después de `012_nutrition.sql`: tablas `nutrition_logs` y `water_logs` (RLS habilitado), `water_logs` con unique(user_id, log_date).
 
 ## Nota sobre RLS
 

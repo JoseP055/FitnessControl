@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Activity, ArrowRight, ClipboardList, LineChart } from "lucide-react";
+import { Activity, ArrowRight, ClipboardList, Droplet, Flame } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -7,8 +7,28 @@ import AppShell from "../components/layout/AppShell";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import PageLoader from "../components/ui/PageLoader";
+import RecentPRsSection from "../components/dashboard/RecentPRsSection";
+import WeightTrendSection from "../components/dashboard/WeightTrendSection";
 import { useAuth } from "../context/AuthContext";
+import { getProfile } from "../services/api";
+import { getWaterToday } from "../services/nutritionClient";
 import { supabaseClient } from "../services/supabaseClient";
+
+function getCurrentWeekRange() {
+  const now = new Date();
+  const day = now.getDay();
+  const diffToMonday = day === 0 ? 6 : day - 1;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - diffToMonday);
+  monday.setHours(0, 0, 0, 0);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+
+  const toIso = (value) =>
+    `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
+
+  return { start: toIso(monday), end: toIso(sunday) };
+}
 
 function Dashboard() {
   const { user } = useAuth();
@@ -16,6 +36,15 @@ function Dashboard() {
   const location = useLocation();
   const [profile, setProfile] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
+  const [stats, setStats] = useState({
+    weeklyDoneCount: 0,
+    streak: null,
+    routinePreview: null,
+    measurements: [],
+    prs: [],
+    waterMl: 0,
+  });
+  const [loadingStats, setLoadingStats] = useState(true);
 
   const tab = useMemo(() => {
     const params = new URLSearchParams(location.search);
@@ -63,6 +92,63 @@ function Dashboard() {
     };
   }, [user]);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadStats() {
+      if (!supabaseClient || !user?.id) {
+        if (isMounted) {
+          setLoadingStats(false);
+        }
+        return;
+      }
+
+      const { start, end } = getCurrentWeekRange();
+
+      const [weeklyResult, profileSummary, measurementsResult, prsResult, waterMl] = await Promise.all([
+        supabaseClient
+          .from("workout_completions")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .eq("status", "done")
+          .gte("completion_date", start)
+          .lte("completion_date", end),
+        getProfile(user.id).catch(() => null),
+        supabaseClient
+          .from("body_measurements")
+          .select("measurement_date, weight_kg")
+          .eq("user_id", user.id)
+          .order("measurement_date", { ascending: false })
+          .limit(6),
+        supabaseClient
+          .from("personal_records")
+          .select("id, exercise_name, record_type, value, unit, achieved_date")
+          .eq("user_id", user.id)
+          .order("achieved_date", { ascending: false })
+          .limit(3),
+        getWaterToday(user.id).catch(() => 0),
+      ]);
+
+      if (isMounted) {
+        setStats({
+          weeklyDoneCount: weeklyResult.count || 0,
+          streak: profileSummary?.sections?.streak?.data || null,
+          routinePreview: profileSummary?.sections?.routine_preview?.data || null,
+          measurements: measurementsResult.data || [],
+          prs: prsResult.data || [],
+          waterMl,
+        });
+        setLoadingStats(false);
+      }
+    }
+
+    loadStats();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user]);
+
   const activeTab = useMemo(() => {
     const validTabs = ["resumen", "rutinas", "progreso"];
     return validTabs.includes(tab) ? tab : "resumen";
@@ -79,10 +165,6 @@ function Dashboard() {
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase())
     .join("");
-
-  function setTab(nextTab) {
-    navigate(`/dashboard?tab=${nextTab}`, { replace: true });
-  }
 
   function goalLabel(value) {
     switch (value) {
@@ -145,17 +227,51 @@ function Dashboard() {
                   Resumen
                 </span>
                 <div className="fc-metric">
-                  <span className="fc-metric__value">0</span>
-                  <span className="fc-metric__label">Entrenos esta semana</span>
-                </div>
-                <div className="fc-progress">
-                  <div className="fc-progress__bar" style={{ width: "12%" }} />
+                  <span className="fc-metric__value">{loadingStats ? "-" : stats.weeklyDoneCount}</span>
+                  <span className="fc-metric__label">Entrenos completados esta semana</span>
                 </div>
                 <p className="fc-card-text">
-                  Empeza por crear una rutina y este panel va a tomar vida con tus datos.
+                  {stats.routinePreview
+                    ? `Rutina actual: ${stats.routinePreview.name}`
+                    : "Empeza por crear una rutina y este panel va a tomar vida con tus datos."}
                 </p>
                 <Button onClick={() => navigate("/routines")}>
                   Ir a rutinas
+                  <ArrowRight size={16} />
+                </Button>
+              </div>
+            </Card>
+
+            <Card glass>
+              <div style={{ display: "grid", gap: "0.75rem" }}>
+                <span className="fc-text-eyebrow">
+                  <Flame size={14} />
+                  Racha
+                </span>
+                <div className="fc-metric">
+                  <span className="fc-metric__value">{stats.streak?.current_streak ?? 0}</span>
+                  <span className="fc-metric__label">
+                    {stats.streak?.routine_name ? `dias seguidos en ${stats.streak.routine_name}` : "dias seguidos"}
+                  </span>
+                </div>
+                <p className="fc-card-text">
+                  Se calcula sobre los dias programados de tu rutina actual que marcaste como hechos.
+                </p>
+              </div>
+            </Card>
+
+            <Card glass>
+              <div style={{ display: "grid", gap: "0.75rem" }}>
+                <span className="fc-text-eyebrow">
+                  <Droplet size={14} />
+                  Agua hoy
+                </span>
+                <div className="fc-metric">
+                  <span className="fc-metric__value">{(stats.waterMl / 1000).toFixed(2)} L</span>
+                  <span className="fc-metric__label">Objetivo: 2.0 L</span>
+                </div>
+                <Button variant="secondary" onClick={() => navigate("/nutrition")}>
+                  Ir a nutricion
                   <ArrowRight size={16} />
                 </Button>
               </div>
@@ -214,21 +330,8 @@ function Dashboard() {
 
         {activeTab === "progreso" ? (
           <div className="fc-dashboard-grid">
-            <Card glass>
-              <div style={{ display: "grid", gap: "0.75rem" }}>
-                <span className="fc-text-eyebrow">
-                  <LineChart size={14} />
-                  Progreso
-                </span>
-                <h2 className="fc-section-title">Tu avance</h2>
-                <p className="fc-card-text">
-                  Cuando registres sesiones y medidas, este bloque va a mostrar una lectura mas util de tu evolucion.
-                </p>
-                <div className="fc-progress fc-progress--tall">
-                  <div className="fc-progress__bar" style={{ width: "34%" }} />
-                </div>
-              </div>
-            </Card>
+            <WeightTrendSection measurements={stats.measurements} />
+            <RecentPRsSection prs={stats.prs} />
           </div>
         ) : null}
       </motion.div>

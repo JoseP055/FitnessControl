@@ -5,6 +5,7 @@ import { useAuth } from "./context/AuthContext";
 import PageLoader from "./components/ui/PageLoader";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
+import Nutrition from "./pages/Nutrition";
 import Profile from "./pages/Profile";
 import ProfileSetup from "./pages/ProfileSetup";
 import Register from "./pages/Register";
@@ -142,6 +143,14 @@ function App() {
         element={
           <ProtectedRoute>
             <Profile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/nutrition"
+        element={
+          <ProtectedRoute>
+            <Nutrition />
           </ProtectedRoute>
         }
       />

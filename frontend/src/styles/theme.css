@@ -635,10 +635,20 @@ a:focus-visible {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  overflow-y: auto;
+  scrollbar-width: thin;
   transition:
     width var(--transition-fast),
     transform var(--transition-fast),
     opacity var(--transition-fast);
+}
+
+@media (min-width: 961px) {
+  .fc-dashboard__sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+  }
 }
 
 .fc-dashboard__sidebar-top {
@@ -2571,5 +2581,28 @@ button.fc-routine-calendar__cell {
   height: 52px;
   border-radius: var(--radius-sm);
   border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ------------------------------------------------------------------------ */
+/* Sparkline de peso (Progreso)                                             */
+/* ------------------------------------------------------------------------ */
+
+.fc-sparkline {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 64px;
+}
+
+.fc-sparkline__bar {
+  flex: 1 1 0;
+  min-width: 6px;
+  background: rgba(var(--color-accent-rgb), 0.35);
+  border-radius: 4px 4px 0 0;
+  transition: background var(--transition-fast);
+}
+
+.fc-sparkline__bar.is-latest {
+  background: rgba(var(--color-accent-rgb), 0.9);
 }
 

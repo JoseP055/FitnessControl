@@ -5,6 +5,7 @@ import {
   LogOut,
   PanelLeftClose,
   PanelLeftOpen,
+  Salad,
   User2,
   X,
 } from "lucide-react";
@@ -34,6 +35,7 @@ function AppShell({ activeSection = "resumen", header, children }) {
     () => [
       { value: "resumen", label: "Resumen", icon: LayoutGrid, path: "/dashboard?tab=resumen" },
       { value: "rutinas", label: "Rutinas", icon: ClipboardList, path: "/routines" },
+      { value: "nutricion", label: "Nutricion", icon: Salad, path: "/nutrition" },
       { value: "progreso", label: "Progreso", icon: LineChart, path: "/dashboard?tab=progreso" },
       { value: "perfil", label: "Perfil", icon: User2, path: "/profile" },
     ],
@@ -78,6 +80,10 @@ function AppShell({ activeSection = "resumen", header, children }) {
 
     if (item.value === "perfil") {
       return location.pathname.startsWith("/profile");
+    }
+
+    if (item.value === "nutricion") {
+      return location.pathname.startsWith("/nutrition");
     }
 
     if (item.value === "resumen") {
