@@ -35,7 +35,7 @@ function AppShell({ activeSection = "resumen", header, children }) {
       { value: "resumen", label: "Resumen", icon: LayoutGrid, path: "/dashboard?tab=resumen" },
       { value: "rutinas", label: "Rutinas", icon: ClipboardList, path: "/routines" },
       { value: "progreso", label: "Progreso", icon: LineChart, path: "/dashboard?tab=progreso" },
-      { value: "perfil", label: "Perfil", icon: User2, path: "/dashboard?tab=perfil" },
+      { value: "perfil", label: "Perfil", icon: User2, path: "/profile" },
     ],
     []
   );
@@ -74,6 +74,10 @@ function AppShell({ activeSection = "resumen", header, children }) {
   function isItemActive(item) {
     if (item.value === "rutinas") {
       return location.pathname.startsWith("/routines");
+    }
+
+    if (item.value === "perfil") {
+      return location.pathname.startsWith("/profile");
     }
 
     if (item.value === "resumen") {

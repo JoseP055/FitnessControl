@@ -5,6 +5,7 @@ import { useAuth } from "./context/AuthContext";
 import PageLoader from "./components/ui/PageLoader";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
+import Profile from "./pages/Profile";
 import ProfileSetup from "./pages/ProfileSetup";
 import Register from "./pages/Register";
 import RoutineDetail from "./pages/RoutineDetail";
@@ -125,6 +126,22 @@ function App() {
         element={
           <ProtectedRoute>
             <ProfileSetup />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile/:userId"
+        element={
+          <ProtectedRoute>
+            <Profile />
           </ProtectedRoute>
         }
       />

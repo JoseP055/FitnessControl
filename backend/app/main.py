@@ -7,6 +7,7 @@ import uvicorn
 from app.core.auth import get_current_user_id
 from app.core.config import settings
 from app.core.supabase import get_supabase_client
+from app.routers.profile import router as profile_router
 from app.routers.routines import router as routines_router
 
 
@@ -22,6 +23,7 @@ app.add_middleware(
 )
 
 app.include_router(routines_router)
+app.include_router(profile_router)
 
 
 @app.get("/health")

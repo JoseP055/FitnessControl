@@ -90,6 +90,10 @@ export async function getCurrentUserProfile() {
   return apiRequest("/me", { method: "GET" });
 }
 
+export async function getProfile(userId) {
+  return apiRequest(`/profile/${userId}`, { method: "GET" });
+}
+
 export async function getExercises({ muscleSubgroup, muscleGroupParent } = {}) {
   const params = new URLSearchParams();
 

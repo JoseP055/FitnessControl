@@ -15,6 +15,7 @@ Ejecutar en este orden:
 7. `007_expand_muscle_groups.sql` — Separa grupo padre/subcategoría en `exercises` y actualiza `routine_days` para guardar subcategorías específicas.
 8. `008_seed_exercises_full.sql` — Reinicia el catálogo global y carga el catálogo amplio con la taxonomía nueva.
 9. `009_routine_exercise_duration.sql` — Agrega `duration_minutes` a `routine_exercises` para ejercicios por tiempo.
+10. `010_social_profile.sql` — Perfil social: avatar/bio/visibilidad por sección en `profiles`, tabla `friendships` (solicitud + aceptación), `personal_records`, `favorite_foods`, `gym_schedule`, función `search_profiles` y bucket de Storage `avatars` + políticas.
 
 ## Qué verificar después de cada script (Table Editor)
 
@@ -27,6 +28,7 @@ Ejecutar en este orden:
 - Después de `007_expand_muscle_groups.sql`: columnas `muscle_group_parent` + `muscle_subgroup` en `exercises` y columna `muscle_subgroups` en `routine_days`.
 - Después de `008_seed_exercises_full.sql`: catálogo global completo en `exercises`, con `muscle_group_parent` y `muscle_subgroup` poblados.
 - Después de `009_routine_exercise_duration.sql`: columna `duration_minutes` en `routine_exercises`.
+- Después de `010_social_profile.sql`: columnas nuevas en `profiles` (`avatar_url`, `bio`, `*_visibility`), tablas `friendships`, `personal_records`, `favorite_foods`, `gym_schedule` (todas con RLS habilitado), función `search_profiles` y bucket `avatars` en Storage con sus 4 policies.
 
 ## Nota sobre RLS
 

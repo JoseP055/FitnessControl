@@ -2197,3 +2197,169 @@ button.fc-routine-calendar__cell {
     align-items: flex-start;
   }
 }
+
+/* ------------------------------------------------------------------------ */
+/* Perfil social                                                             */
+/* ------------------------------------------------------------------------ */
+
+.fc-avatar {
+  overflow: hidden;
+}
+
+.fc-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+.fc-avatar--lg {
+  width: 84px;
+  height: 84px;
+  border-radius: 24px;
+  font-size: 1.4rem;
+}
+
+.fc-profile-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.fc-profile-header__avatar-wrap {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.fc-avatar-edit-button {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: rgba(172, 79, 116, 0.85);
+  border: 1px solid rgba(242, 238, 245, 0.24);
+  color: rgba(242, 238, 245, 0.95);
+  cursor: pointer;
+}
+
+.fc-profile-header__info {
+  flex: 1 1 260px;
+  min-width: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.fc-profile-header__actions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.fc-option-grid--compact {
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.5rem;
+}
+
+.fc-option-grid--compact .fc-option-card {
+  grid-template-columns: 1fr;
+  padding: 0.6rem 0.75rem;
+  text-align: center;
+}
+
+.fc-section-locked {
+  opacity: 0.85;
+}
+
+.fc-friend-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(174, 147, 217, 0.14);
+  background: rgba(23, 18, 28, 0.5);
+  flex-wrap: wrap;
+}
+
+.fc-friend-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.fc-friend-card__meta .fc-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  font-size: 0.85rem;
+}
+
+.fc-friend-card__actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.fc-streak-badge {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+.fc-streak-badge__value {
+  font-family: var(--font-display);
+  font-size: 2.6rem;
+  letter-spacing: -0.03em;
+  color: rgba(242, 238, 245, 0.95);
+}
+
+.fc-streak-badge__label {
+  color: rgba(242, 238, 245, 0.64);
+}
+
+.fc-day-picker {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.fc-day-picker__day {
+  display: grid;
+  gap: 0.25rem;
+  justify-items: center;
+  padding: 0.6rem 0.35rem;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(174, 147, 217, 0.14);
+  background: rgba(23, 18, 28, 0.5);
+  color: rgba(242, 238, 245, 0.76);
+  cursor: pointer;
+}
+
+.fc-day-picker__day.is-scheduled {
+  border-color: rgba(172, 79, 116, 0.4);
+  background: rgba(172, 79, 116, 0.12);
+}
+
+.fc-day-picker__day.is-selected {
+  border-color: rgba(174, 147, 217, 0.55);
+}
+
+.fc-day-picker__day:disabled {
+  cursor: default;
+  opacity: 0.85;
+}
+
+@media (max-width: 640px) {
+  .fc-day-picker {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
