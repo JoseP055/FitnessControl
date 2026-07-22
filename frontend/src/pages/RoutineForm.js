@@ -72,6 +72,7 @@ function createDraftDay(dayOfWeek) {
     day_of_week: dayOfWeek,
     muscle_subgroups: [],
     exercises: [],
+    is_configured: false,
   };
 }
 
@@ -102,14 +103,7 @@ function RoutineForm() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedExerciseId, setSelectedExerciseId] = useState("");
   const [catalogPage, setCatalogPage] = useState(1);
-  const [addForm, setAddForm] = useState({
-    sets_planned: "4",
-    reps_planned: "10",
-    rest_seconds: "90",
-    notes: "",
-  });
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -162,9 +156,13 @@ function RoutineForm() {
 
   const activeDay = selectedDays[dayCursor] || null;
   const activeDayMeta = weekdayOptions.find((day) => day.value === activeDay?.day_of_week) || null;
-  const selectedExercise = useMemo(
-    () => catalog.find((exercise) => exercise.id === selectedExerciseId) || null,
-    [catalog, selectedExerciseId]
+  const catalogById = useMemo(
+    () =>
+      catalog.reduce((accumulator, exercise) => {
+        accumulator[exercise.id] = exercise;
+        return accumulator;
+      }, {}),
+    [catalog]
   );
 
   const filteredCatalog = useMemo(() => {
@@ -202,15 +200,6 @@ function RoutineForm() {
     return filteredCatalog.slice(startIndex, startIndex + CATALOG_PAGE_SIZE);
   }, [catalogPage, filteredCatalog]);
 
-  const groupedCatalog = useMemo(() => {
-    return paginatedCatalog.reduce((groups, exercise) => {
-      const group = exercise.muscle_group_parent || "Otros";
-      groups[group] = groups[group] || [];
-      groups[group].push(exercise);
-      return groups;
-    }, {});
-  }, [paginatedCatalog]);
-
   const calendarPreview = useMemo(
     () =>
       buildCalendarPreview({
@@ -239,14 +228,7 @@ function RoutineForm() {
 
   useEffect(() => {
     setSearchTerm("");
-    setSelectedExerciseId("");
     setCatalogPage(1);
-    setAddForm({
-      sets_planned: "4",
-      reps_planned: "10",
-      rest_seconds: "90",
-      notes: "",
-    });
   }, [activeDay?.day_of_week]);
 
   useEffect(() => {
@@ -294,11 +276,127 @@ function RoutineForm() {
       const exists = day.muscle_subgroups.includes(subgroup);
       return {
         ...day,
+        is_configured: false,
         muscle_subgroups: exists
           ? day.muscle_subgroups.filter((value) => value !== subgroup)
           : [...day.muscle_subgroups, subgroup],
       };
     });
+  }
+
+  function createExerciseRow(exercise, index) {
+    return {
+      id: `draft-ex-${Date.now()}-${Math.random().toString(16).slice(2, 6)}`,
+      exercise_id: exercise?.id || "",
+      exercise: exercise || null,
+      sets_planned: 4,
+      reps_planned: 10,
+      rest_seconds: 90,
+      notes: "",
+      exercise_order: index + 1,
+    };
+  }
+
+  function addExerciseRow(preselectedExercise = null) {
+    if (!activeDay) {
+      return;
+    }
+
+    const firstAvailableExercise = preselectedExercise || filteredCatalog[0] || catalog[0];
+    if (!firstAvailableExercise) {
+      setError("No hay ejercicios disponibles para agregar.");
+      return;
+    }
+
+    updateDay(activeDay.day_of_week, (day) => ({
+      ...day,
+      is_configured: false,
+      exercises: [...day.exercises, createExerciseRow(firstAvailableExercise, day.exercises.length)],
+    }));
+    setError("");
+  }
+
+  function updateDraftExercise(exerciseRowId, field, value) {
+    if (!activeDay) {
+      return;
+    }
+
+    updateDay(activeDay.day_of_week, (day) => ({
+      ...day,
+      is_configured: false,
+      exercises: day.exercises.map((item) => {
+        if (item.id !== exerciseRowId) {
+          return item;
+        }
+
+        if (field === "exercise_id") {
+          const nextExercise = catalogById[value] || null;
+          return {
+            ...item,
+            exercise_id: value,
+            exercise: nextExercise,
+          };
+        }
+
+        return {
+          ...item,
+          [field]: value,
+        };
+      }),
+    }));
+  }
+
+  function saveDayConfiguration() {
+    if (!activeDay) {
+      return;
+    }
+
+    if (!activeDay.exercises.length) {
+      setError("Agrega al menos un ejercicio para este dia.");
+      return;
+    }
+
+    try {
+      const normalizedRows = activeDay.exercises.map((item, index) => {
+        const exerciseId = (item.exercise_id || "").trim();
+        const sets = Number(item.sets_planned);
+        const reps = Number(item.reps_planned);
+        const rest = Number(item.rest_seconds);
+        const order = Number(item.exercise_order || index + 1);
+
+        if (!exerciseId) {
+          throw new Error("Cada fila debe tener un ejercicio seleccionado.");
+        }
+
+        if (![sets, reps, rest, order].every((value) => Number.isFinite(value) && value > 0)) {
+          throw new Error("Series, reps, descanso y posicion deben ser numeros mayores a cero.");
+        }
+
+        return {
+          ...item,
+          exercise_id: exerciseId,
+          exercise: catalogById[exerciseId] || item.exercise || null,
+          sets_planned: sets,
+          reps_planned: reps,
+          rest_seconds: rest,
+          exercise_order: order,
+        };
+      });
+
+      normalizedRows.sort((left, right) => left.exercise_order - right.exercise_order);
+
+      updateDay(activeDay.day_of_week, (day) => ({
+        ...day,
+        is_configured: true,
+        exercises: normalizedRows.map((item, index) => ({
+          ...item,
+          exercise_order: index + 1,
+        })),
+      }));
+      setError("");
+    } catch (saveError) {
+      setError(saveError.message || "No se pudo guardar la configuracion del dia.");
+    }
   }
 
   function moveDraftExercise(exerciseId, direction) {
@@ -320,6 +418,7 @@ function RoutineForm() {
 
       return {
         ...day,
+        is_configured: false,
         exercises: nextExercises.map((item, index) => ({
           ...item,
           exercise_order: index + 1,
@@ -335,55 +434,11 @@ function RoutineForm() {
 
     updateDay(activeDay.day_of_week, (day) => ({
       ...day,
+      is_configured: false,
       exercises: day.exercises
         .filter((item) => item.id !== exerciseId)
         .map((item, index) => ({ ...item, exercise_order: index + 1 })),
     }));
-  }
-
-  function handleAddExercise() {
-    if (!activeDay) {
-      return;
-    }
-
-    if (!selectedExercise) {
-      setError("Elegi un ejercicio del catalogo para agregarlo a este dia.");
-      return;
-    }
-
-    const sets = Number(addForm.sets_planned);
-    const reps = Number(addForm.reps_planned);
-    const rest = Number(addForm.rest_seconds);
-
-    if (!Number.isFinite(sets) || !Number.isFinite(reps) || !Number.isFinite(rest)) {
-      setError("Completa series, repeticiones y descanso con valores validos.");
-      return;
-    }
-
-    const draftExercise = {
-      id: `draft-ex-${Date.now()}-${Math.random().toString(16).slice(2, 6)}`,
-      exercise_id: selectedExercise.id,
-      exercise: selectedExercise,
-      sets_planned: sets,
-      reps_planned: reps,
-      rest_seconds: rest,
-      notes: addForm.notes.trim(),
-      exercise_order: activeDay.exercises.length + 1,
-    };
-
-    updateDay(activeDay.day_of_week, (day) => ({
-      ...day,
-      exercises: [...day.exercises, draftExercise],
-    }));
-
-    setSelectedExerciseId("");
-    setAddForm({
-      sets_planned: "4",
-      reps_planned: "10",
-      rest_seconds: "90",
-      notes: "",
-    });
-    setError("");
   }
 
   function goToPreviousDay() {
@@ -439,6 +494,11 @@ function RoutineForm() {
 
       if (!activeDay?.exercises.length) {
         setError("Agrega al menos un ejercicio antes de continuar.");
+        return;
+      }
+
+      if (!activeDay?.is_configured) {
+        setError("Guarda la configuracion del dia antes de continuar.");
         return;
       }
 
@@ -780,244 +840,204 @@ function RoutineForm() {
                           </p>
                         </Card>
                       ) : (
-                        <div className="fc-routine-builder">
-                          <Card glass className="fc-routine-builder__catalog">
-                            <div className="fc-routine-builder__header">
-                              <div>
-                                <span className="fc-text-eyebrow">Catalogo sugerido</span>
-                                <h3 className="fc-section-title" style={{ margin: "0.25rem 0 0" }}>
-                                  Ejercicios del dia
-                                </h3>
-                              </div>
-                              <span className="fc-pill">{filteredCatalog.length} resultados</span>
+                        <Card glass className="fc-routine-table-builder">
+                          <div className="fc-routine-builder__header">
+                            <div>
+                              <span className="fc-text-eyebrow">Editor del dia</span>
+                              <h3 className="fc-section-title" style={{ margin: "0.25rem 0 0" }}>
+                                Lista de ejercicios
+                              </h3>
                             </div>
-
-                            <div className="fc-search-input">
-                              <Search size={16} />
-                              <input
-                                className="fc-search-input__field"
-                                placeholder="Buscar por nombre, grupo o equipo"
-                                value={searchTerm}
-                                onChange={(event) => setSearchTerm(event.target.value)}
-                              />
+                            <div className="fc-routine-table-builder__actions">
+                              <span className="fc-pill">{filteredCatalog.length} disponibles</span>
+                              <span className={`fc-pill ${activeDay.is_configured ? "is-success" : ""}`}>
+                                {activeDay.is_configured ? "Dia guardado" : "Pendiente"}
+                              </span>
                             </div>
+                          </div>
 
-                            {!activeDay.muscle_subgroups.length ? (
-                              <p className="fc-card-text">Elegi al menos un subgrupo muscular para filtrar el catalogo.</p>
-                            ) : null}
+                          <div className="fc-search-input">
+                            <Search size={16} />
+                            <input
+                              className="fc-search-input__field"
+                              placeholder="Buscar por nombre, grupo o equipo"
+                              value={searchTerm}
+                              onChange={(event) => setSearchTerm(event.target.value)}
+                            />
+                          </div>
 
-                            {activeDay.muscle_subgroups.length && filteredCatalog.length === 0 ? (
-                              <p className="fc-card-text">No hay ejercicios cargados para esos subgrupos todavia.</p>
-                            ) : null}
+                          {!activeDay.muscle_subgroups.length ? (
+                            <p className="fc-card-text">Elegi al menos un subgrupo muscular para filtrar el catalogo.</p>
+                          ) : null}
 
-                            <div className="fc-catalog-groups">
-                              {Object.entries(groupedCatalog).map(([group, exercises]) => (
-                                <div key={group} className="fc-catalog-group">
-                                  <h4 className="fc-catalog-group__title">{group}</h4>
-                                  <div className="fc-catalog-group__items">
-                                    {exercises.map((exercise) => (
-                                      <button
-                                        key={exercise.id}
-                                        type="button"
-                                        className={`fc-catalog-item ${
-                                          selectedExerciseId === exercise.id ? "is-selected" : ""
-                                        }`}
-                                        onClick={() => setSelectedExerciseId(exercise.id)}
-                                      >
-                                        <div>
-                                          <strong>{exercise.name}</strong>
-                                          <p>{exercise.description || "Sin descripcion."}</p>
-                                        </div>
-                                        <div className="fc-catalog-item__meta">
-                                          <span className="fc-pill">{exercise.muscle_subgroup || "General"}</span>
-                                          <span className="fc-pill">{exercise.equipment || "Libre"}</span>
-                                        </div>
-                                      </button>
-                                    ))}
-                                  </div>
-                                </div>
+                          {activeDay.muscle_subgroups.length && filteredCatalog.length === 0 ? (
+                            <p className="fc-card-text">No hay ejercicios cargados para esos subgrupos todavia.</p>
+                          ) : null}
+
+                          {paginatedCatalog.length ? (
+                            <div className="fc-routine-suggestions">
+                              {paginatedCatalog.map((exercise) => (
+                                <button
+                                  key={exercise.id}
+                                  type="button"
+                                  className="fc-routine-suggestion"
+                                  onClick={() => addExerciseRow(exercise)}
+                                >
+                                  <strong>{exercise.name}</strong>
+                                  <span>
+                                    {exercise.muscle_subgroup || "General"} · {exercise.equipment || "Libre"}
+                                  </span>
+                                </button>
                               ))}
                             </div>
+                          ) : null}
 
-                            {filteredCatalog.length > CATALOG_PAGE_SIZE ? (
-                              <div className="fc-pagination">
-                                <Button
-                                  variant="ghost"
-                                  disabled={catalogPage === 1}
-                                  onClick={() => setCatalogPage((current) => Math.max(1, current - 1))}
-                                >
-                                  <ChevronLeft size={16} />
-                                  Anterior
-                                </Button>
-                                <span className="fc-pagination__label">
-                                  Pagina {catalogPage} de {totalCatalogPages}
-                                </span>
-                                <Button
-                                  variant="ghost"
-                                  disabled={catalogPage === totalCatalogPages}
-                                  onClick={() =>
-                                    setCatalogPage((current) => Math.min(totalCatalogPages, current + 1))
-                                  }
-                                >
-                                  Siguiente
-                                  <ChevronRight size={16} />
-                                </Button>
-                              </div>
-                            ) : null}
-                          </Card>
+                          {filteredCatalog.length > CATALOG_PAGE_SIZE ? (
+                            <div className="fc-pagination">
+                              <Button
+                                variant="ghost"
+                                disabled={catalogPage === 1}
+                                onClick={() => setCatalogPage((current) => Math.max(1, current - 1))}
+                              >
+                                <ChevronLeft size={16} />
+                                Anterior
+                              </Button>
+                              <span className="fc-pagination__label">
+                                Pagina {catalogPage} de {totalCatalogPages}
+                              </span>
+                              <Button
+                                variant="ghost"
+                                disabled={catalogPage === totalCatalogPages}
+                                onClick={() =>
+                                  setCatalogPage((current) => Math.min(totalCatalogPages, current + 1))
+                                }
+                              >
+                                Siguiente
+                                <ChevronRight size={16} />
+                              </Button>
+                            </div>
+                          ) : null}
 
-                          <Card glass className="fc-routine-builder__setup">
-                            <div className="fc-routine-builder__header">
-                              <div>
-                                <span className="fc-text-eyebrow">Configuracion</span>
-                                <h3 className="fc-section-title" style={{ margin: "0.25rem 0 0" }}>
-                                  {selectedExercise ? selectedExercise.name : "Elegi un ejercicio"}
-                                </h3>
-                              </div>
+                          <div className="fc-routine-table-scroller">
+                            <div className="fc-routine-table-header">
+                              <span>Pos</span>
+                              <span>Ejercicio</span>
+                              <span>Series</span>
+                              <span>Reps</span>
+                              <span>Descanso</span>
+                              <span>Acciones</span>
                             </div>
 
-                            {selectedExercise ? (
-                              <div className="fc-routine-builder__form">
-                                <div className="fc-grid-3">
-                                  <Input
-                                    id="wizard-sets"
-                                    label="Series"
-                                    inputMode="numeric"
-                                    value={addForm.sets_planned}
-                                    onChange={(event) =>
-                                      setAddForm((current) => ({
-                                        ...current,
-                                        sets_planned: event.target.value,
-                                      }))
-                                    }
-                                  />
-                                  <Input
-                                    id="wizard-reps"
-                                    label="Repeticiones"
-                                    inputMode="numeric"
-                                    value={addForm.reps_planned}
-                                    onChange={(event) =>
-                                      setAddForm((current) => ({
-                                        ...current,
-                                        reps_planned: event.target.value,
-                                      }))
-                                    }
-                                  />
-                                  <Input
-                                    id="wizard-rest"
-                                    label="Descanso (seg)"
-                                    inputMode="numeric"
-                                    value={addForm.rest_seconds}
-                                    onChange={(event) =>
-                                      setAddForm((current) => ({
-                                        ...current,
-                                        rest_seconds: event.target.value,
-                                      }))
-                                    }
-                                  />
-                                </div>
-
-                                <div className="fc-field">
-                                  <label className="fc-field__label" htmlFor="wizard-notes">
-                                    Nota opcional
-                                  </label>
-                                  <textarea
-                                    id="wizard-notes"
-                                    className="fc-input fc-textarea"
-                                    rows={3}
-                                    placeholder="Ej. ultima serie cerca del fallo, tecnica controlada, etc."
-                                    value={addForm.notes}
-                                    onChange={(event) =>
-                                      setAddForm((current) => ({
-                                        ...current,
-                                        notes: event.target.value,
-                                      }))
-                                    }
-                                  />
-                                </div>
-
-                                <Button onClick={handleAddExercise}>
-                                  <Plus size={16} />
-                                  Agregar al dia
-                                </Button>
+                            {(activeDay.exercises || []).length === 0 ? (
+                              <div className="fc-routine-table-empty">
+                                <Dumbbell size={20} />
+                                <p>Todavia no agregaste ejercicios para {activeDayMeta?.label}.</p>
                               </div>
                             ) : (
-                              <p className="fc-card-text">
-                                Selecciona un ejercicio del catalogo para agregarlo a {activeDayMeta?.label}.
-                              </p>
+                              activeDay.exercises.map((item, index) => (
+                                <div key={item.id} className="fc-routine-table-row">
+                                  <input
+                                    className="fc-input"
+                                    inputMode="numeric"
+                                    value={item.exercise_order}
+                                    onChange={(event) =>
+                                      updateDraftExercise(item.id, "exercise_order", event.target.value)
+                                    }
+                                  />
+
+                                  <div className="fc-routine-table-row__exercise">
+                                    <select
+                                      className="fc-input fc-select"
+                                      value={item.exercise_id}
+                                      onChange={(event) =>
+                                        updateDraftExercise(item.id, "exercise_id", event.target.value)
+                                      }
+                                    >
+                                      <option value="">Selecciona ejercicio</option>
+                                      {filteredCatalog.map((exercise) => (
+                                        <option key={exercise.id} value={exercise.id}>
+                                          {exercise.name}
+                                        </option>
+                                      ))}
+                                    </select>
+                                    <div className="fc-catalog-item__meta">
+                                      <span className="fc-pill">
+                                        {item.exercise?.muscle_group_parent || "Sin grupo"}
+                                      </span>
+                                      <span className="fc-pill">
+                                        {item.exercise?.muscle_subgroup || "Sin subgrupo"}
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  <input
+                                    className="fc-input"
+                                    inputMode="numeric"
+                                    value={item.sets_planned}
+                                    onChange={(event) =>
+                                      updateDraftExercise(item.id, "sets_planned", event.target.value)
+                                    }
+                                  />
+                                  <input
+                                    className="fc-input"
+                                    inputMode="numeric"
+                                    value={item.reps_planned}
+                                    onChange={(event) =>
+                                      updateDraftExercise(item.id, "reps_planned", event.target.value)
+                                    }
+                                  />
+                                  <input
+                                    className="fc-input"
+                                    inputMode="numeric"
+                                    value={item.rest_seconds}
+                                    onChange={(event) =>
+                                      updateDraftExercise(item.id, "rest_seconds", event.target.value)
+                                    }
+                                  />
+
+                                  <div className="fc-routine-table-row__actions">
+                                    <Button
+                                      variant="ghost"
+                                      disabled={index === 0}
+                                      onClick={() => moveDraftExercise(item.id, "up")}
+                                    >
+                                      <ChevronLeft size={16} />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      disabled={index === activeDay.exercises.length - 1}
+                                      onClick={() => moveDraftExercise(item.id, "down")}
+                                    >
+                                      <ChevronRight size={16} />
+                                    </Button>
+                                    <Button variant="ghost" onClick={() => removeDraftExercise(item.id)}>
+                                      <Trash2 size={16} />
+                                    </Button>
+                                  </div>
+                                </div>
+                              ))
                             )}
-                          </Card>
-                        </div>
+                          </div>
+
+                          <div className="fc-routine-table-builder__footer">
+                            <Button
+                              variant="secondary"
+                              disabled={!filteredCatalog.length}
+                              onClick={addExerciseRow}
+                            >
+                              <Plus size={16} />
+                              Agregar fila
+                            </Button>
+                            <Button
+                              disabled={!activeDay.exercises.length}
+                              onClick={saveDayConfiguration}
+                            >
+                              <Check size={16} />
+                              Guardar dia
+                            </Button>
+                          </div>
+                        </Card>
                       )}
-
-                      <div className="fc-routine-day-exercises">
-                        {(activeDay.exercises || []).length === 0 ? (
-                          <Card glass className="fc-empty-state">
-                            <div className="fc-empty-state__icon">
-                              <Dumbbell size={24} />
-                            </div>
-                            <h3 className="fc-section-title">Este dia todavia no tiene ejercicios</h3>
-                            <p className="fc-card-text">
-                              Selecciona un ejercicio del catalogo y agregalo a este dia.
-                            </p>
-                          </Card>
-                        ) : (
-                          activeDay.exercises.map((item, index) => (
-                            <Card key={item.id} glass className="fc-routine-exercise-card">
-                              <div className="fc-routine-exercise-card__top">
-                                <div>
-                                  <span className="fc-text-eyebrow">#{item.exercise_order}</span>
-                                  <h3 className="fc-section-title">{item.exercise?.name}</h3>
-                                </div>
-                                <div className="fc-catalog-item__meta">
-                                  <span className="fc-pill">{item.exercise?.muscle_group_parent || "Sin grupo"}</span>
-                                  <span className="fc-pill">{item.exercise?.muscle_subgroup || "Sin subgrupo"}</span>
-                                </div>
-                              </div>
-
-                              <div className="fc-kv-grid">
-                                <div className="fc-kv">
-                                  <span className="fc-kv__label">Series</span>
-                                  <span className="fc-kv__value">{item.sets_planned}</span>
-                                </div>
-                                <div className="fc-kv">
-                                  <span className="fc-kv__label">Reps</span>
-                                  <span className="fc-kv__value">{item.reps_planned}</span>
-                                </div>
-                                <div className="fc-kv">
-                                  <span className="fc-kv__label">Descanso</span>
-                                  <span className="fc-kv__value">{item.rest_seconds}s</span>
-                                </div>
-                              </div>
-
-                              {item.notes ? <p className="fc-card-text">{item.notes}</p> : null}
-
-                              <div className="fc-routine-card__actions">
-                                <Button
-                                  variant="ghost"
-                                  disabled={index === 0}
-                                  onClick={() => moveDraftExercise(item.id, "up")}
-                                >
-                                  <ChevronLeft size={16} />
-                                  Subir
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  disabled={index === activeDay.exercises.length - 1}
-                                  onClick={() => moveDraftExercise(item.id, "down")}
-                                >
-                                  <ChevronRight size={16} />
-                                  Bajar
-                                </Button>
-                                <Button variant="ghost" onClick={() => removeDraftExercise(item.id)}>
-                                  <Trash2 size={16} />
-                                  Quitar
-                                </Button>
-                              </div>
-                            </Card>
-                          ))
-                        )}
-                      </div>
                     </div>
                   )}
                 </div>

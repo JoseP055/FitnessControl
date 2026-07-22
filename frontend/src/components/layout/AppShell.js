@@ -3,7 +3,6 @@ import {
   LayoutGrid,
   LineChart,
   LogOut,
-  Menu,
   PanelLeftClose,
   PanelLeftOpen,
   User2,
@@ -109,13 +108,6 @@ function AppShell({ activeSection = "resumen", header, children }) {
           <div className="fc-dashboard__sidebar-top">
             <div className="fc-dashboard__brand">
               <div className="fc-dashboard__logo">FC</div>
-              <div className="fc-dashboard__brand-copy">
-                <div className="fc-dashboard__brand-title">FitnessControl</div>
-                <div className="fc-dashboard__brand-subtitle">Entrena con claridad</div>
-              </div>
-            </div>
-
-            <div className="fc-dashboard__sidebar-actions">
               <button
                 type="button"
                 className="fc-sidebar-toggle fc-sidebar-toggle--desktop"
@@ -124,7 +116,13 @@ function AppShell({ activeSection = "resumen", header, children }) {
               >
                 {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
               </button>
+              <div className="fc-dashboard__brand-copy">
+                <div className="fc-dashboard__brand-title">FitnessControl</div>
+                <div className="fc-dashboard__brand-subtitle">Entrena con claridad</div>
+              </div>
+            </div>
 
+            <div className="fc-dashboard__sidebar-actions">
               <button
                 type="button"
                 className="fc-sidebar-toggle fc-sidebar-toggle--mobile"
@@ -178,7 +176,7 @@ function AppShell({ activeSection = "resumen", header, children }) {
               aria-expanded={mobileMenuOpen}
               aria-controls="fc-main-sidebar"
             >
-              <Menu size={18} />
+              <PanelLeftOpen size={18} />
             </button>
             {header}
           </header>
