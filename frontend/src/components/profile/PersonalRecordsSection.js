@@ -1,11 +1,12 @@
-import { useState } from "react";
-import { Trash2, Trophy } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Trash2, Trophy, X } from "lucide-react";
 
 import Button from "../ui/Button";
 import Card from "../ui/Card";
 import Input from "../ui/Input";
 import SectionLocked from "./SectionLocked";
 import VisibilitySelector from "./VisibilitySelector";
+import { getExercises } from "../../services/api";
 import { deletePersonalRecord, updateVisibility, upsertPersonalRecord } from "../../services/socialClient";
 
 const RECORD_TYPES = [
@@ -16,14 +17,34 @@ const RECORD_TYPES = [
 ];
 
 function emptyForm() {
-  return { exercise_name: "", record_type: "peso", value: "", unit: "", notes: "" };
+  return { exercise_id: "", exercise_name: "", record_type: "peso", value: "", unit: "", notes: "" };
 }
 
 function PersonalRecordsSection({ userId, isSelf, section, onRefresh }) {
   const [form, setForm] = useState(emptyForm());
+  const [exerciseQuery, setExerciseQuery] = useState("");
+  const [catalog, setCatalog] = useState([]);
   const [saving, setSaving] = useState(false);
   const [busyId, setBusyId] = useState("");
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!isSelf) {
+      return;
+    }
+
+    getExercises()
+      .then((response) => setCatalog(response.items || []))
+      .catch(() => setCatalog([]));
+  }, [isSelf]);
+
+  const matches = useMemo(() => {
+    const query = exerciseQuery.trim().toLowerCase();
+    if (!query) {
+      return [];
+    }
+    return catalog.filter((exercise) => exercise.name.toLowerCase().includes(query)).slice(0, 8);
+  }, [exerciseQuery, catalog]);
 
   if (!isSelf && !section.visible) {
     return <SectionLocked label="Los records de este usuario no son visibles para vos." />;
@@ -31,11 +52,20 @@ function PersonalRecordsSection({ userId, isSelf, section, onRefresh }) {
 
   const records = section.data || [];
 
+  function selectExercise(exercise) {
+    setForm((current) => ({ ...current, exercise_id: exercise.id, exercise_name: exercise.name }));
+    setExerciseQuery("");
+  }
+
+  function clearExercise() {
+    setForm((current) => ({ ...current, exercise_id: "", exercise_name: "" }));
+  }
+
   async function handleAdd() {
     setError("");
 
     if (!form.exercise_name.trim() || !form.value) {
-      setError("Completa el ejercicio y el valor del record.");
+      setError("Elegi un ejercicio del catalogo y completa el valor del record.");
       return;
     }
 
@@ -43,6 +73,7 @@ function PersonalRecordsSection({ userId, isSelf, section, onRefresh }) {
 
     try {
       await upsertPersonalRecord(userId, {
+        exercise_id: form.exercise_id || null,
         exercise_name: form.exercise_name.trim(),
         record_type: form.record_type,
         value: Number.parseFloat(form.value),
@@ -119,13 +150,43 @@ function PersonalRecordsSection({ userId, isSelf, section, onRefresh }) {
 
         {isSelf ? (
           <>
+            <div style={{ display: "grid", gap: "0.5rem" }}>
+              <span className="fc-field__label">Ejercicio (del catalogo)</span>
+              {form.exercise_id ? (
+                <span className="fc-pill">
+                  {form.exercise_name}
+                  <button type="button" className="fc-pill-clear" onClick={clearExercise} aria-label="Cambiar ejercicio">
+                    <X size={12} />
+                  </button>
+                </span>
+              ) : (
+                <div style={{ position: "relative" }}>
+                  <input
+                    className="fc-input"
+                    placeholder="Buscar ejercicio del catalogo..."
+                    value={exerciseQuery}
+                    onChange={(event) => setExerciseQuery(event.target.value)}
+                  />
+                  {matches.length ? (
+                    <div className="fc-autocomplete">
+                      {matches.map((exercise) => (
+                        <button
+                          key={exercise.id}
+                          type="button"
+                          className="fc-autocomplete__item"
+                          onClick={() => selectExercise(exercise)}
+                        >
+                          {exercise.name}
+                          <small>{exercise.muscle_group_parent}</small>
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              )}
+            </div>
+
             <div style={{ display: "grid", gap: "0.75rem", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))" }}>
-              <Input
-                id="pr-exercise-name"
-                label="Ejercicio"
-                value={form.exercise_name}
-                onChange={(event) => setForm((current) => ({ ...current, exercise_name: event.target.value }))}
-              />
               <Input
                 id="pr-value"
                 label="Valor"

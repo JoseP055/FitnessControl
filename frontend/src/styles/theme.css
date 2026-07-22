@@ -2363,3 +2363,194 @@ button.fc-routine-calendar__cell {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
+
+/* ------------------------------------------------------------------------ */
+/* PRs: autocomplete de ejercicios y pills auxiliares                        */
+/* ------------------------------------------------------------------------ */
+
+.fc-autocomplete {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  right: 0;
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.35rem;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(174, 147, 217, 0.2);
+  background: var(--color-surface-strong);
+  box-shadow: var(--shadow-card);
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.fc-autocomplete__item {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: rgba(242, 238, 245, 0.88);
+  cursor: pointer;
+  text-align: left;
+}
+
+.fc-autocomplete__item:hover {
+  background: rgba(172, 79, 116, 0.14);
+}
+
+.fc-autocomplete__item small {
+  color: rgba(242, 238, 245, 0.56);
+}
+
+.fc-pill-clear {
+  display: inline-grid;
+  place-items: center;
+  margin-left: 0.35rem;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.fc-id-pill {
+  cursor: pointer;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Temas: paletas alternativas seleccionables por el usuario                 */
+/* La paleta "original" es la definida en :root al inicio de este archivo.  */
+/* ------------------------------------------------------------------------ */
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --color-bg: #f5f6f8;
+  --color-surface: #ffffff;
+  --color-surface-strong: #eef0f4;
+  --color-border: rgba(15, 23, 42, 0.08);
+  --color-border-strong: rgba(15, 23, 42, 0.16);
+  --color-text: #111827;
+  --color-text-secondary: #4b5563;
+  --color-primary: #2563eb;
+  --color-accent: #2563eb;
+  --color-accent-soft: rgba(37, 99, 235, 0.12);
+  --color-decorative: #60a5fa;
+  --color-orchid-soft: rgba(37, 99, 235, 0.06);
+  --color-success: #16a34a;
+  --color-danger: #dc2626;
+  --shadow-soft: 0 24px 60px rgba(15, 23, 42, 0.1);
+  --shadow-card: 0 10px 30px rgba(15, 23, 42, 0.08);
+  --shadow-glow: 0 0 0 1px rgba(37, 99, 235, 0.12), 0 0 0 6px rgba(37, 99, 235, 0.08);
+  --gradient-page: linear-gradient(160deg, #f5f6f8 0%, #eef1f5 50%, #e7ebf1 100%);
+  --gradient-card: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(246, 247, 250, 0.96) 100%);
+  --gradient-highlight: linear-gradient(135deg, rgba(37, 99, 235, 0.9) 0%, rgba(96, 165, 250, 0.75) 100%);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-bg: #0d0e10;
+  --color-surface: #17181b;
+  --color-surface-strong: #1f2023;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.16);
+  --color-text: #f2f2f3;
+  --color-text-secondary: #9a9ba1;
+  --color-primary: #6b7280;
+  --color-accent: #3b82f6;
+  --color-accent-soft: rgba(59, 130, 246, 0.16);
+  --color-decorative: #93c5fd;
+  --color-orchid-soft: rgba(255, 255, 255, 0.04);
+  --color-success: #22c55e;
+  --color-danger: #ef4444;
+  --shadow-soft: 0 24px 80px rgba(0, 0, 0, 0.5);
+  --shadow-card: 0 14px 44px rgba(0, 0, 0, 0.4);
+  --shadow-glow: 0 0 0 1px rgba(59, 130, 246, 0.18), 0 0 0 6px rgba(59, 130, 246, 0.1);
+  --gradient-page: linear-gradient(160deg, #0d0e10 0%, #131417 52%, #17181b 100%);
+  --gradient-card: linear-gradient(180deg, rgba(23, 24, 27, 0.96) 0%, rgba(17, 18, 20, 0.94) 100%);
+  --gradient-highlight: linear-gradient(135deg, rgba(59, 130, 246, 0.85) 0%, rgba(96, 165, 250, 0.65) 100%);
+}
+
+:root[data-theme="gym"] {
+  color-scheme: dark;
+  --color-bg: #121212;
+  --color-surface: #1c1c1c;
+  --color-surface-strong: #262626;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 87, 34, 0.3);
+  --color-text: #f5f5f5;
+  --color-text-secondary: #b0b0b0;
+  --color-primary: #ff5722;
+  --color-accent: #ff3d00;
+  --color-accent-soft: rgba(255, 61, 0, 0.16);
+  --color-decorative: #ffab40;
+  --color-orchid-soft: rgba(255, 171, 64, 0.08);
+  --color-success: #76ff03;
+  --color-danger: #ff1744;
+  --shadow-soft: 0 24px 80px rgba(0, 0, 0, 0.55);
+  --shadow-card: 0 14px 44px rgba(0, 0, 0, 0.45);
+  --shadow-glow: 0 0 0 1px rgba(255, 61, 0, 0.2), 0 0 0 6px rgba(255, 61, 0, 0.12);
+  --gradient-page: radial-gradient(
+      circle at top left,
+      rgba(255, 61, 0, 0.18) 0%,
+      transparent 32%
+    ),
+    radial-gradient(circle at 80% 18%, rgba(255, 171, 64, 0.14) 0%, transparent 24%),
+    linear-gradient(160deg, #121212 0%, #181818 52%, #1c1c1c 100%);
+  --gradient-card: linear-gradient(180deg, rgba(28, 28, 28, 0.96) 0%, rgba(20, 20, 20, 0.94) 100%);
+  --gradient-highlight: linear-gradient(135deg, rgba(255, 87, 34, 0.9) 0%, rgba(255, 61, 0, 0.7) 100%);
+}
+
+.fc-theme-swatch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 0.75rem;
+}
+
+.fc-theme-swatch {
+  display: grid;
+  gap: 0.4rem;
+  justify-items: center;
+  padding: 0.75rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(174, 147, 217, 0.14);
+  background: rgba(23, 18, 28, 0.5);
+  cursor: pointer;
+}
+
+.fc-theme-swatch.is-selected {
+  border-color: rgba(172, 79, 116, 0.55);
+}
+
+.fc-theme-swatch__preview {
+  width: 100%;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.fc-color-editor {
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.fc-color-editor__field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(174, 147, 217, 0.14);
+}
+
+.fc-color-editor__field input[type="color"] {
+  width: 40px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  cursor: pointer;
+}

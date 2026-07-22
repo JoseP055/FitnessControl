@@ -11,6 +11,7 @@ import PersonalRecordsSection from "../components/profile/PersonalRecordsSection
 import ProfileHeader from "../components/profile/ProfileHeader";
 import RoutinePreviewSection from "../components/profile/RoutinePreviewSection";
 import StreakSection from "../components/profile/StreakSection";
+import ThemeSection from "../components/profile/ThemeSection";
 import { useAuth } from "../context/AuthContext";
 import { getProfile } from "../services/api";
 import { getFriendshipWith } from "../services/socialClient";
@@ -135,6 +136,7 @@ function Profile() {
         />
 
         {isSelf ? <FriendsPanel userId={targetUserId} /> : null}
+        {isSelf ? <ThemeSection /> : null}
       </div>
     </AppShell>
   );

@@ -14,11 +14,13 @@ function throwIfError(error, fallbackMessage) {
   }
 }
 
+const USERNAME_PATTERN = /^[a-z0-9_]{3,24}$/;
+
 // ---------------------------------------------------------------------------
 // Identidad, avatar y visibilidad
 // ---------------------------------------------------------------------------
 
-export async function updateIdentity(userId, { full_name, bio, avatar_url } = {}) {
+export async function updateIdentity(userId, { full_name, bio, avatar_url, username } = {}) {
   const client = ensureClient();
   const payload = { user_id: userId, updated_at: new Date().toISOString() };
 
@@ -26,11 +28,25 @@ export async function updateIdentity(userId, { full_name, bio, avatar_url } = {}
   if (bio !== undefined) payload.bio = bio;
   if (avatar_url !== undefined) payload.avatar_url = avatar_url;
 
+  if (username !== undefined) {
+    const trimmed = username.trim().toLowerCase();
+
+    if (trimmed && !USERNAME_PATTERN.test(trimmed)) {
+      throw new Error("El usuario debe tener 3-24 caracteres: minusculas, numeros y guion bajo.");
+    }
+
+    payload.username = trimmed || null;
+  }
+
   const { data, error } = await client
     .from("profiles")
     .upsert(payload, { onConflict: "user_id" })
     .select()
     .maybeSingle();
+
+  if (error?.code === "23505") {
+    throw new Error("Ese nombre de usuario ya esta en uso.");
+  }
 
   throwIfError(error, "No se pudo actualizar el perfil.");
   return data;

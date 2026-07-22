@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Camera, Check, Pencil, UserMinus, UserPlus, UserX, X } from "lucide-react";
+import { Camera, Check, Copy, Pencil, UserMinus, UserPlus, UserX, X } from "lucide-react";
 
 import Button from "../ui/Button";
 import Card from "../ui/Card";
@@ -27,11 +27,23 @@ function ProfileHeader({ userId, viewerId, identity, isSelf, friendshipStatus, f
   const [editing, setEditing] = useState(false);
   const [fullName, setFullName] = useState(identity.full_name || "");
   const [bio, setBio] = useState(identity.bio || "");
+  const [username, setUsername] = useState(identity.username || "");
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [busyAction, setBusyAction] = useState(false);
   const [error, setError] = useState("");
   const [confirmRemoveOpen, setConfirmRemoveOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopyId() {
+    try {
+      await navigator.clipboard.writeText(identity.public_id || "");
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch (copyError) {
+      // Ignore clipboard errors; the ID is still visible on screen.
+    }
+  }
 
   async function handleAvatarChange(event) {
     const file = event.target.files?.[0];
@@ -60,7 +72,7 @@ function ProfileHeader({ userId, viewerId, identity, isSelf, friendshipStatus, f
     setSaving(true);
 
     try {
-      await updateIdentity(userId, { full_name: fullName.trim(), bio: bio.trim() });
+      await updateIdentity(userId, { full_name: fullName.trim(), bio: bio.trim(), username });
       await onRefresh();
       setEditing(false);
     } catch (saveError) {
@@ -155,6 +167,13 @@ function ProfileHeader({ userId, viewerId, identity, isSelf, friendshipStatus, f
                 value={fullName}
                 onChange={(event) => setFullName(event.target.value)}
               />
+              <Input
+                id="profile-username"
+                label="Usuario (minusculas, numeros y guion bajo)"
+                placeholder="tu_usuario"
+                value={username}
+                onChange={(event) => setUsername(event.target.value.toLowerCase())}
+              />
               <div className="fc-field">
                 <label className="fc-field__label" htmlFor="profile-bio">
                   Biografia
@@ -182,6 +201,15 @@ function ProfileHeader({ userId, viewerId, identity, isSelf, friendshipStatus, f
           ) : (
             <>
               <h1 className="fc-dashboard__title">{identity.full_name || "Atleta"}</h1>
+              <div className="fc-helper-list">
+                {identity.username ? <span className="fc-pill">@{identity.username}</span> : null}
+                {isSelf ? (
+                  <button type="button" className="fc-pill fc-id-pill" onClick={handleCopyId}>
+                    <Copy size={12} />
+                    ID: {identity.public_id} {copied ? "(copiado)" : ""}
+                  </button>
+                ) : null}
+              </div>
               <p className="fc-card-text">{identity.bio || (isSelf ? "Todavia no escribiste tu biografia." : "")}</p>
             </>
           )}

@@ -29,6 +29,7 @@ def _get_profile_or_404(user_id: str) -> dict[str, Any]:
         supabase.table("profiles")
         .select(
             "user_id, full_name, bio, avatar_url, goal, experience_level, "
+            "username, public_id, "
             "measurements_visibility, prs_visibility, favorite_foods_visibility, "
             "gym_schedule_visibility, streak_visibility, routine_preview_visibility"
         )
@@ -219,6 +220,8 @@ async def get_profile(user_id: str, viewer_id: str = Depends(get_current_user_id
             "bio": profile.get("bio"),
             "goal": profile.get("goal"),
             "experience_level": profile.get("experience_level"),
+            "username": profile.get("username"),
+            "public_id": profile.get("public_id"),
         },
         "sections": sections,
     }

@@ -206,7 +206,7 @@ function FriendsPanel({ userId }) {
                 <div className="fc-inline-form">
                   <input
                     className="fc-input"
-                    placeholder="Buscar por nombre..."
+                    placeholder="Buscar por nombre, usuario o ID..."
                     value={searchQuery}
                     onChange={(event) => setSearchQuery(event.target.value)}
                     onKeyDown={(event) => event.key === "Enter" && handleSearch()}

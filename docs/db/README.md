@@ -16,6 +16,7 @@ Ejecutar en este orden:
 8. `008_seed_exercises_full.sql` — Reinicia el catálogo global y carga el catálogo amplio con la taxonomía nueva.
 9. `009_routine_exercise_duration.sql` — Agrega `duration_minutes` a `routine_exercises` para ejercicios por tiempo.
 10. `010_social_profile.sql` — Perfil social: avatar/bio/visibilidad por sección en `profiles`, tabla `friendships` (solicitud + aceptación), `personal_records`, `favorite_foods`, `gym_schedule`, función `search_profiles` y bucket de Storage `avatars` + políticas.
+11. `011_profile_identity_and_pr_catalog.sql` — Agrega `public_id` (autogenerado) y `username` (elegido) a `profiles` para buscar amigos de forma precisa, agrega `exercise_id` a `personal_records` para estandarizar los PRs contra el catálogo de `exercises`, y actualiza `search_profiles` para buscar también por username/ID.
 
 ## Qué verificar después de cada script (Table Editor)
 
@@ -29,6 +30,7 @@ Ejecutar en este orden:
 - Después de `008_seed_exercises_full.sql`: catálogo global completo en `exercises`, con `muscle_group_parent` y `muscle_subgroup` poblados.
 - Después de `009_routine_exercise_duration.sql`: columna `duration_minutes` en `routine_exercises`.
 - Después de `010_social_profile.sql`: columnas nuevas en `profiles` (`avatar_url`, `bio`, `*_visibility`), tablas `friendships`, `personal_records`, `favorite_foods`, `gym_schedule` (todas con RLS habilitado), función `search_profiles` y bucket `avatars` en Storage con sus 4 policies.
+- Después de `011_profile_identity_and_pr_catalog.sql`: columnas `public_id` (única, autogenerada) y `username` (única, nullable) en `profiles`; columna `exercise_id` en `personal_records`; función `search_profiles` devolviendo también `username`/`public_id`.
 
 ## Nota sobre RLS
 

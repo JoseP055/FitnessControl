@@ -20,7 +20,14 @@ function FriendCard({ profile, busy = false, actions = [] }) {
             <span>{initials(profile?.full_name) || "?"}</span>
           )}
         </div>
-        <span>{profile?.full_name || "Usuario"}</span>
+        <div>
+          <div>{profile?.full_name || "Usuario"}</div>
+          {profile?.username ? (
+            <small className="fc-text-eyebrow">@{profile.username}</small>
+          ) : profile?.public_id ? (
+            <small className="fc-text-eyebrow">ID: {profile.public_id}</small>
+          ) : null}
+        </div>
       </div>
       <div className="fc-friend-card__actions">
         {actions.map((action) => {
