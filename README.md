@@ -145,3 +145,53 @@ Variables de entorno a configurar:
 - `REACT_APP_API_URL`
 - `REACT_APP_SUPABASE_URL`
 - `REACT_APP_SUPABASE_PUBLISHABLE_KEY`
+
+## Auth con Supabase
+
+### Frontend
+
+- El frontend usa Supabase Auth directamente para registro, login, logout y sesion.
+- El contexto vive en `frontend/src/context/AuthContext.js`.
+- Las rutas `/login` y `/register` son publicas.
+- La ruta `/` es protegida y redirige a `/login` si no hay sesion.
+
+### Backend
+
+- El backend no maneja passwords ni crea sesiones.
+- El endpoint protegido `GET /me` valida el token Bearer recibido usando Supabase.
+- Si el token es valido, responde el `user_id` autenticado.
+- Si falta el token o es invalido, responde `401`.
+
+### Flujo de prueba
+
+1. Levantar backend:
+
+```bash
+cd backend
+uvicorn app.main:app --reload
+```
+
+2. Levantar frontend:
+
+```bash
+cd frontend
+npm start
+```
+
+3. Abrir la app y entrar a `/register`.
+4. Registrar un usuario con email y password.
+5. Si Supabase requiere confirmacion por email, confirmar la cuenta y luego entrar a `/login`.
+6. Iniciar sesion con el mismo usuario.
+7. Confirmar que la app redirige a `/`.
+8. Verificar que la pantalla protegida muestra:
+   - el resultado de `GET /health`
+   - el resultado de `GET /me`
+9. Confirmar que `GET /me` devuelve un JSON similar a:
+
+```json
+{
+  "user_id": "uuid-del-usuario"
+}
+```
+
+10. Cerrar sesion y confirmar que la app vuelve a `/login`.

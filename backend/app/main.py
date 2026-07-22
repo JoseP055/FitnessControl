@@ -1,8 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import Depends
 from fastapi.responses import JSONResponse
 import uvicorn
 
+from app.core.auth import get_current_user_id
 from app.core.config import settings
 from app.core.supabase import get_supabase_client
 
@@ -44,6 +46,11 @@ async def health_check():
         return JSONResponse(status_code=503, content=response_data)
 
     return response_data
+
+
+@app.get("/me")
+async def get_current_user_profile(user_id: str = Depends(get_current_user_id)):
+    return {"user_id": user_id}
 
 
 if __name__ == "__main__":
