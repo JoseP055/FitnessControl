@@ -67,13 +67,12 @@ function Login() {
 
             <span className="fc-text-eyebrow">
               <Sparkles size={14} />
-              FitnessControl / Auth
+              FitnessControl
             </span>
             <div style={{ display: "grid", gap: "1rem", marginTop: "1.5rem" }}>
-              <h1 className="fc-heading">Tu progreso merece una interfaz de nivel pro.</h1>
+              <h1 className="fc-heading">Bienvenido de vuelta.</h1>
               <p className="fc-subheading">
-                Un espacio oscuro, preciso y moderno para entrar a tus rutinas,
-                métricas y decisiones fitness sin distracciones.
+                Iniciá sesión para seguir tu progreso y mantener tu racha en marcha.
               </p>
             </div>
           </div>
@@ -129,20 +128,19 @@ function Login() {
 
           <div className="fc-auth-metric-grid">
             <div className="fc-auth-metric">
-              <strong>JWT listo</strong>
-              <span>El frontend habla directo con Supabase Auth y el backend valida.</span>
+              <strong>Rutinas</strong>
+              <span>Guardá y repetí tus entrenamientos favoritos.</span>
             </div>
             <div className="fc-auth-metric">
-              <strong>Dark analytics</strong>
-              <span>Un lenguaje visual consistente para rutinas, progreso y perfil.</span>
+              <strong>Progreso</strong>
+              <span>Visualizá tu avance con claridad, sin ruido.</span>
             </div>
           </div>
 
           <div className="fc-auth-quote">
-            <strong>Entrá y seguí donde lo dejaste.</strong>
+            <strong>Todo en un solo lugar.</strong>
             <p style={{ margin: 0 }}>
-              La sesión protege tus datos y prepara el camino para el dashboard y el
-              onboarding de perfil.
+              Rutinas, medidas y registros organizados para que entrenar sea más simple.
             </p>
           </div>
         </motion.section>
@@ -171,7 +169,7 @@ function Login() {
                   Iniciar sesión
                 </h2>
                 <p style={{ margin: 0, color: "rgba(242, 238, 245, 0.66)" }}>
-                  Entrá a FitnessControl con tu cuenta de Supabase y seguí tu progreso.
+                  Iniciá sesión para continuar donde lo dejaste.
                 </p>
               </div>
             </div>

@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap");
+
 :root {
   --color-bg: #17121c;
   --color-surface: #241b2c;
@@ -437,6 +439,37 @@ a:focus-visible {
   background: rgba(172, 79, 116, 0.08);
   color: #ffd6e6;
   font-size: var(--font-size-sm);
+}
+
+.fc-validation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: -0.25rem;
+}
+
+.fc-validation__item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.35rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid rgba(174, 147, 217, 0.14);
+  background: rgba(23, 18, 28, 0.52);
+  color: rgba(242, 238, 245, 0.65);
+  font-size: var(--font-size-xs);
+}
+
+.fc-validation__item.is-valid {
+  border-color: rgba(126, 214, 163, 0.35);
+  background: rgba(126, 214, 163, 0.12);
+  color: rgba(242, 238, 245, 0.82);
+}
+
+.fc-validation__item.is-invalid {
+  border-color: rgba(172, 79, 116, 0.35);
+  background: rgba(172, 79, 116, 0.12);
+  color: rgba(242, 238, 245, 0.82);
 }
 
 .fc-login-footer {
