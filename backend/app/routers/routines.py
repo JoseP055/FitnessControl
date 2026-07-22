@@ -36,6 +36,7 @@ class RoutineDayExercisePayload(BaseModel):
     exercise_id: str
     sets_planned: int | None = Field(default=None, ge=1, le=100)
     reps_planned: int | None = Field(default=None, ge=1, le=500)
+    duration_minutes: int | None = Field(default=None, ge=1, le=600)
     rest_seconds: int | None = Field(default=None, ge=0, le=3600)
     exercise_order: int | None = Field(default=None, ge=1, le=999)
     notes: str | None = Field(default=None, max_length=500)
@@ -44,6 +45,7 @@ class RoutineDayExercisePayload(BaseModel):
 class RoutineExerciseUpdatePayload(BaseModel):
     sets_planned: int | None = Field(default=None, ge=1, le=100)
     reps_planned: int | None = Field(default=None, ge=1, le=500)
+    duration_minutes: int | None = Field(default=None, ge=1, le=600)
     rest_seconds: int | None = Field(default=None, ge=0, le=3600)
     exercise_order: int | None = Field(default=None, ge=1, le=999)
     notes: str | None = Field(default=None, max_length=500)
@@ -191,7 +193,7 @@ def _get_routine_exercise_or_404(
         supabase.table("routine_exercises")
         .select(
             "id, user_id, routine_id, routine_day_id, exercise_id, sets_planned, "
-            "reps_planned, rest_seconds, exercise_order, notes, created_at, updated_at"
+            "reps_planned, duration_minutes, rest_seconds, exercise_order, notes, created_at, updated_at"
         )
         .eq("id", routine_exercise_id)
         .eq("routine_id", routine_id)
@@ -251,7 +253,7 @@ def _build_schedule(user_id: str, routine_id: str) -> dict[str, Any]:
             supabase.table("routine_exercises")
             .select(
                 "id, user_id, routine_id, routine_day_id, exercise_id, sets_planned, "
-                "reps_planned, rest_seconds, exercise_order, notes, created_at, updated_at"
+                "reps_planned, duration_minutes, rest_seconds, exercise_order, notes, created_at, updated_at"
             )
             .eq("user_id", user_id)
             .eq("routine_id", routine_id)
@@ -265,7 +267,7 @@ def _build_schedule(user_id: str, routine_id: str) -> dict[str, Any]:
         supabase.table("routine_exercises")
         .select(
             "id, user_id, routine_id, routine_day_id, exercise_id, sets_planned, "
-            "reps_planned, rest_seconds, exercise_order, notes, created_at, updated_at"
+            "reps_planned, duration_minutes, rest_seconds, exercise_order, notes, created_at, updated_at"
         )
         .eq("user_id", user_id)
         .eq("routine_id", routine_id)
@@ -334,7 +336,7 @@ def _build_routine_detail(user_id: str, routine_id: str) -> dict[str, Any]:
         supabase.table("routine_exercises")
         .select(
             "id, user_id, routine_id, routine_day_id, exercise_id, sets_planned, reps_planned, "
-            "rest_seconds, exercise_order, notes, created_at, updated_at"
+            "duration_minutes, rest_seconds, exercise_order, notes, created_at, updated_at"
         )
         .eq("user_id", user_id)
         .eq("routine_id", routine_id)
@@ -645,6 +647,7 @@ async def add_routine_day_exercise(
                 "exercise_id": payload.exercise_id,
                 "sets_planned": payload.sets_planned,
                 "reps_planned": payload.reps_planned,
+                "duration_minutes": payload.duration_minutes,
                 "rest_seconds": payload.rest_seconds,
                 "exercise_order": exercise_order,
                 "notes": _normalize_text(payload.notes),
@@ -862,6 +865,7 @@ async def add_routine_exercise(
             "exercise_id": payload.exercise_id,
             "sets_planned": payload.sets_planned,
             "reps_planned": payload.reps_planned,
+            "duration_minutes": payload.duration_minutes,
             "rest_seconds": payload.rest_seconds,
             "exercise_order": exercise_order,
             "notes": _normalize_text(payload.notes),
@@ -885,6 +889,7 @@ async def update_routine_exercise(
     update_data = {
         "sets_planned": payload.sets_planned,
         "reps_planned": payload.reps_planned,
+        "duration_minutes": payload.duration_minutes,
         "rest_seconds": payload.rest_seconds,
         "exercise_order": payload.exercise_order,
         "notes": _normalize_text(payload.notes),

@@ -14,6 +14,7 @@ Ejecutar en este orden:
 6. `006_routine_schedule.sql` — Extiende rutinas con calendario, días semanales, tracking de cumplimiento y asociación ejercicio->día.
 7. `007_expand_muscle_groups.sql` — Separa grupo padre/subcategoría en `exercises` y actualiza `routine_days` para guardar subcategorías específicas.
 8. `008_seed_exercises_full.sql` — Reinicia el catálogo global y carga el catálogo amplio con la taxonomía nueva.
+9. `009_routine_exercise_duration.sql` — Agrega `duration_minutes` a `routine_exercises` para ejercicios por tiempo.
 
 ## Qué verificar después de cada script (Table Editor)
 
@@ -25,6 +26,7 @@ Ejecutar en este orden:
 - Después de `006_routine_schedule.sql`: columnas nuevas en `routines`, tabla `routine_days`, columna `routine_day_id` en `routine_exercises` y tabla `workout_completions`.
 - Después de `007_expand_muscle_groups.sql`: columnas `muscle_group_parent` + `muscle_subgroup` en `exercises` y columna `muscle_subgroups` en `routine_days`.
 - Después de `008_seed_exercises_full.sql`: catálogo global completo en `exercises`, con `muscle_group_parent` y `muscle_subgroup` poblados.
+- Después de `009_routine_exercise_duration.sql`: columna `duration_minutes` en `routine_exercises`.
 
 ## Nota sobre RLS
 

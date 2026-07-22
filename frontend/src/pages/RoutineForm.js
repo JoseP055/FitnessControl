@@ -93,6 +93,44 @@ function formatDate(dateValue) {
   return `${String(date.getDate()).padStart(2, "0")} ${monthLabels[date.getMonth()]} ${date.getFullYear()}`;
 }
 
+function isDurationBasedExercise(exercise) {
+  if (!exercise) {
+    return false;
+  }
+
+  const name = (exercise.name || "").toLowerCase();
+  return (
+    exercise.muscle_group_parent === "Cardio" ||
+    name.includes("plancha") ||
+    name.includes("plank") ||
+    name.includes("cinta") ||
+    name.includes("escaladora") ||
+    name.includes("eliptica") ||
+    name.includes("bicicleta estatica")
+  );
+}
+
+function getExerciseDefaults(exercise) {
+  if (isDurationBasedExercise(exercise)) {
+    const isCardio = exercise?.muscle_group_parent === "Cardio";
+    return {
+      planning_mode: "duration",
+      sets_planned: isCardio ? 1 : 3,
+      reps_planned: "",
+      duration_minutes: isCardio ? 20 : 1,
+      rest_seconds: isCardio ? 0 : 45,
+    };
+  }
+
+  return {
+    planning_mode: "reps",
+    sets_planned: 4,
+    reps_planned: 10,
+    duration_minutes: "",
+    rest_seconds: 90,
+  };
+}
+
 function RoutineForm() {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
@@ -200,6 +238,19 @@ function RoutineForm() {
     return filteredCatalog.slice(startIndex, startIndex + CATALOG_PAGE_SIZE);
   }, [catalogPage, filteredCatalog]);
 
+  const groupedPaginatedCatalog = useMemo(
+    () =>
+      paginatedCatalog.reduce((accumulator, exercise) => {
+        const parent = exercise.muscle_group_parent || "Otros";
+        if (!accumulator[parent]) {
+          accumulator[parent] = [];
+        }
+        accumulator[parent].push(exercise);
+        return accumulator;
+      }, {}),
+    [paginatedCatalog]
+  );
+
   const calendarPreview = useMemo(
     () =>
       buildCalendarPreview({
@@ -285,13 +336,16 @@ function RoutineForm() {
   }
 
   function createExerciseRow(exercise, index) {
+    const defaults = getExerciseDefaults(exercise);
     return {
       id: `draft-ex-${Date.now()}-${Math.random().toString(16).slice(2, 6)}`,
       exercise_id: exercise?.id || "",
       exercise: exercise || null,
-      sets_planned: 4,
-      reps_planned: 10,
-      rest_seconds: 90,
+      planning_mode: defaults.planning_mode,
+      sets_planned: defaults.sets_planned,
+      reps_planned: defaults.reps_planned,
+      duration_minutes: defaults.duration_minutes,
+      rest_seconds: defaults.rest_seconds,
       notes: "",
       exercise_order: index + 1,
     };
@@ -331,10 +385,29 @@ function RoutineForm() {
 
         if (field === "exercise_id") {
           const nextExercise = catalogById[value] || null;
+          const defaults = getExerciseDefaults(nextExercise);
           return {
             ...item,
             exercise_id: value,
             exercise: nextExercise,
+            planning_mode: defaults.planning_mode,
+            sets_planned: defaults.sets_planned,
+            reps_planned: defaults.reps_planned,
+            duration_minutes: defaults.duration_minutes,
+            rest_seconds: defaults.rest_seconds,
+          };
+        }
+
+        if (field === "planning_mode") {
+          const nextMode = value === "duration" ? "duration" : "reps";
+          return {
+            ...item,
+            planning_mode: nextMode,
+            reps_planned: nextMode === "duration" ? "" : item.reps_planned || 10,
+            duration_minutes:
+              nextMode === "duration"
+                ? item.duration_minutes || (isDurationBasedExercise(item.exercise) ? 20 : 1)
+                : "",
           };
         }
 
@@ -360,24 +433,41 @@ function RoutineForm() {
       const normalizedRows = activeDay.exercises.map((item, index) => {
         const exerciseId = (item.exercise_id || "").trim();
         const sets = Number(item.sets_planned);
-        const reps = Number(item.reps_planned);
+        const reps = item.reps_planned === "" ? null : Number(item.reps_planned);
+        const durationMinutes =
+          item.duration_minutes === "" ? null : Number(item.duration_minutes);
         const rest = Number(item.rest_seconds);
         const order = Number(item.exercise_order || index + 1);
+        const planningMode = item.planning_mode === "duration" ? "duration" : "reps";
 
         if (!exerciseId) {
           throw new Error("Cada fila debe tener un ejercicio seleccionado.");
         }
 
-        if (![sets, reps, rest, order].every((value) => Number.isFinite(value) && value > 0)) {
-          throw new Error("Series, reps, descanso y posicion deben ser numeros mayores a cero.");
+        if (![sets, rest, order].every((value) => Number.isFinite(value) && value >= 0)) {
+          throw new Error("Series, descanso y posicion deben ser numeros validos.");
+        }
+
+        if (sets < 1 || order < 1) {
+          throw new Error("Series y posicion deben ser mayores a cero.");
+        }
+
+        if (planningMode === "duration") {
+          if (!Number.isFinite(durationMinutes) || durationMinutes <= 0) {
+            throw new Error("La duracion debe ser mayor a cero en ejercicios por tiempo.");
+          }
+        } else if (!Number.isFinite(reps) || reps <= 0) {
+          throw new Error("Las repeticiones deben ser mayores a cero en ejercicios por repeticiones.");
         }
 
         return {
           ...item,
           exercise_id: exerciseId,
           exercise: catalogById[exerciseId] || item.exercise || null,
+          planning_mode: planningMode,
           sets_planned: sets,
-          reps_planned: reps,
+          reps_planned: planningMode === "duration" ? null : reps,
+          duration_minutes: planningMode === "duration" ? durationMinutes : null,
           rest_seconds: rest,
           exercise_order: order,
         };
@@ -550,6 +640,7 @@ function RoutineForm() {
             exercise_id: exercise.exercise_id,
             sets_planned: exercise.sets_planned,
             reps_planned: exercise.reps_planned,
+            duration_minutes: exercise.duration_minutes,
             rest_seconds: exercise.rest_seconds,
             exercise_order: exercise.exercise_order,
             notes: exercise.notes,
@@ -820,11 +911,18 @@ function RoutineForm() {
                           </Button>
                         </div>
 
-                        <div className="fc-helper-list">
-                          {activeDay.muscle_subgroups.map((group) => (
-                            <span key={group} className="fc-pill">
-                              {group}
-                            </span>
+                        <div className="fc-routine-selected-groups">
+                          {Object.entries(selectedSubgroupsByParent).map(([parent, subgroups]) => (
+                            <div key={parent} className="fc-routine-selected-group">
+                              <strong>{parent}</strong>
+                              <div className="fc-helper-list">
+                                {subgroups.map((group) => (
+                                  <span key={group} className="fc-pill">
+                                    {group}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
                           ))}
                         </div>
                       </Card>
@@ -876,18 +974,28 @@ function RoutineForm() {
 
                           {paginatedCatalog.length ? (
                             <div className="fc-routine-suggestions">
-                              {paginatedCatalog.map((exercise) => (
-                                <button
-                                  key={exercise.id}
-                                  type="button"
-                                  className="fc-routine-suggestion"
-                                  onClick={() => addExerciseRow(exercise)}
-                                >
-                                  <strong>{exercise.name}</strong>
-                                  <span>
-                                    {exercise.muscle_subgroup || "General"} · {exercise.equipment || "Libre"}
-                                  </span>
-                                </button>
+                              {Object.entries(groupedPaginatedCatalog).map(([parent, exercises]) => (
+                                <div key={parent} className="fc-routine-suggestion-group">
+                                  <div className="fc-routine-suggestion-group__header">
+                                    <strong>{parent}</strong>
+                                    <span>{exercises.length} opciones</span>
+                                  </div>
+                                  <div className="fc-routine-suggestion-group__items">
+                                    {exercises.map((exercise) => (
+                                      <button
+                                        key={exercise.id}
+                                        type="button"
+                                        className="fc-routine-suggestion"
+                                        onClick={() => addExerciseRow(exercise)}
+                                      >
+                                        <strong>{exercise.name}</strong>
+                                        <span>
+                                          {exercise.muscle_subgroup || "General"} · {exercise.equipment || "Libre"}
+                                        </span>
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
                               ))}
                             </div>
                           ) : null}
@@ -919,15 +1027,6 @@ function RoutineForm() {
                           ) : null}
 
                           <div className="fc-routine-table-scroller">
-                            <div className="fc-routine-table-header">
-                              <span>Pos</span>
-                              <span>Ejercicio</span>
-                              <span>Series</span>
-                              <span>Reps</span>
-                              <span>Descanso</span>
-                              <span>Acciones</span>
-                            </div>
-
                             {(activeDay.exercises || []).length === 0 ? (
                               <div className="fc-routine-table-empty">
                                 <Dumbbell size={20} />
@@ -936,83 +1035,141 @@ function RoutineForm() {
                             ) : (
                               activeDay.exercises.map((item, index) => (
                                 <div key={item.id} className="fc-routine-table-row">
-                                  <input
-                                    className="fc-input"
-                                    inputMode="numeric"
-                                    value={item.exercise_order}
-                                    onChange={(event) =>
-                                      updateDraftExercise(item.id, "exercise_order", event.target.value)
-                                    }
-                                  />
+                                  <div className="fc-routine-table-row__top">
+                                    <div className="fc-routine-table-row__position">
+                                      <span className="fc-text-eyebrow">Pos</span>
+                                      <input
+                                        className="fc-input"
+                                        inputMode="numeric"
+                                        value={item.exercise_order}
+                                        onChange={(event) =>
+                                          updateDraftExercise(item.id, "exercise_order", event.target.value)
+                                        }
+                                      />
+                                    </div>
 
-                                  <div className="fc-routine-table-row__exercise">
-                                    <select
-                                      className="fc-input fc-select"
-                                      value={item.exercise_id}
-                                      onChange={(event) =>
-                                        updateDraftExercise(item.id, "exercise_id", event.target.value)
-                                      }
-                                    >
-                                      <option value="">Selecciona ejercicio</option>
-                                      {filteredCatalog.map((exercise) => (
-                                        <option key={exercise.id} value={exercise.id}>
-                                          {exercise.name}
-                                        </option>
-                                      ))}
-                                    </select>
-                                    <div className="fc-catalog-item__meta">
-                                      <span className="fc-pill">
-                                        {item.exercise?.muscle_group_parent || "Sin grupo"}
-                                      </span>
-                                      <span className="fc-pill">
-                                        {item.exercise?.muscle_subgroup || "Sin subgrupo"}
-                                      </span>
+                                    <div className="fc-routine-table-row__exercise">
+                                      <select
+                                        className="fc-input fc-select"
+                                        value={item.exercise_id}
+                                        onChange={(event) =>
+                                          updateDraftExercise(item.id, "exercise_id", event.target.value)
+                                        }
+                                      >
+                                        <option value="">Selecciona ejercicio</option>
+                                        {filteredCatalog.map((exercise) => (
+                                          <option key={exercise.id} value={exercise.id}>
+                                            {exercise.name}
+                                          </option>
+                                        ))}
+                                      </select>
+                                      <div className="fc-catalog-item__meta">
+                                        <span className="fc-pill">
+                                          {item.exercise?.muscle_group_parent || "Sin grupo"}
+                                        </span>
+                                        <span className="fc-pill">
+                                          {item.exercise?.muscle_subgroup || "Sin subgrupo"}
+                                        </span>
+                                      </div>
+                                    </div>
+
+                                    <div className="fc-routine-table-row__actions">
+                                      <button
+                                        type="button"
+                                        className={`fc-mode-chip ${item.planning_mode === "reps" ? "is-active" : ""}`}
+                                        onClick={() => updateDraftExercise(item.id, "planning_mode", "reps")}
+                                      >
+                                        Reps
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className={`fc-mode-chip ${item.planning_mode === "duration" ? "is-active" : ""}`}
+                                        onClick={() => updateDraftExercise(item.id, "planning_mode", "duration")}
+                                      >
+                                        Min
+                                      </button>
+                                      <Button
+                                        variant="ghost"
+                                        disabled={index === 0}
+                                        onClick={() => moveDraftExercise(item.id, "up")}
+                                      >
+                                        <ChevronLeft size={16} />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        disabled={index === activeDay.exercises.length - 1}
+                                        onClick={() => moveDraftExercise(item.id, "down")}
+                                      >
+                                        <ChevronRight size={16} />
+                                      </Button>
+                                      <Button variant="ghost" onClick={() => removeDraftExercise(item.id)}>
+                                        <Trash2 size={16} />
+                                      </Button>
                                     </div>
                                   </div>
 
-                                  <input
-                                    className="fc-input"
-                                    inputMode="numeric"
-                                    value={item.sets_planned}
-                                    onChange={(event) =>
-                                      updateDraftExercise(item.id, "sets_planned", event.target.value)
-                                    }
-                                  />
-                                  <input
-                                    className="fc-input"
-                                    inputMode="numeric"
-                                    value={item.reps_planned}
-                                    onChange={(event) =>
-                                      updateDraftExercise(item.id, "reps_planned", event.target.value)
-                                    }
-                                  />
-                                  <input
-                                    className="fc-input"
-                                    inputMode="numeric"
-                                    value={item.rest_seconds}
-                                    onChange={(event) =>
-                                      updateDraftExercise(item.id, "rest_seconds", event.target.value)
-                                    }
-                                  />
+                                  <div className="fc-routine-table-row__metrics">
+                                    <label className="fc-routine-field-mini">
+                                      <span>Series</span>
+                                      <input
+                                        className="fc-input"
+                                        inputMode="numeric"
+                                        value={item.sets_planned}
+                                        onChange={(event) =>
+                                          updateDraftExercise(item.id, "sets_planned", event.target.value)
+                                        }
+                                      />
+                                    </label>
+                                    {item.planning_mode === "duration" ? (
+                                      <label className="fc-routine-field-mini">
+                                        <span>Duracion min</span>
+                                        <input
+                                          className="fc-input"
+                                          inputMode="numeric"
+                                          value={item.duration_minutes ?? ""}
+                                          onChange={(event) =>
+                                            updateDraftExercise(item.id, "duration_minutes", event.target.value)
+                                          }
+                                        />
+                                      </label>
+                                    ) : (
+                                      <label className="fc-routine-field-mini">
+                                        <span>Reps</span>
+                                        <input
+                                          className="fc-input"
+                                          inputMode="numeric"
+                                          value={item.reps_planned ?? ""}
+                                          onChange={(event) =>
+                                            updateDraftExercise(item.id, "reps_planned", event.target.value)
+                                          }
+                                        />
+                                      </label>
+                                    )}
+                                    <label className="fc-routine-field-mini">
+                                      <span>Descanso seg</span>
+                                      <input
+                                        className="fc-input"
+                                        inputMode="numeric"
+                                        value={item.rest_seconds}
+                                        onChange={(event) =>
+                                          updateDraftExercise(item.id, "rest_seconds", event.target.value)
+                                        }
+                                      />
+                                    </label>
+                                  </div>
 
-                                  <div className="fc-routine-table-row__actions">
-                                    <Button
-                                      variant="ghost"
-                                      disabled={index === 0}
-                                      onClick={() => moveDraftExercise(item.id, "up")}
-                                    >
-                                      <ChevronLeft size={16} />
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      disabled={index === activeDay.exercises.length - 1}
-                                      onClick={() => moveDraftExercise(item.id, "down")}
-                                    >
-                                      <ChevronRight size={16} />
-                                    </Button>
-                                    <Button variant="ghost" onClick={() => removeDraftExercise(item.id)}>
-                                      <Trash2 size={16} />
-                                    </Button>
+                                  <div className="fc-routine-table-row__note">
+                                    <label className="fc-routine-field-mini">
+                                      <span>Nota opcional</span>
+                                      <input
+                                        className="fc-input"
+                                        value={item.notes || ""}
+                                        onChange={(event) =>
+                                          updateDraftExercise(item.id, "notes", event.target.value)
+                                        }
+                                        placeholder="Tecnica, ritmo, observaciones"
+                                      />
+                                    </label>
                                   </div>
                                 </div>
                               ))

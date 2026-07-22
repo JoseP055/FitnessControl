@@ -351,8 +351,12 @@ function RoutineDetail() {
                       <span className="fc-kv__value">{item.sets_planned || "-"}</span>
                     </div>
                     <div className="fc-kv">
-                      <span className="fc-kv__label">Reps</span>
-                      <span className="fc-kv__value">{item.reps_planned || "-"}</span>
+                      <span className="fc-kv__label">
+                        {item.duration_minutes ? "Duracion" : "Reps"}
+                      </span>
+                      <span className="fc-kv__value">
+                        {item.duration_minutes ? `${item.duration_minutes} min` : item.reps_planned || "-"}
+                      </span>
                     </div>
                     <div className="fc-kv">
                       <span className="fc-kv__label">Descanso</span>
