@@ -45,11 +45,11 @@ function RoutineEditForm() {
 
   const helperText = useMemo(() => {
     if (!form.name.trim()) {
-      return "Dale un nombre claro y fácil de reconocer.";
+      return "Dale un nombre claro y facil de reconocer.";
     }
 
     if (form.name.trim().length < 4) {
-      return "Un nombre un poco más descriptivo te va a ayudar después.";
+      return "Un nombre un poco mas descriptivo te va a ayudar despues.";
     }
 
     return "Se ve bien. Los cambios se aplican sobre la rutina actual.";
@@ -60,12 +60,12 @@ function RoutineEditForm() {
     setError("");
 
     if (!form.name.trim()) {
-      setError("Poné un nombre para la rutina.");
+      setError("Pone un nombre para la rutina.");
       return;
     }
 
     if (!form.start_date) {
-      setError("Elegí una fecha de inicio.");
+      setError("Elegi una fecha de inicio.");
       return;
     }
 
@@ -98,7 +98,7 @@ function RoutineEditForm() {
           <div>
             <h1 className="fc-dashboard__title">Editar rutina</h1>
             <p className="fc-dashboard__subtitle">
-              Ajustá los datos generales sin tocar la estructura semanal.
+              Ajusta los datos generales sin tocar la estructura semanal.
             </p>
           </div>
 
@@ -130,13 +130,13 @@ function RoutineEditForm() {
 
             <div className="fc-field">
               <label className="fc-field__label" htmlFor="routine-description-edit">
-                Descripción
+                Descripcion
               </label>
               <textarea
                 id="routine-description-edit"
                 className="fc-input fc-textarea"
                 rows={5}
-                placeholder="Opcional. Podés indicar el enfoque de la rutina."
+                placeholder="Opcional. Podes indicar el enfoque de la rutina."
                 value={form.description}
                 onChange={(event) =>
                   setForm((current) => ({ ...current, description: event.target.value }))
@@ -147,7 +147,7 @@ function RoutineEditForm() {
             <div className="fc-grid-3">
               <Input
                 id="routine-duration-edit"
-                label="Duración (meses)"
+                label="Duracion (meses)"
                 type="number"
                 min="1"
                 max="24"
@@ -186,7 +186,7 @@ function RoutineEditForm() {
             <span className="fc-text-eyebrow">Nota</span>
             <h2 className="fc-section-title">La estructura semanal se conserva</h2>
             <p className="fc-card-text">
-              Esta pantalla actualiza nombre, descripción, duración y fecha de inicio. Los días y ejercicios siguen tal como ya fueron definidos.
+              Esta pantalla actualiza nombre, descripcion, duracion y fecha de inicio. Los dias y ejercicios siguen tal como ya fueron definidos.
             </p>
           </div>
         </Card>

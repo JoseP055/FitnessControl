@@ -405,10 +405,24 @@ a:focus-visible {
   border-color: rgba(174, 147, 217, 0.12);
 }
 
+.fc-button--danger {
+  color: rgba(10, 8, 14, 0.92);
+  background: linear-gradient(135deg, rgba(255, 140, 168, 0.95), rgba(172, 79, 116, 0.85));
+  box-shadow: 0 14px 34px rgba(255, 140, 168, 0.12);
+}
+
+.fc-button.is-loading {
+  pointer-events: none;
+}
+
 .fc-button__label {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
+}
+
+.fc-button__content.is-loading {
+  opacity: 0.65;
 }
 
 .fc-spinner {
@@ -815,7 +829,7 @@ a:focus-visible {
 .fc-shell-header {
   width: 100%;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
@@ -825,6 +839,8 @@ a:focus-visible {
   display: flex;
   gap: 0.75rem;
   flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
 }
 
 .fc-dashboard-grid {
@@ -1106,6 +1122,12 @@ a:focus-visible {
   color: rgba(242, 238, 245, 0.64);
 }
 
+.fc-catalog-item__meta {
+  display: grid;
+  justify-items: end;
+  gap: 0.45rem;
+}
+
 .fc-catalog-item.is-selected {
   border-color: rgba(172, 79, 116, 0.45);
   background: rgba(172, 79, 116, 0.12);
@@ -1300,6 +1322,32 @@ a:focus-visible {
   flex-wrap: wrap;
 }
 
+.fc-muscle-taxonomy {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.fc-muscle-group-card {
+  border: 1px solid rgba(174, 147, 217, 0.12);
+  border-radius: var(--radius-lg);
+  background: rgba(23, 18, 28, 0.42);
+  padding: 0.85rem 0.9rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.fc-muscle-group-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.fc-muscle-group-card__header strong {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
 .fc-muscle-chip {
   display: inline-flex;
   align-items: center;
@@ -1392,10 +1440,16 @@ a:focus-visible {
   align-items: center;
 }
 
+.fc-routine-calendar__table {
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+}
+
 .fc-routine-calendar__weekdays {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 0.5rem;
+  min-width: 520px;
 }
 
 .fc-routine-calendar__weekdays span {
@@ -1410,6 +1464,7 @@ a:focus-visible {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 0.5rem;
+  min-width: 520px;
 }
 
 .fc-routine-calendar__cell {
@@ -1484,6 +1539,84 @@ button.fc-routine-calendar__cell {
   z-index: 9;
   border: 0;
   background: rgba(10, 8, 14, 0.56);
+}
+
+.fc-dialog-root {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+}
+
+.fc-dialog-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(10, 8, 14, 0.62);
+}
+
+.fc-dialog-card {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 520px);
+  border-radius: 22px;
+  border: 1px solid rgba(174, 147, 217, 0.14);
+  background: rgba(36, 27, 44, 0.92);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(18px);
+  overflow: hidden;
+}
+
+.fc-dialog-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.15rem 0;
+}
+
+.fc-dialog-card__icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 140, 168, 0.25);
+  background: rgba(255, 140, 168, 0.14);
+  color: rgba(242, 238, 245, 0.92);
+}
+
+.fc-dialog-card__close {
+  width: 38px;
+  height: 38px;
+  border-radius: 14px;
+  border: 1px solid rgba(174, 147, 217, 0.14);
+  background: rgba(23, 18, 28, 0.58);
+  color: rgba(242, 238, 245, 0.78);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: transform var(--transition-fast), border-color var(--transition-fast);
+}
+
+.fc-dialog-card__close:hover {
+  transform: translateY(-1px);
+  border-color: rgba(174, 147, 217, 0.26);
+}
+
+.fc-dialog-card__body {
+  padding: 0.85rem 1.15rem 1rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.fc-dialog-card__actions {
+  padding: 0 1.15rem 1.15rem;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  flex-wrap: wrap;
 }
 
 @media (max-width: 960px) {

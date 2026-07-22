@@ -1,7 +1,25 @@
 import { supabaseClient } from "./supabaseClient";
 
-const API_URL = process.env.REACT_APP_API_URL || "";
+const API_URL = (process.env.REACT_APP_API_URL || "").trim().replace(/\/+$/, "");
 const API_TIMEOUT_MS = 6000;
+
+function buildRequestUrl(path) {
+  if (!API_URL) {
+    return path;
+  }
+
+  return `${API_URL}${path}`;
+}
+
+function getNetworkErrorMessage(path) {
+  const targetUrl = buildRequestUrl(path);
+
+  if (API_URL.includes("localhost") || API_URL.includes("127.0.0.1")) {
+    return `No se pudo conectar con el backend en ${API_URL}. Verifica que este levantado y que responda ${targetUrl}.`;
+  }
+
+  return `No se pudo conectar con el backend. Revisa la URL API y el acceso a ${targetUrl}.`;
+}
 
 async function getAuthHeaders() {
   if (!supabaseClient) {
@@ -27,8 +45,9 @@ async function apiRequest(path, options = {}) {
   const authHeaders = await getAuthHeaders();
   const controller = new AbortController();
   const timeoutId = window.setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+
   try {
-    const response = await fetch(`${API_URL}${path}`, {
+    const response = await fetch(buildRequestUrl(path), {
       ...options,
       headers: {
         "Content-Type": "application/json",
@@ -36,12 +55,6 @@ async function apiRequest(path, options = {}) {
         ...(options.headers || {}),
       },
       signal: controller.signal,
-    }).catch((error) => {
-      if (error?.name === "AbortError") {
-        throw new Error("El backend tardó demasiado en responder.");
-      }
-
-      throw error;
     });
 
     const contentType = response.headers.get("content-type") || "";
@@ -54,6 +67,16 @@ async function apiRequest(path, options = {}) {
     }
 
     return data;
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      throw new Error("El backend tardo demasiado en responder.");
+    }
+
+    if (error instanceof TypeError) {
+      throw new Error(getNetworkErrorMessage(path));
+    }
+
+    throw error;
   } finally {
     window.clearTimeout(timeoutId);
   }
@@ -67,10 +90,15 @@ export async function getCurrentUserProfile() {
   return apiRequest("/me", { method: "GET" });
 }
 
-export async function getExercises(muscleGroup) {
+export async function getExercises({ muscleSubgroup, muscleGroupParent } = {}) {
   const params = new URLSearchParams();
-  if (muscleGroup) {
-    params.set("muscle_group", muscleGroup);
+
+  if (muscleSubgroup) {
+    params.set("muscle_subgroup", muscleSubgroup);
+  }
+
+  if (muscleGroupParent) {
+    params.set("muscle_group_parent", muscleGroupParent);
   }
 
   return apiRequest(`/exercises${params.toString() ? `?${params.toString()}` : ""}`, {

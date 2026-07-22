@@ -72,7 +72,7 @@ function Login() {
             <div style={{ display: "grid", gap: "1rem", marginTop: "1.5rem" }}>
               <h1 className="fc-heading">Bienvenido de vuelta.</h1>
               <p className="fc-subheading">
-                Iniciá sesión para seguir tu progreso y mantener tu racha en marcha.
+                Inicia sesion para seguir tu progreso y mantener tu racha en marcha.
               </p>
             </div>
           </div>
@@ -129,18 +129,18 @@ function Login() {
           <div className="fc-auth-metric-grid">
             <div className="fc-auth-metric">
               <strong>Rutinas</strong>
-              <span>Guardá y repetí tus entrenamientos favoritos.</span>
+              <span>Guarda y repeti tus entrenamientos favoritos.</span>
             </div>
             <div className="fc-auth-metric">
               <strong>Progreso</strong>
-              <span>Visualizá tu avance con claridad, sin ruido.</span>
+              <span>Visualiza tu avance con claridad, sin ruido.</span>
             </div>
           </div>
 
           <div className="fc-auth-quote">
             <strong>Todo en un solo lugar.</strong>
             <p style={{ margin: 0 }}>
-              Rutinas, medidas y registros organizados para que entrenar sea más simple.
+              Rutinas, medidas y registros organizados para que entrenar sea mas simple.
             </p>
           </div>
         </motion.section>
@@ -166,10 +166,10 @@ function Login() {
                     letterSpacing: "-0.04em",
                   }}
                 >
-                  Iniciar sesión
+                  Iniciar sesion
                 </h2>
                 <p style={{ margin: 0, color: "rgba(242, 238, 245, 0.66)" }}>
-                  Iniciá sesión para continuar donde lo dejaste.
+                  Inicia sesion para continuar donde lo dejaste.
                 </p>
               </div>
             </div>
@@ -191,7 +191,7 @@ function Login() {
                   id="login-password"
                   label="Password"
                   type="password"
-                  placeholder="Tu contraseña"
+                  placeholder="Tu contrasena"
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   autoComplete="current-password"
@@ -225,7 +225,7 @@ function Login() {
             </motion.div>
 
             <div style={{ marginTop: "1.5rem" }} className="fc-login-footer">
-              <span>¿Todavía no tenés cuenta?</span>
+              <span>Todavia no tenes cuenta?</span>
               <Link className="fc-inline-link" to="/register">
                 Crear cuenta
               </Link>

@@ -36,37 +36,40 @@ const stepTransition = {
 };
 
 const durationOptions = [
-  { value: 1, label: "1 mes", description: "Bloque corto para arrancar rápido." },
+  { value: 1, label: "1 mes", description: "Bloque corto para arrancar rapido." },
   { value: 2, label: "2 meses", description: "Tiempo ideal para agarrar ritmo." },
-  { value: 3, label: "3 meses", description: "Progresión más estable y sostenida." },
+  { value: 3, label: "3 meses", description: "Progresion mas estable y sostenida." },
   { value: 6, label: "6 meses", description: "Plan largo para construir constancia." },
 ];
 
 const weekdayOptions = [
   { value: 0, short: "Lun", label: "Lunes" },
   { value: 1, short: "Mar", label: "Martes" },
-  { value: 2, short: "Mie", label: "Miércoles" },
+  { value: 2, short: "Mie", label: "Miercoles" },
   { value: 3, short: "Jue", label: "Jueves" },
   { value: 4, short: "Vie", label: "Viernes" },
-  { value: 5, short: "Sab", label: "Sábado" },
+  { value: 5, short: "Sab", label: "Sabado" },
   { value: 6, short: "Dom", label: "Domingo" },
 ];
 
-const muscleGroupOptions = [
-  "pecho",
-  "espalda",
-  "piernas",
-  "hombros",
-  "brazos",
-  "core",
-  "cardio",
+const muscleTaxonomy = [
+  { parent: "Pecho", subgroups: ["Alto", "Medio", "Bajo"] },
+  { parent: "Espalda", subgroups: ["Dorsales", "Trapecio", "Lumbar"] },
+  { parent: "Hombros", subgroups: ["Anterior", "Lateral", "Posterior"] },
+  { parent: "Brazos", subgroups: ["Biceps", "Triceps", "Antebrazos"] },
+  { parent: "Piernas", subgroups: ["Cuadriceps", "Femoral", "Gemelos"] },
+  { parent: "Core", subgroups: ["Recto abdominal", "Oblicuos", "Estabilizadores profundos"] },
+  { parent: "Gluteos", subgroups: ["Gluteo mayor", "Gluteo medio", "Gluteo menor"] },
+  { parent: "Cardio", subgroups: ["Cardio"] },
 ];
+
+const monthLabels = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
 
 function createDraftDay(dayOfWeek) {
   return {
     id: `draft-${dayOfWeek}`,
     day_of_week: dayOfWeek,
-    muscle_groups: [],
+    muscle_subgroups: [],
     exercises: [],
   };
 }
@@ -84,11 +87,8 @@ function formatDate(dateValue) {
     return "Sin definir";
   }
 
-  return new Date(`${dateValue}T00:00:00`).toLocaleDateString("es-ES", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+  const date = new Date(`${dateValue}T00:00:00`);
+  return `${String(date.getDate()).padStart(2, "0")} ${monthLabels[date.getMonth()]} ${date.getFullYear()}`;
 }
 
 function RoutineForm() {
@@ -121,7 +121,7 @@ function RoutineForm() {
         const response = await getExercises();
         setCatalog(response.items || []);
       } catch (loadError) {
-        setError(loadError.message || "No se pudo cargar el catálogo de ejercicios.");
+        setError(loadError.message || "No se pudo cargar el catalogo de ejercicios.");
       } finally {
         setCatalogLoading(false);
       }
@@ -133,8 +133,8 @@ function RoutineForm() {
   const steps = useMemo(
     () => [
       { key: "general", label: "Datos" },
-      { key: "weekdays", label: "Días" },
-      { key: "days", label: "Configuración" },
+      { key: "weekdays", label: "Dias" },
+      { key: "days", label: "Configuracion" },
       { key: "summary", label: "Resumen" },
     ],
     []
@@ -142,11 +142,11 @@ function RoutineForm() {
 
   const helperText = useMemo(() => {
     if (!form.name.trim()) {
-      return "Poné un nombre fácil de reconocer más adelante.";
+      return "Pone un nombre facil de reconocer mas adelante.";
     }
 
     if (form.name.trim().length < 4) {
-      return "Podés hacerlo un poco más descriptivo.";
+      return "Podes hacerlo un poco mas descriptivo.";
     }
 
     return "Se ve bien. Ahora solo falta darle forma a la semana.";
@@ -165,14 +165,14 @@ function RoutineForm() {
   );
 
   const filteredCatalog = useMemo(() => {
-    if (!activeDay?.muscle_groups?.length) {
+    if (!activeDay?.muscle_subgroups?.length) {
       return [];
     }
 
     const normalizedSearch = searchTerm.trim().toLowerCase();
     return catalog.filter((exercise) => {
-      const matchesGroup = activeDay.muscle_groups.includes((exercise.muscle_group || "").toLowerCase());
-      if (!matchesGroup) {
+      const matchesSubgroup = activeDay.muscle_subgroups.includes(exercise.muscle_subgroup || "");
+      if (!matchesSubgroup) {
         return false;
       }
 
@@ -180,7 +180,13 @@ function RoutineForm() {
         return true;
       }
 
-      return [exercise.name, exercise.muscle_group, exercise.equipment, exercise.description]
+      return [
+        exercise.name,
+        exercise.muscle_group_parent,
+        exercise.muscle_subgroup,
+        exercise.equipment,
+        exercise.description,
+      ]
         .filter(Boolean)
         .some((value) => value.toLowerCase().includes(normalizedSearch));
     });
@@ -188,7 +194,7 @@ function RoutineForm() {
 
   const groupedCatalog = useMemo(() => {
     return filteredCatalog.reduce((groups, exercise) => {
-      const group = capitalize(exercise.muscle_group || "otros");
+      const group = exercise.muscle_group_parent || "Otros";
       groups[group] = groups[group] || [];
       groups[group].push(exercise);
       return groups;
@@ -204,6 +210,22 @@ function RoutineForm() {
       }),
     [form.duration_months, form.start_date, selectedDays]
   );
+
+  const selectedSubgroupsByParent = useMemo(() => {
+    if (!activeDay?.muscle_subgroups?.length) {
+      return {};
+    }
+
+    return muscleTaxonomy.reduce((accumulator, group) => {
+      const selected = group.subgroups.filter((subgroup) =>
+        activeDay.muscle_subgroups.includes(subgroup)
+      );
+      if (selected.length) {
+        accumulator[group.parent] = selected;
+      }
+      return accumulator;
+    }, {});
+  }, [activeDay]);
 
   useEffect(() => {
     setSearchTerm("");
@@ -244,18 +266,18 @@ function RoutineForm() {
     updateSelectedDays([...selectedDays, createDraftDay(dayOfWeek)]);
   }
 
-  function handleToggleMuscleGroup(group) {
+  function handleToggleMuscleSubgroup(subgroup) {
     if (!activeDay) {
       return;
     }
 
     updateDay(activeDay.day_of_week, (day) => {
-      const exists = day.muscle_groups.includes(group);
+      const exists = day.muscle_subgroups.includes(subgroup);
       return {
         ...day,
-        muscle_groups: exists
-          ? day.muscle_groups.filter((value) => value !== group)
-          : [...day.muscle_groups, group],
+        muscle_subgroups: exists
+          ? day.muscle_subgroups.filter((value) => value !== subgroup)
+          : [...day.muscle_subgroups, subgroup],
       };
     });
   }
@@ -306,7 +328,7 @@ function RoutineForm() {
     }
 
     if (!selectedExercise) {
-      setError("Elegí un ejercicio del catálogo para agregarlo a este día.");
+      setError("Elegi un ejercicio del catalogo para agregarlo a este dia.");
       return;
     }
 
@@ -315,7 +337,7 @@ function RoutineForm() {
     const rest = Number(addForm.rest_seconds);
 
     if (!Number.isFinite(sets) || !Number.isFinite(reps) || !Number.isFinite(rest)) {
-      setError("Completá series, repeticiones y descanso con valores válidos.");
+      setError("Completa series, repeticiones y descanso con valores validos.");
       return;
     }
 
@@ -350,7 +372,7 @@ function RoutineForm() {
       return false;
     }
 
-    return activeDay.muscle_groups.length > 0 && activeDay.exercises.length > 0;
+    return activeDay.muscle_subgroups.length > 0 && activeDay.exercises.length > 0;
   }
 
   function goNext() {
@@ -358,12 +380,12 @@ function RoutineForm() {
 
     if (step === 0) {
       if (!form.name.trim()) {
-        setError("Poné un nombre para la rutina.");
+        setError("Pone un nombre para la rutina.");
         return;
       }
 
       if (!form.start_date) {
-        setError("Elegí la fecha de inicio.");
+        setError("Elegi la fecha de inicio.");
         return;
       }
 
@@ -373,7 +395,7 @@ function RoutineForm() {
 
     if (step === 1) {
       if (!selectedDays.length) {
-        setError("Seleccioná al menos un día de entrenamiento.");
+        setError("Selecciona al menos un dia de entrenamiento.");
         return;
       }
 
@@ -384,7 +406,7 @@ function RoutineForm() {
 
     if (step === 2) {
       if (!canAdvanceFromCurrentDay()) {
-        setError("Cada día debe tener al menos un grupo muscular y un ejercicio.");
+        setError("Cada dia debe tener al menos un subgrupo muscular y un ejercicio.");
         return;
       }
 
@@ -423,7 +445,7 @@ function RoutineForm() {
       for (const day of selectedDays) {
         const createdDay = await createRoutineDay(createdRoutine.id, {
           day_of_week: day.day_of_week,
-          muscle_groups: day.muscle_groups,
+          muscle_subgroups: day.muscle_subgroups,
         });
 
         for (const exercise of day.exercises) {
@@ -458,7 +480,7 @@ function RoutineForm() {
           <div>
             <h1 className="fc-dashboard__title">Nueva rutina</h1>
             <p className="fc-dashboard__subtitle">
-              Armá tu semana como un onboarding claro: duración, días, grupos musculares, ejercicios y calendario.
+              Arma tu semana como un onboarding claro: duracion, dias, grupos musculares, ejercicios y calendario.
             </p>
           </div>
 
@@ -474,7 +496,7 @@ function RoutineForm() {
           <div>
             <span className="fc-text-eyebrow">
               <Sparkles size={14} />
-              Wizard de creación
+              Wizard de creacion
             </span>
             <h2 className="fc-section-title" style={{ marginTop: "0.4rem" }}>
               Paso {step + 1} de {steps.length}
@@ -493,7 +515,7 @@ function RoutineForm() {
             </div>
             <div className="fc-stepper__label">
               {step === 2 && activeDayMeta
-                ? `${activeDayMeta.label} - Día ${dayCursor + 1} de ${selectedDays.length}`
+                ? `${activeDayMeta.label} - Dia ${dayCursor + 1} de ${selectedDays.length}`
                 : steps[step].label}
             </div>
           </div>
@@ -507,7 +529,7 @@ function RoutineForm() {
                   <div className="fc-routine-wizard-panel__intro">
                     <h2 className="fc-section-title">Datos generales</h2>
                     <p className="fc-card-text">
-                      Definí la base de la rutina: nombre, duración y desde cuándo empieza a correr.
+                      Defini la base de la rutina: nombre, duracion y desde cuando empieza a correr.
                     </p>
                   </div>
 
@@ -525,13 +547,13 @@ function RoutineForm() {
 
                     <div className="fc-field">
                       <label className="fc-field__label" htmlFor="routine-description">
-                        Descripción opcional
+                        Descripcion opcional
                       </label>
                       <textarea
                         id="routine-description"
                         className="fc-input fc-textarea"
                         rows={5}
-                        placeholder="Podés usarla para recordar el enfoque, intensidad o contexto."
+                        placeholder="Podes usarla para recordar el enfoque, intensidad o contexto."
                         value={form.description}
                         onChange={(event) =>
                           setForm((current) => ({ ...current, description: event.target.value }))
@@ -581,9 +603,9 @@ function RoutineForm() {
               {step === 1 ? (
                 <div className="fc-routine-wizard-panel">
                   <div className="fc-routine-wizard-panel__intro">
-                    <h2 className="fc-section-title">Elegí los días de la semana</h2>
+                    <h2 className="fc-section-title">Elegi los dias de la semana</h2>
                     <p className="fc-card-text">
-                      Seleccioná todos los días donde querés entrenar. Después vas a configurar cada uno por separado.
+                      Selecciona todos los dias donde queres entrenar. Despues vas a configurar cada uno por separado.
                     </p>
                   </div>
 
@@ -611,7 +633,7 @@ function RoutineForm() {
                         return <span key={day.day_of_week} className="fc-pill">{meta?.label}</span>;
                       })
                     ) : (
-                      <span className="fc-pill">Todavía no elegiste días</span>
+                      <span className="fc-pill">Todavia no elegiste dias</span>
                     )}
                   </div>
                 </div>
@@ -626,7 +648,7 @@ function RoutineForm() {
                           {activeDayMeta?.label}
                         </h2>
                         <p className="fc-card-text" style={{ margin: 0 }}>
-                          Definí grupos musculares y agregá los ejercicios que querés ver en este día.
+                          Define subgrupos musculares y agrega los ejercicios que quieres ver en este dia.
                         </p>
                       </div>
 
@@ -637,7 +659,7 @@ function RoutineForm() {
                           onClick={() => setDayCursor((current) => Math.max(current - 1, 0))}
                         >
                           <ChevronLeft size={16} />
-                          Día anterior
+                          Dia anterior
                         </Button>
                         <Button
                           variant="ghost"
@@ -648,36 +670,47 @@ function RoutineForm() {
                             )
                           }
                         >
-                          Siguiente día
+                          Siguiente dia
                           <ChevronRight size={16} />
                         </Button>
                       </div>
                     </div>
                   </div>
 
-                  <div className="fc-routine-day-groups">
-                    {muscleGroupOptions.map((group) => {
-                      const selected = activeDay.muscle_groups.includes(group);
-                      return (
-                        <button
-                          key={group}
-                          type="button"
-                          className={`fc-muscle-chip ${selected ? "is-selected" : ""}`}
-                          onClick={() => handleToggleMuscleGroup(group)}
-                        >
-                          {capitalize(group)}
-                        </button>
-                      );
-                    })}
+                  <div className="fc-muscle-taxonomy">
+                    {muscleTaxonomy.map((group) => (
+                      <div key={group.parent} className="fc-muscle-group-card">
+                        <div className="fc-muscle-group-card__header">
+                          <strong>{group.parent}</strong>
+                          <span className="fc-pill">{(selectedSubgroupsByParent[group.parent] || []).length}</span>
+                        </div>
+
+                        <div className="fc-routine-day-groups">
+                          {group.subgroups.map((subgroup) => {
+                            const selected = activeDay.muscle_subgroups.includes(subgroup);
+                            return (
+                              <button
+                                key={subgroup}
+                                type="button"
+                                className={`fc-muscle-chip ${selected ? "is-selected" : ""}`}
+                                onClick={() => handleToggleMuscleSubgroup(subgroup)}
+                              >
+                                {subgroup}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
                   </div>
 
                   <div className="fc-routine-builder">
                     <Card glass className="fc-routine-builder__catalog">
                       <div className="fc-routine-builder__header">
                         <div>
-                          <span className="fc-text-eyebrow">Catálogo sugerido</span>
+                          <span className="fc-text-eyebrow">Catalogo sugerido</span>
                           <h3 className="fc-section-title" style={{ margin: "0.25rem 0 0" }}>
-                            Ejercicios del día
+                            Ejercicios del dia
                           </h3>
                         </div>
                       </div>
@@ -686,18 +719,18 @@ function RoutineForm() {
                         <Search size={16} />
                         <input
                           className="fc-search-input__field"
-                          placeholder="Buscar por nombre, grupo o equipo"
+                      placeholder="Buscar por nombre, grupo o equipo"
                           value={searchTerm}
                           onChange={(event) => setSearchTerm(event.target.value)}
                         />
                       </div>
 
-                      {!activeDay.muscle_groups.length ? (
-                        <p className="fc-card-text">Elegí al menos un grupo muscular para filtrar el catálogo.</p>
+                  {!activeDay.muscle_subgroups.length ? (
+                    <p className="fc-card-text">Elegi al menos un subgrupo muscular para filtrar el catalogo.</p>
                       ) : null}
 
-                      {activeDay.muscle_groups.length && filteredCatalog.length === 0 ? (
-                        <p className="fc-card-text">No hay ejercicios cargados para esos grupos todavía.</p>
+                  {activeDay.muscle_subgroups.length && filteredCatalog.length === 0 ? (
+                    <p className="fc-card-text">No hay ejercicios cargados para esos subgrupos todavia.</p>
                       ) : null}
 
                       <div className="fc-catalog-groups">
@@ -716,9 +749,12 @@ function RoutineForm() {
                                 >
                                   <div>
                                     <strong>{exercise.name}</strong>
-                                    <p>{exercise.description || "Sin descripción."}</p>
+                                    <p>{exercise.description || "Sin descripcion."}</p>
                                   </div>
-                                  <span className="fc-pill">{exercise.equipment || "Libre"}</span>
+                                  <div className="fc-catalog-item__meta">
+                                    <span className="fc-pill">{exercise.muscle_subgroup || "General"}</span>
+                                    <span className="fc-pill">{exercise.equipment || "Libre"}</span>
+                                  </div>
                                 </button>
                               ))}
                             </div>
@@ -730,9 +766,9 @@ function RoutineForm() {
                     <Card glass className="fc-routine-builder__setup">
                       <div className="fc-routine-builder__header">
                         <div>
-                          <span className="fc-text-eyebrow">Configuración</span>
+                          <span className="fc-text-eyebrow">Configuracion</span>
                           <h3 className="fc-section-title" style={{ margin: "0.25rem 0 0" }}>
-                            {selectedExercise ? selectedExercise.name : "Elegí un ejercicio"}
+                            {selectedExercise ? selectedExercise.name : "Elegi un ejercicio"}
                           </h3>
                         </div>
                       </div>
@@ -786,7 +822,7 @@ function RoutineForm() {
                               id="wizard-notes"
                               className="fc-input fc-textarea"
                               rows={3}
-                              placeholder="Ej. última serie cerca del fallo, técnica controlada, etc."
+                              placeholder="Ej. ultima serie cerca del fallo, tecnica controlada, etc."
                               value={addForm.notes}
                               onChange={(event) =>
                                 setAddForm((current) => ({
@@ -799,12 +835,12 @@ function RoutineForm() {
 
                           <Button onClick={handleAddExercise}>
                             <Plus size={16} />
-                            Agregar al día
+                            Agregar al dia
                           </Button>
                         </div>
                       ) : (
                         <p className="fc-card-text">
-                          Seleccioná un ejercicio del catálogo para agregarlo a {activeDayMeta?.label}.
+                          Selecciona un ejercicio del catalogo para agregarlo a {activeDayMeta?.label}.
                         </p>
                       )}
                     </Card>
@@ -816,9 +852,9 @@ function RoutineForm() {
                         <div className="fc-empty-state__icon">
                           <Dumbbell size={24} />
                         </div>
-                        <h3 className="fc-section-title">Este día todavía no tiene ejercicios</h3>
+                        <h3 className="fc-section-title">Este dia todavia no tiene ejercicios</h3>
                         <p className="fc-card-text">
-                          Elegí grupos musculares y sumá al menos un ejercicio antes de avanzar.
+                          Elegi subgrupos musculares y suma al menos un ejercicio antes de avanzar.
                         </p>
                       </Card>
                     ) : (
@@ -829,9 +865,10 @@ function RoutineForm() {
                               <span className="fc-text-eyebrow">#{item.exercise_order}</span>
                               <h3 className="fc-section-title">{item.exercise?.name}</h3>
                             </div>
-                            <span className="fc-pill">
-                              {capitalize(item.exercise?.muscle_group || "sin grupo")}
-                            </span>
+                            <div className="fc-catalog-item__meta">
+                              <span className="fc-pill">{item.exercise?.muscle_group_parent || "Sin grupo"}</span>
+                              <span className="fc-pill">{item.exercise?.muscle_subgroup || "Sin subgrupo"}</span>
+                            </div>
                           </div>
 
                           <div className="fc-kv-grid">
@@ -885,7 +922,7 @@ function RoutineForm() {
                   <div className="fc-routine-wizard-panel__intro">
                     <h2 className="fc-section-title">Resumen final</h2>
                     <p className="fc-card-text">
-                      Revisá cómo queda organizada la semana y las fechas concretas antes de guardar la rutina.
+                      Revisa como queda organizada la semana y las fechas concretas antes de guardar la rutina.
                     </p>
                   </div>
 
@@ -898,7 +935,7 @@ function RoutineForm() {
                         </span>
                         <div className="fc-metric">
                           <span className="fc-metric__value">{selectedDays.length}</span>
-                          <span className="fc-metric__label">Días activos por semana</span>
+                            <span className="fc-metric__label">Dias activos por semana</span>
                         </div>
                       </div>
                     </Card>
@@ -920,7 +957,7 @@ function RoutineForm() {
                       <div className="fc-routine-summary">
                         <span className="fc-text-eyebrow">
                           <Check size={14} />
-                          Próxima
+                          Proxima
                         </span>
                         <div className="fc-metric">
                           <span className="fc-metric__value">
@@ -928,7 +965,7 @@ function RoutineForm() {
                               ? formatDate(calendarPreview.nextTrainingDate)
                               : "Sin fecha"}
                           </span>
-                          <span className="fc-metric__label">Próximo entrenamiento</span>
+                          <span className="fc-metric__label">Proximo entrenamiento</span>
                         </div>
                       </div>
                     </Card>
@@ -947,9 +984,19 @@ function RoutineForm() {
                             <span className="fc-pill">{day.exercises.length} ejercicios</span>
                           </div>
                           <div className="fc-helper-list">
-                            {day.muscle_groups.map((group) => (
-                              <span key={group} className="fc-pill">
-                                {capitalize(group)}
+                            {Object.entries(
+                              muscleTaxonomy.reduce((acc, group) => {
+                                const selected = group.subgroups.filter((sub) =>
+                                  day.muscle_subgroups.includes(sub)
+                                );
+                                if (selected.length) {
+                                  acc[group.parent] = selected;
+                                }
+                                return acc;
+                              }, {})
+                            ).map(([parent, subgroups]) => (
+                              <span key={parent} className="fc-pill">
+                                {parent}: {subgroups.join(", ")}
                               </span>
                             ))}
                           </div>
@@ -969,7 +1016,7 @@ function RoutineForm() {
                         <span className="fc-kv__value">{formatDate(calendarPreview.endDate)}</span>
                       </div>
                       <div className="fc-kv">
-                        <span className="fc-kv__label">Duración</span>
+                        <span className="fc-kv__label">Duracion</span>
                         <span className="fc-kv__value">{form.duration_months} meses</span>
                       </div>
                     </div>
@@ -990,14 +1037,14 @@ function RoutineForm() {
           <div className="fc-routine-wizard-sidebar">
             <Card glass>
               <div className="fc-routine-summary">
-                <span className="fc-text-eyebrow">Resumen rápido</span>
+                <span className="fc-text-eyebrow">Resumen rapido</span>
                 <div className="fc-kv-grid">
                   <div className="fc-kv">
                     <span className="fc-kv__label">Nombre</span>
                     <span className="fc-kv__value">{form.name.trim() || "Sin definir"}</span>
                   </div>
                   <div className="fc-kv">
-                    <span className="fc-kv__label">Días</span>
+                    <span className="fc-kv__label">Dias</span>
                     <span className="fc-kv__value">{selectedDays.length}</span>
                   </div>
                   <div className="fc-kv">
@@ -1015,21 +1062,21 @@ function RoutineForm() {
                 <span className="fc-text-eyebrow">Consejo</span>
                 <h3 className="fc-section-title">
                   {step === 0
-                    ? "Empezá simple"
+                    ? "Empeza simple"
                     : step === 1
-                      ? "Pensá en frecuencia real"
+                      ? "Pensa en frecuencia real"
                       : step === 2
-                        ? "Construí día por día"
-                        : "Revisá antes de guardar"}
+                        ? "Construi dia por dia"
+                        : "Revisa antes de guardar"}
                 </h3>
                 <p className="fc-card-text">
                   {step === 0
-                    ? "La mejor rutina es la que entendés de un vistazo y podés sostener."
+                    ? "La mejor rutina es la que entendes de un vistazo y podes sostener."
                     : step === 1
-                      ? "Elegí solo los días que realmente vas a poder cumplir semana tras semana."
+                      ? "Elegi solo los dias que realmente vas a poder cumplir semana tras semana."
                       : step === 2
-                        ? "Agrupá músculos compatibles y dejá una secuencia de ejercicios clara."
-                        : "Si algo no cierra, podés volver atrás sin perder lo cargado."}
+                        ? "Agrupa musculos compatibles y deja una secuencia de ejercicios clara."
+                        : "Si algo no cierra, podes volver atras sin perder lo cargado."}
                 </p>
               </div>
             </Card>
@@ -1047,12 +1094,12 @@ function RoutineForm() {
         <div className="fc-form-actions">
           <Button variant="secondary" disabled={step === 0} onClick={goBack}>
             <ArrowLeft size={16} />
-            Atrás
+            Atras
           </Button>
 
           {step < 3 ? (
             <Button onClick={goNext}>
-              {step === 2 && dayCursor < selectedDays.length - 1 ? "Siguiente día" : "Continuar"}
+              {step === 2 && dayCursor < selectedDays.length - 1 ? "Siguiente dia" : "Continuar"}
               <ArrowRight size={16} />
             </Button>
           ) : (

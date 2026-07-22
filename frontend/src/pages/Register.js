@@ -93,7 +93,7 @@ function Register() {
               FitnessControl
             </span>
             <div style={{ display: "grid", gap: "1rem", marginTop: "1.5rem" }}>
-              <h1 className="fc-heading">Creá tu cuenta.</h1>
+              <h1 className="fc-heading">Crea tu cuenta.</h1>
               <p className="fc-subheading">
                 Registrate para empezar a guardar tus rutinas y seguir tu progreso.
               </p>
@@ -152,7 +152,7 @@ function Register() {
           <div className="fc-auth-quote">
             <strong>Un onboarding simple.</strong>
             <p style={{ margin: 0 }}>
-              Creá tu cuenta ahora y en el siguiente paso terminás de configurar tu
+              Crea tu cuenta ahora y en el siguiente paso terminas de configurar tu
               perfil.
             </p>
           </div>
@@ -182,7 +182,7 @@ function Register() {
                   Registrate
                 </h2>
                 <p style={{ margin: 0, color: "rgba(242, 238, 245, 0.66)" }}>
-                  Completá los datos para crear tu cuenta.
+                  Completa los datos para crear tu cuenta.
                 </p>
               </div>
             </div>
@@ -205,7 +205,7 @@ function Register() {
                       email ? (emailValid ? "is-valid" : "is-invalid") : ""
                     }`}
                   >
-                    Email válido
+                    Email valido
                   </span>
                 </div>
 
@@ -213,7 +213,7 @@ function Register() {
                   id="register-password"
                   label="Password"
                   type="password"
-                  placeholder="Mínimo 8 caracteres"
+                  placeholder="Minimo 8 caracteres"
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   autoComplete="new-password"
@@ -240,7 +240,7 @@ function Register() {
                       password ? (checks.number ? "is-valid" : "is-invalid") : ""
                     }`}
                   >
-                    Al menos un número
+                    Al menos un numero
                   </span>
                 </div>
               </div>
@@ -272,9 +272,9 @@ function Register() {
             </motion.div>
 
             <div style={{ marginTop: "1.5rem" }} className="fc-login-footer">
-              <span>¿Ya tenés cuenta?</span>
+              <span>Ya tenes cuenta?</span>
               <Link className="fc-inline-link" to="/login">
-                Iniciar sesión
+                Iniciar sesion
               </Link>
             </div>
           </Card>

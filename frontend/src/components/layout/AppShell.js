@@ -53,8 +53,38 @@ function AppShell({ activeSection = "resumen", header, children }) {
     setMobileMenuOpen(false);
   }, [location.pathname, location.search]);
 
+  useEffect(() => {
+    if (!mobileMenuOpen) {
+      return undefined;
+    }
+
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        setMobileMenuOpen(false);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [mobileMenuOpen]);
+
   function handleNavigate(path) {
     navigate(path);
+  }
+
+  function isItemActive(item) {
+    if (item.value === "rutinas") {
+      return location.pathname.startsWith("/routines");
+    }
+
+    if (item.value === "resumen") {
+      return location.pathname === "/dashboard" && !new URLSearchParams(location.search).get("tab");
+    }
+
+    return (
+      location.pathname === "/dashboard" &&
+      new URLSearchParams(location.search).get("tab") === item.value
+    );
   }
 
   return (
@@ -65,22 +95,23 @@ function AppShell({ activeSection = "resumen", header, children }) {
         <button
           type="button"
           className="fc-sidebar-backdrop"
-          aria-label="Cerrar menú"
+          aria-label="Cerrar menu"
           onClick={() => setMobileMenuOpen(false)}
         />
       ) : null}
 
       <div className={`fc-dashboard ${collapsed ? "is-collapsed" : ""}`}>
         <aside
+          id="fc-main-sidebar"
           className={`fc-dashboard__sidebar ${mobileMenuOpen ? "is-open" : ""}`}
-          aria-label="Navegación principal"
+          aria-label="Navegacion principal"
         >
           <div className="fc-dashboard__sidebar-top">
             <div className="fc-dashboard__brand">
               <div className="fc-dashboard__logo">FC</div>
               <div className="fc-dashboard__brand-copy">
                 <div className="fc-dashboard__brand-title">FitnessControl</div>
-                <div className="fc-dashboard__brand-subtitle">Entrená con claridad</div>
+                <div className="fc-dashboard__brand-subtitle">Entrena con claridad</div>
               </div>
             </div>
 
@@ -89,7 +120,7 @@ function AppShell({ activeSection = "resumen", header, children }) {
                 type="button"
                 className="fc-sidebar-toggle fc-sidebar-toggle--desktop"
                 onClick={() => setCollapsed((current) => !current)}
-                aria-label={collapsed ? "Expandir menú" : "Colapsar menú"}
+                aria-label={collapsed ? "Expandir menu" : "Colapsar menu"}
               >
                 {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
               </button>
@@ -98,7 +129,7 @@ function AppShell({ activeSection = "resumen", header, children }) {
                 type="button"
                 className="fc-sidebar-toggle fc-sidebar-toggle--mobile"
                 onClick={() => setMobileMenuOpen(false)}
-                aria-label="Cerrar menú"
+                aria-label="Cerrar menu"
               >
                 <X size={18} />
               </button>
@@ -108,7 +139,7 @@ function AppShell({ activeSection = "resumen", header, children }) {
           <nav className="fc-dashboard__nav">
             {navItems.map((item) => {
               const Icon = item.icon;
-              const isActive = activeSection === item.value;
+              const isActive = isItemActive(item) || activeSection === item.value;
               return (
                 <button
                   key={item.value}
@@ -129,10 +160,10 @@ function AppShell({ activeSection = "resumen", header, children }) {
               type="button"
               className="fc-nav-item"
               onClick={signOut}
-              title={collapsed ? "Cerrar sesión" : undefined}
+              title={collapsed ? "Cerrar sesion" : undefined}
             >
               <LogOut size={18} />
-              <span>Cerrar sesión</span>
+              <span>Cerrar sesion</span>
             </button>
           </div>
         </aside>
@@ -143,7 +174,9 @@ function AppShell({ activeSection = "resumen", header, children }) {
               type="button"
               className="fc-sidebar-toggle fc-sidebar-toggle--header"
               onClick={() => setMobileMenuOpen(true)}
-              aria-label="Abrir menú"
+              aria-label="Abrir menu"
+              aria-expanded={mobileMenuOpen}
+              aria-controls="fc-main-sidebar"
             >
               <Menu size={18} />
             </button>

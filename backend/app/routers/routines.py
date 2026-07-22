@@ -29,7 +29,7 @@ class RoutineUpdatePayload(BaseModel):
 
 class RoutineDayPayload(BaseModel):
     day_of_week: int = Field(ge=0, le=6)
-    muscle_groups: list[str] = Field(min_length=1, max_length=8)
+    muscle_subgroups: list[str] = Field(min_length=1, max_length=12)
 
 
 class RoutineDayExercisePayload(BaseModel):
@@ -63,7 +63,7 @@ def _normalize_text(value: str | None) -> str | None:
     return normalized or None
 
 
-def _normalize_muscle_groups(values: list[str]) -> list[str]:
+def _normalize_muscle_subgroups(values: list[str]) -> list[str]:
     cleaned: list[str] = []
     seen: set[str] = set()
 
@@ -77,7 +77,7 @@ def _normalize_muscle_groups(values: list[str]) -> list[str]:
     if not cleaned:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Seleccioná al menos un grupo muscular.",
+            detail="Selecciona al menos un subgrupo muscular.",
         )
 
     return cleaned
@@ -134,7 +134,9 @@ def _get_accessible_exercise_or_404(user_id: str, exercise_id: str) -> dict[str,
     supabase = get_supabase_client()
     result = (
         supabase.table("exercises")
-        .select("id, created_by_user_id, name, muscle_group, equipment, description")
+        .select(
+            "id, created_by_user_id, name, muscle_group_parent, muscle_subgroup, equipment, description"
+        )
         .eq("id", exercise_id)
         .limit(1)
         .execute()
@@ -162,7 +164,7 @@ def _get_routine_day_or_404(user_id: str, routine_id: str, routine_day_id: str) 
     supabase = get_supabase_client()
     result = (
         supabase.table("routine_days")
-        .select("id, routine_id, day_of_week, muscle_groups, created_at")
+        .select("id, routine_id, day_of_week, muscle_subgroups, created_at")
         .eq("id", routine_day_id)
         .eq("routine_id", routine_id)
         .limit(1)
@@ -235,7 +237,7 @@ def _build_schedule(user_id: str, routine_id: str) -> dict[str, Any]:
 
     routine_days_result = (
         supabase.table("routine_days")
-        .select("id, routine_id, day_of_week, muscle_groups, created_at")
+        .select("id, routine_id, day_of_week, muscle_subgroups, created_at")
         .eq("routine_id", routine_id)
         .order("day_of_week")
         .execute()
@@ -285,7 +287,9 @@ def _build_schedule(user_id: str, routine_id: str) -> dict[str, Any]:
     if exercise_ids:
         exercises_result = (
             supabase.table("exercises")
-            .select("id, name, muscle_group, equipment, description, created_by_user_id")
+            .select(
+                "id, name, muscle_group_parent, muscle_subgroup, equipment, description, created_by_user_id"
+            )
             .in_("id", exercise_ids)
             .execute()
         )
@@ -299,14 +303,16 @@ def _build_schedule(user_id: str, routine_id: str) -> dict[str, Any]:
         enriched = {**item, "exercise": exercises_by_id.get(item["exercise_id"])}
         exercises_by_day.setdefault(item["routine_day_id"], []).append(enriched)
 
-    days = [
-        {
-            **routine_day,
-            "exercises": exercises_by_day.get(routine_day["id"], []),
-            "exercise_count": len(exercises_by_day.get(routine_day["id"], [])),
-        }
-        for routine_day in routine_days
-    ]
+    days = []
+    for routine_day in routine_days:
+        days.append(
+            {
+                **routine_day,
+                "muscle_groups": routine_day.get("muscle_subgroups") or [],
+                "exercises": exercises_by_day.get(routine_day["id"], []),
+                "exercise_count": len(exercises_by_day.get(routine_day["id"], [])),
+            }
+        )
 
     return {
         **routine,
@@ -343,7 +349,9 @@ def _build_routine_detail(user_id: str, routine_id: str) -> dict[str, Any]:
     if exercise_ids:
         exercises_result = (
             supabase.table("exercises")
-            .select("id, name, muscle_group, equipment, description, created_by_user_id")
+            .select(
+                "id, name, muscle_group_parent, muscle_subgroup, equipment, description, created_by_user_id"
+            )
             .in_("id", exercise_ids)
             .execute()
         )
@@ -418,7 +426,8 @@ def _build_routine_calendar(user_id: str, routine_id: str) -> dict[str, Any]:
                     "status": completion["status"] if completion else "pending",
                     "completed_at": completion["completed_at"] if completion else None,
                     "day_of_week": routine_day["day_of_week"],
-                    "muscle_groups": routine_day.get("muscle_groups") or [],
+                    "muscle_subgroups": routine_day.get("muscle_subgroups") or [],
+                    "muscle_groups": routine_day.get("muscle_subgroups") or [],
                     "exercise_count": routine_day.get("exercise_count", 0),
                 }
             )
@@ -443,12 +452,17 @@ def _build_routine_calendar(user_id: str, routine_id: str) -> dict[str, Any]:
 async def list_exercises(
     user_id: str = Depends(get_current_user_id),
     muscle_group: str | None = Query(default=None),
+    muscle_subgroup: str | None = Query(default=None),
+    muscle_group_parent: str | None = Query(default=None),
 ):
     supabase = get_supabase_client()
     result = (
         supabase.table("exercises")
-        .select("id, created_by_user_id, name, muscle_group, equipment, description")
-        .order("muscle_group")
+        .select(
+            "id, created_by_user_id, name, muscle_group_parent, muscle_subgroup, equipment, description"
+        )
+        .order("muscle_group_parent")
+        .order("muscle_subgroup")
         .order("name")
         .execute()
     )
@@ -459,12 +473,23 @@ async def list_exercises(
         if exercise.get("created_by_user_id") in (None, user_id)
     ]
 
-    normalized_group = _normalize_text(muscle_group)
-    if normalized_group:
+    normalized_subgroup = _normalize_text(muscle_subgroup or muscle_group)
+    normalized_parent = _normalize_text(muscle_group_parent)
+
+    if normalized_parent:
         visible_exercises = [
             exercise
             for exercise in visible_exercises
-            if (exercise.get("muscle_group") or "").strip().lower() == normalized_group.lower()
+            if (exercise.get("muscle_group_parent") or "").strip().lower()
+            == normalized_parent.lower()
+        ]
+
+    if normalized_subgroup:
+        visible_exercises = [
+            exercise
+            for exercise in visible_exercises
+            if (exercise.get("muscle_subgroup") or "").strip().lower()
+            == normalized_subgroup.lower()
         ]
 
     return {"items": visible_exercises}
@@ -552,7 +577,7 @@ async def create_routine_day(
 ):
     _get_routine_or_404(user_id, routine_id)
     supabase = get_supabase_client()
-    muscle_groups = _normalize_muscle_groups(payload.muscle_groups)
+    muscle_subgroups = _normalize_muscle_subgroups(payload.muscle_subgroups)
 
     existing_result = (
         supabase.table("routine_days")
@@ -574,7 +599,7 @@ async def create_routine_day(
             {
                 "routine_id": routine_id,
                 "day_of_week": payload.day_of_week,
-                "muscle_groups": muscle_groups,
+                "muscle_subgroups": muscle_subgroups,
             }
         )
         .execute()
@@ -587,7 +612,12 @@ async def create_routine_day(
             detail="No se pudo crear el día de la rutina.",
         )
 
-    return {**routine_day, "exercise_count": 0, "exercises": []}
+    return {
+        **routine_day,
+        "muscle_groups": routine_day.get("muscle_subgroups") or [],
+        "exercise_count": 0,
+        "exercises": [],
+    }
 
 
 @router.post("/routines/{routine_id}/days/{routine_day_id}/exercises", status_code=status.HTTP_201_CREATED)

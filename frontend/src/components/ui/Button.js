@@ -10,11 +10,17 @@ function Button({
   return (
     <button
       type={type}
-      className={`fc-button fc-button--${variant}`}
+      className={`fc-button fc-button--${variant} ${loading ? "is-loading" : ""}`}
       disabled={loading || props.disabled}
+      aria-busy={loading}
       {...props}
     >
-      {loading ? <Spinner label="Procesando" /> : children}
+      <span className="fc-button__label">
+        {loading ? <Spinner /> : null}
+        <span className={loading ? "fc-button__content is-loading" : "fc-button__content"}>
+          {children}
+        </span>
+      </span>
     </button>
   );
 }

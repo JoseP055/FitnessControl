@@ -92,7 +92,7 @@ function Dashboard() {
       case "perder_peso":
         return "Perder peso";
       case "ganar_musculo":
-        return "Ganar músculo";
+        return "Ganar musculo";
       case "mantenerse":
         return "Mantenerse";
       case "resistencia":
@@ -126,7 +126,7 @@ function Dashboard() {
     const parsed = Number.parseFloat(weightKg);
 
     if (!Number.isFinite(parsed) || parsed <= 0) {
-      setWeightMessage("Ingresá un peso válido.");
+      setWeightMessage("Ingresa un peso valido.");
       return;
     }
 
@@ -166,7 +166,7 @@ function Dashboard() {
       }
 
       if (!updatedProfile) {
-        throw new Error("Primero completá tu perfil para poder registrar tu peso.");
+        throw new Error("Primero completa tu perfil para poder registrar tu peso.");
       }
 
       setProfile((current) => ({
@@ -194,7 +194,7 @@ function Dashboard() {
           <div style={{ display: "grid", gap: "0.25rem" }}>
             <h1 className="fc-dashboard__title">Hola, {displayName}.</h1>
             <p className="fc-dashboard__subtitle">
-              Organizá tu semana, guardá tus avances y mantené todo en un solo lugar.
+              Organiza tu semana, guarda tus avances y manten todo en un solo lugar.
             </p>
           </div>
         </div>
@@ -223,7 +223,7 @@ function Dashboard() {
                   <div className="fc-progress__bar" style={{ width: "12%" }} />
                 </div>
                 <p className="fc-card-text">
-                  Empezá por crear una rutina y este panel va a tomar vida con tus datos.
+                  Empeza por crear una rutina y este panel va a tomar vida con tus datos.
                 </p>
                 <Button onClick={() => navigate("/routines")}>
                   Ir a rutinas
@@ -240,7 +240,7 @@ function Dashboard() {
                   <span className="fc-metric__label">Foco actual</span>
                 </div>
                 <p className="fc-card-text">
-                  Ajustamos la experiencia visual y el seguimiento en función de este objetivo.
+                  Ajustamos la experiencia visual y el seguimiento en funcion de este objetivo.
                 </p>
               </div>
             </Card>
@@ -255,7 +255,7 @@ function Dashboard() {
                   <span className="fc-metric__label">Experiencia</span>
                 </div>
                 <p className="fc-card-text">
-                  Este dato nos ayuda a ordenar mejor la progresión de tus rutinas.
+                  Este dato nos ayuda a ordenar mejor la progresion de tus rutinas.
                 </p>
               </div>
             </Card>
@@ -270,12 +270,12 @@ function Dashboard() {
                   <ClipboardList size={14} />
                   Rutinas
                 </span>
-                <h2 className="fc-section-title">Tu creador de rutinas ya está listo</h2>
+                <h2 className="fc-section-title">Tu creador de rutinas ya esta listo</h2>
                 <p className="fc-card-text">
-                  Entrá al módulo de rutinas para crear, ordenar y editar ejercicios con una interfaz completa.
+                  Entra al modulo de rutinas para crear, ordenar y editar ejercicios con una interfaz completa.
                 </p>
                 <Button onClick={() => navigate("/routines")}>
-                  Abrir módulo
+                  Abrir modulo
                   <ArrowRight size={16} />
                 </Button>
               </div>
@@ -293,7 +293,7 @@ function Dashboard() {
                 </span>
                 <h2 className="fc-section-title">Tu avance</h2>
                 <p className="fc-card-text">
-                  Cuando registres sesiones y medidas, este bloque va a mostrar una lectura más útil de tu evolución.
+                  Cuando registres sesiones y medidas, este bloque va a mostrar una lectura mas util de tu evolucion.
                 </p>
                 <div className="fc-progress fc-progress--tall">
                   <div className="fc-progress__bar" style={{ width: "34%" }} />
@@ -326,13 +326,13 @@ function Dashboard() {
                   <div className="fc-kv">
                     <span className="fc-kv__label">Altura</span>
                     <span className="fc-kv__value">
-                      {profile?.height_cm ? `${profile.height_cm} cm` : "—"}
+                      {profile?.height_cm ? `${profile.height_cm} cm` : "-"}
                     </span>
                   </div>
                   <div className="fc-kv">
                     <span className="fc-kv__label">Peso</span>
                     <span className="fc-kv__value">
-                      {profile?.weight_kg ? `${profile.weight_kg} kg` : "—"}
+                      {profile?.weight_kg ? `${profile.weight_kg} kg` : "-"}
                     </span>
                   </div>
                 </div>

@@ -18,7 +18,7 @@ function ProtectedRoute({ children }) {
   const location = useLocation();
 
   if (loading) {
-    return <PageLoader label="Cargando sesión..." />;
+    return <PageLoader label="Cargando sesion..." />;
   }
 
   if (!session) {
@@ -99,7 +99,7 @@ function App() {
   const { session, loading } = useAuth();
 
   if (loading) {
-    return <PageLoader label="Cargando autenticación..." />;
+    return <PageLoader label="Cargando autenticacion..." />;
   }
 
   return (

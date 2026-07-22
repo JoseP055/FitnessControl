@@ -44,7 +44,7 @@ function ProfileSetup() {
   const goalOptions = useMemo(
     () => [
       { value: "perder_peso", label: "Perder peso", icon: Flame },
-      { value: "ganar_musculo", label: "Ganar músculo", icon: Dumbbell },
+      { value: "ganar_musculo", label: "Ganar musculo", icon: Dumbbell },
       { value: "mantenerse", label: "Mantenerse", icon: Target },
       { value: "resistencia", label: "Resistencia", icon: Timer },
     ],
@@ -145,12 +145,12 @@ function ProfileSetup() {
     setError("");
 
     if (!supabaseClient) {
-      setError("El cliente de Supabase no está configurado.");
+      setError("El cliente de Supabase no esta configurado.");
       return;
     }
 
     if (!basicValid || !goalValid || !levelValid) {
-      setError("Completá los campos requeridos para continuar.");
+      setError("Completa los campos requeridos para continuar.");
       return;
     }
 
@@ -194,7 +194,7 @@ function ProfileSetup() {
             <div style={{ display: "grid", gap: "0.5rem" }}>
               <span className="fc-text-eyebrow">Perfil</span>
               <h1 style={{ margin: 0, fontFamily: "var(--font-display)", letterSpacing: "-0.04em", fontSize: "clamp(1.9rem, 4vw, 2.8rem)" }}>
-                {isEditing ? "Editar perfil" : "Configurá tu perfil"}
+                {isEditing ? "Editar perfil" : "Configura tu perfil"}
               </h1>
               <p style={{ margin: 0, color: "rgba(242, 238, 245, 0.68)" }}>
                 Un par de datos para personalizar tu experiencia.
@@ -223,7 +223,7 @@ function ProfileSetup() {
                 <div style={{ display: "grid", gap: "1.25rem" }}>
                   <div style={{ display: "grid", gap: "0.35rem" }}>
                     <h2 style={{ margin: 0, fontFamily: "var(--font-display)", letterSpacing: "-0.03em", fontSize: "1.5rem" }}>
-                      Datos básicos
+                      Datos basicos
                     </h2>
                     <p style={{ margin: 0, color: "rgba(242, 238, 245, 0.68)" }}>
                       Estos datos se usan para personalizar tus recomendaciones.
@@ -248,7 +248,7 @@ function ProfileSetup() {
                       onChange={(event) => setAge(event.target.value)}
                     />
                     <div style={{ display: "grid", gap: "0.5rem" }}>
-                      <span className="fc-field__label">Género (opcional)</span>
+                      <span className="fc-field__label">Genero (opcional)</span>
                       <div className="fc-option-grid">
                         {genderOptions.map((option) => {
                           const Icon = option.icon;
@@ -296,7 +296,7 @@ function ProfileSetup() {
                       Objetivo
                     </h2>
                     <p style={{ margin: 0, color: "rgba(242, 238, 245, 0.68)" }}>
-                      Elegí el foco principal para tu plan.
+                      Elegi el foco principal para tu plan.
                     </p>
                   </div>
 
@@ -329,7 +329,7 @@ function ProfileSetup() {
                       Nivel de experiencia
                     </h2>
                     <p style={{ margin: 0, color: "rgba(242, 238, 245, 0.68)" }}>
-                      Esto nos ayuda a ajustar la intensidad y progresión.
+                      Esto nos ayuda a ajustar la intensidad y progresion.
                     </p>
                   </div>
 
@@ -369,7 +369,7 @@ function ProfileSetup() {
               <Button variant="ghost" onClick={back} disabled={step === 0}>
                 <span className="fc-button__label">
                   <ArrowLeft size={16} />
-                  Atrás
+                  Atras
                 </span>
               </Button>
 

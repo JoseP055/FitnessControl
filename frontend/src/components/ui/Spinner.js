@@ -1,9 +1,6 @@
-function Spinner({ label = "Cargando" }) {
+function Spinner() {
   return (
-    <span className="fc-button__label" aria-live="polite">
-      <span className="fc-spinner" aria-hidden="true" />
-      <span>{label}</span>
-    </span>
+    <span className="fc-spinner" aria-hidden="true" />
   );
 }
 

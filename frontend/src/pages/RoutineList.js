@@ -54,7 +54,7 @@ function RoutineList() {
           <div>
             <h1 className="fc-dashboard__title">Tus rutinas</h1>
             <p className="fc-dashboard__subtitle">
-              Creá, ordená y ajustá cada rutina con una estructura clara y rápida de editar.
+              Crea, ordena y ajusta cada rutina con una estructura clara y rapida de editar.
             </p>
           </div>
 
@@ -100,7 +100,7 @@ function RoutineList() {
                 Estado
               </span>
               <p className="fc-card-text">
-                El wizard nuevo te deja planear duración, días, grupos musculares y calendario en un solo flujo.
+                El wizard nuevo te deja planear duracion, dias, grupos musculares y calendario en un solo flujo.
               </p>
             </div>
           </Card>
@@ -119,9 +119,9 @@ function RoutineList() {
             <div className="fc-empty-state__icon">
               <ClipboardList size={30} />
             </div>
-            <h2 className="fc-section-title">Todavía no tenés rutinas creadas</h2>
+              <h2 className="fc-section-title">Todavia no tenes rutinas creadas</h2>
             <p className="fc-card-text">
-              Empezá con una estructura simple y después agregá ejercicios desde el catálogo.
+              Empeza con una estructura simple y despues agrega ejercicios desde el catalogo.
             </p>
             <Button onClick={() => navigate("/routines/new")}>
               <Plus size={16} />
@@ -143,11 +143,11 @@ function RoutineList() {
                       <span className="fc-text-eyebrow">Rutina</span>
                       <h2 className="fc-section-title">{routine.name}</h2>
                     </div>
-                    <span className="fc-pill">{routine.day_count || 0} días / {routine.exercise_count || 0} ejercicios</span>
+                    <span className="fc-pill">{routine.day_count || 0} dias / {routine.exercise_count || 0} ejercicios</span>
                   </div>
 
                   <p className="fc-card-text">
-                    {routine.description || "Sin descripción todavía. Podés agregarla al editar."}
+                    {routine.description || "Sin descripcion todavia. Podes agregarla al editar."}
                   </p>
 
                   <div className="fc-helper-list">

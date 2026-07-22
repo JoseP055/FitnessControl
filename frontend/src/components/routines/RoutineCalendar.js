@@ -94,7 +94,7 @@ function RoutineCalendar({
     return (
       <div className="fc-routine-calendar fc-routine-calendar--empty">
         <p className="fc-card-text" style={{ margin: 0 }}>
-          Definí una fecha de inicio y una duración para ver el calendario.
+          Defini una fecha de inicio y una duracion para ver el calendario.
         </p>
       </div>
     );
@@ -120,66 +120,73 @@ function RoutineCalendar({
             </h3>
           </div>
 
-          <div className="fc-routine-calendar__weekdays">
-            {WEEKDAY_LABELS.map((label) => (
-              <span key={label}>{label}</span>
-            ))}
-          </div>
+          <div className="fc-routine-calendar__table">
+            <div className="fc-routine-calendar__weekdays">
+              {WEEKDAY_LABELS.map((label) => (
+                <span key={label}>{label}</span>
+              ))}
+            </div>
 
-          <div className="fc-routine-calendar__grid">
-            {month.days.map((currentDate, index) => {
-              if (!currentDate) {
-                return <div key={`empty-${month.key}-${index}`} className="fc-routine-calendar__cell is-empty" />;
-              }
+            <div className="fc-routine-calendar__grid">
+              {month.days.map((currentDate, index) => {
+                if (!currentDate) {
+                  return (
+                    <div
+                      key={`empty-${month.key}-${index}`}
+                      className="fc-routine-calendar__cell is-empty"
+                    />
+                  );
+                }
 
-              const isoDate = toIsoDate(currentDate);
-              const dayItems = itemsByDate[isoDate] || [];
-              const selected = selectedDate === isoDate;
-              const isToday = isoDate === toIsoDate(new Date());
-              const hasTraining = dayItems.length > 0;
-              const hasDone = dayItems.some((item) => item.status === "done");
-              const hasSkipped = dayItems.some((item) => item.status === "skipped");
-              const statusClass = hasDone
-                ? "is-done"
-                : hasSkipped
-                  ? "is-skipped"
-                  : hasTraining
-                    ? "is-pending"
-                    : "";
+                const isoDate = toIsoDate(currentDate);
+                const dayItems = itemsByDate[isoDate] || [];
+                const selected = selectedDate === isoDate;
+                const isToday = isoDate === toIsoDate(new Date());
+                const hasTraining = dayItems.length > 0;
+                const hasDone = dayItems.some((item) => item.status === "done");
+                const hasSkipped = dayItems.some((item) => item.status === "skipped");
+                const statusClass = hasDone
+                  ? "is-done"
+                  : hasSkipped
+                    ? "is-skipped"
+                    : hasTraining
+                      ? "is-pending"
+                      : "";
 
-              const content = (
-                <>
-                  <span className="fc-routine-calendar__day-number">{currentDate.getDate()}</span>
-                  {hasTraining ? (
-                    <span className="fc-routine-calendar__badge">
-                      {dayItems.length} {dayItems.length === 1 ? "sesión" : "sesiones"}
-                    </span>
-                  ) : null}
-                </>
-              );
+                const content = (
+                  <>
+                    <span className="fc-routine-calendar__day-number">{currentDate.getDate()}</span>
+                    {hasTraining ? (
+                      <span className="fc-routine-calendar__badge">
+                        {dayItems.length} {dayItems.length === 1 ? "sesion" : "sesiones"}
+                      </span>
+                    ) : null}
+                  </>
+                );
 
-              if (!interactive) {
+                if (!interactive) {
+                  return (
+                    <div
+                      key={isoDate}
+                      className={`fc-routine-calendar__cell ${statusClass} ${selected ? "is-selected" : ""} ${isToday ? "is-today" : ""}`}
+                    >
+                      {content}
+                    </div>
+                  );
+                }
+
                 return (
-                  <div
+                  <button
                     key={isoDate}
+                    type="button"
                     className={`fc-routine-calendar__cell ${statusClass} ${selected ? "is-selected" : ""} ${isToday ? "is-today" : ""}`}
+                    onClick={() => onSelectDate?.(isoDate)}
                   >
                     {content}
-                  </div>
+                  </button>
                 );
-              }
-
-              return (
-                <button
-                  key={isoDate}
-                  type="button"
-                  className={`fc-routine-calendar__cell ${statusClass} ${selected ? "is-selected" : ""} ${isToday ? "is-today" : ""}`}
-                  onClick={() => onSelectDate?.(isoDate)}
-                >
-                  {content}
-                </button>
-              );
-            })}
+              })}
+            </div>
           </div>
         </div>
       ))}
@@ -227,7 +234,8 @@ export function buildCalendarPreview({ startDate, durationMonths, selectedDays }
       date: toIsoDate(cursor),
       routine_day_id: dayConfig?.id || `draft-${weekday}`,
       status: "pending",
-      muscle_groups: dayConfig?.muscle_groups || [],
+      muscle_subgroups: dayConfig?.muscle_subgroups || [],
+      muscle_groups: dayConfig?.muscle_subgroups || [],
       exercise_count: dayConfig?.exercises?.length || 0,
     });
   }
