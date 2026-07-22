@@ -1240,6 +1240,24 @@ a:focus-visible {
   gap: 1.35rem;
 }
 
+.fc-routine-stage-stack {
+  display: grid;
+  gap: 1rem;
+}
+
+.fc-routine-stage-card {
+  display: grid;
+  gap: 1rem;
+}
+
+.fc-routine-stage-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
 .fc-routine-wizard-panel__intro {
   display: grid;
   gap: 0.45rem;

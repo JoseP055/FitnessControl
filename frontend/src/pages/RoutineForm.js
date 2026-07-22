@@ -96,6 +96,7 @@ function RoutineForm() {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [dayCursor, setDayCursor] = useState(0);
+  const [dayStage, setDayStage] = useState("groups");
   const [catalog, setCatalog] = useState([]);
   const [catalogLoading, setCatalogLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -385,12 +386,14 @@ function RoutineForm() {
     setError("");
   }
 
-  function canAdvanceFromCurrentDay() {
-    if (!activeDay) {
-      return false;
-    }
+  function goToPreviousDay() {
+    setDayCursor((current) => Math.max(current - 1, 0));
+    setDayStage("groups");
+  }
 
-    return activeDay.muscle_subgroups.length > 0 && activeDay.exercises.length > 0;
+  function goToNextDay() {
+    setDayCursor((current) => Math.min(current + 1, selectedDays.length - 1));
+    setDayStage("groups");
   }
 
   function goNext() {
@@ -418,18 +421,29 @@ function RoutineForm() {
       }
 
       setDayCursor(0);
+      setDayStage("groups");
       setStep(2);
       return;
     }
 
     if (step === 2) {
-      if (!canAdvanceFromCurrentDay()) {
-        setError("Cada dia debe tener al menos un subgrupo muscular y un ejercicio.");
+      if (dayStage === "groups") {
+        if (!activeDay?.muscle_subgroups.length) {
+          setError("Selecciona al menos un subgrupo muscular para este dia.");
+          return;
+        }
+
+        setDayStage("exercises");
+        return;
+      }
+
+      if (!activeDay?.exercises.length) {
+        setError("Agrega al menos un ejercicio antes de continuar.");
         return;
       }
 
       if (dayCursor < selectedDays.length - 1) {
-        setDayCursor((current) => current + 1);
+        goToNextDay();
         return;
       }
 
@@ -440,8 +454,13 @@ function RoutineForm() {
   function goBack() {
     setError("");
 
+    if (step === 2 && dayStage === "exercises") {
+      setDayStage("groups");
+      return;
+    }
+
     if (step === 2 && dayCursor > 0) {
-      setDayCursor((current) => current - 1);
+      goToPreviousDay();
       return;
     }
 
@@ -533,7 +552,7 @@ function RoutineForm() {
             </div>
             <div className="fc-stepper__label">
               {step === 2 && activeDayMeta
-                ? `${activeDayMeta.label} - Dia ${dayCursor + 1} de ${selectedDays.length}`
+                ? `${activeDayMeta.label} - ${dayStage === "groups" ? "Subgrupos" : "Ejercicios"} - Dia ${dayCursor + 1} de ${selectedDays.length}`
                 : steps[step].label}
             </div>
           </div>
@@ -674,7 +693,7 @@ function RoutineForm() {
                         <Button
                           variant="ghost"
                           disabled={dayCursor === 0}
-                          onClick={() => setDayCursor((current) => Math.max(current - 1, 0))}
+                          onClick={goToPreviousDay}
                         >
                           <ChevronLeft size={16} />
                           Dia anterior
@@ -682,11 +701,7 @@ function RoutineForm() {
                         <Button
                           variant="ghost"
                           disabled={dayCursor === selectedDays.length - 1}
-                          onClick={() =>
-                            setDayCursor((current) =>
-                              Math.min(current + 1, selectedDays.length - 1)
-                            )
-                          }
+                          onClick={goToNextDay}
                         >
                           Siguiente dia
                           <ChevronRight size={16} />
@@ -695,272 +710,316 @@ function RoutineForm() {
                     </div>
                   </div>
 
-                  <div className="fc-muscle-taxonomy">
-                    {muscleTaxonomy.map((group) => (
-                      <div key={group.parent} className="fc-muscle-group-card">
-                        <div className="fc-muscle-group-card__header">
-                          <strong>{group.parent}</strong>
-                          <span className="fc-pill">{(selectedSubgroupsByParent[group.parent] || []).length}</span>
-                        </div>
-
-                        <div className="fc-routine-day-groups">
-                          {group.subgroups.map((subgroup) => {
-                            const selected = activeDay.muscle_subgroups.includes(subgroup);
-                            return (
-                              <button
-                                key={subgroup}
-                                type="button"
-                                className={`fc-muscle-chip ${selected ? "is-selected" : ""}`}
-                                onClick={() => handleToggleMuscleSubgroup(subgroup)}
-                              >
-                                {subgroup}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="fc-routine-builder">
-                    <Card glass className="fc-routine-builder__catalog">
-                      <div className="fc-routine-builder__header">
+                  {dayStage === "groups" ? (
+                    <Card glass className="fc-routine-stage-card">
+                      <div className="fc-routine-stage-card__header">
                         <div>
-                          <span className="fc-text-eyebrow">Catalogo sugerido</span>
-                          <h3 className="fc-section-title" style={{ margin: "0.25rem 0 0" }}>
-                            Ejercicios del dia
-                          </h3>
+                          <span className="fc-text-eyebrow">Paso 1</span>
+                          <h3 className="fc-section-title">Subgrupos musculares</h3>
                         </div>
-                        <span className="fc-pill">
-                          {filteredCatalog.length} resultados
-                        </span>
+                        <span className="fc-pill">{activeDay.muscle_subgroups.length} elegidos</span>
                       </div>
 
-                      <div className="fc-search-input">
-                        <Search size={16} />
-                        <input
-                          className="fc-search-input__field"
-                      placeholder="Buscar por nombre, grupo o equipo"
-                          value={searchTerm}
-                          onChange={(event) => setSearchTerm(event.target.value)}
-                        />
-                      </div>
+                      <div className="fc-muscle-taxonomy">
+                        {muscleTaxonomy.map((group) => (
+                          <div key={group.parent} className="fc-muscle-group-card">
+                            <div className="fc-muscle-group-card__header">
+                              <strong>{group.parent}</strong>
+                              <span className="fc-pill">{(selectedSubgroupsByParent[group.parent] || []).length}</span>
+                            </div>
 
-                  {!activeDay.muscle_subgroups.length ? (
-                    <p className="fc-card-text">Elegi al menos un subgrupo muscular para filtrar el catalogo.</p>
-                      ) : null}
-
-                  {activeDay.muscle_subgroups.length && filteredCatalog.length === 0 ? (
-                    <p className="fc-card-text">No hay ejercicios cargados para esos subgrupos todavia.</p>
-                      ) : null}
-
-                      <div className="fc-catalog-groups">
-                        {Object.entries(groupedCatalog).map(([group, exercises]) => (
-                          <div key={group} className="fc-catalog-group">
-                            <h4 className="fc-catalog-group__title">{group}</h4>
-                            <div className="fc-catalog-group__items">
-                              {exercises.map((exercise) => (
-                                <button
-                                  key={exercise.id}
-                                  type="button"
-                                  className={`fc-catalog-item ${
-                                    selectedExerciseId === exercise.id ? "is-selected" : ""
-                                  }`}
-                                  onClick={() => setSelectedExerciseId(exercise.id)}
-                                >
-                                  <div>
-                                    <strong>{exercise.name}</strong>
-                                    <p>{exercise.description || "Sin descripcion."}</p>
-                                  </div>
-                                  <div className="fc-catalog-item__meta">
-                                    <span className="fc-pill">{exercise.muscle_subgroup || "General"}</span>
-                                    <span className="fc-pill">{exercise.equipment || "Libre"}</span>
-                                  </div>
-                                </button>
-                              ))}
+                            <div className="fc-routine-day-groups">
+                              {group.subgroups.map((subgroup) => {
+                                const selected = activeDay.muscle_subgroups.includes(subgroup);
+                                return (
+                                  <button
+                                    key={subgroup}
+                                    type="button"
+                                    className={`fc-muscle-chip ${selected ? "is-selected" : ""}`}
+                                    onClick={() => handleToggleMuscleSubgroup(subgroup)}
+                                  >
+                                    {subgroup}
+                                  </button>
+                                );
+                              })}
                             </div>
                           </div>
                         ))}
                       </div>
-
-                      {filteredCatalog.length > CATALOG_PAGE_SIZE ? (
-                        <div className="fc-pagination">
-                          <Button
-                            variant="ghost"
-                            disabled={catalogPage === 1}
-                            onClick={() => setCatalogPage((current) => Math.max(1, current - 1))}
-                          >
-                            <ChevronLeft size={16} />
-                            Anterior
-                          </Button>
-                          <span className="fc-pagination__label">
-                            Pagina {catalogPage} de {totalCatalogPages}
-                          </span>
-                          <Button
-                            variant="ghost"
-                            disabled={catalogPage === totalCatalogPages}
-                            onClick={() =>
-                              setCatalogPage((current) => Math.min(totalCatalogPages, current + 1))
-                            }
-                          >
-                            Siguiente
-                            <ChevronRight size={16} />
-                          </Button>
-                        </div>
-                      ) : null}
                     </Card>
-
-                    <Card glass className="fc-routine-builder__setup">
-                      <div className="fc-routine-builder__header">
-                        <div>
-                          <span className="fc-text-eyebrow">Configuracion</span>
-                          <h3 className="fc-section-title" style={{ margin: "0.25rem 0 0" }}>
-                            {selectedExercise ? selectedExercise.name : "Elegi un ejercicio"}
-                          </h3>
-                        </div>
-                      </div>
-
-                      {selectedExercise ? (
-                        <div className="fc-routine-builder__form">
-                          <div className="fc-grid-3">
-                            <Input
-                              id="wizard-sets"
-                              label="Series"
-                              inputMode="numeric"
-                              value={addForm.sets_planned}
-                              onChange={(event) =>
-                                setAddForm((current) => ({
-                                  ...current,
-                                  sets_planned: event.target.value,
-                                }))
-                              }
-                            />
-                            <Input
-                              id="wizard-reps"
-                              label="Repeticiones"
-                              inputMode="numeric"
-                              value={addForm.reps_planned}
-                              onChange={(event) =>
-                                setAddForm((current) => ({
-                                  ...current,
-                                  reps_planned: event.target.value,
-                                }))
-                              }
-                            />
-                            <Input
-                              id="wizard-rest"
-                              label="Descanso (seg)"
-                              inputMode="numeric"
-                              value={addForm.rest_seconds}
-                              onChange={(event) =>
-                                setAddForm((current) => ({
-                                  ...current,
-                                  rest_seconds: event.target.value,
-                                }))
-                              }
-                            />
+                  ) : (
+                    <div className="fc-routine-stage-stack">
+                      <Card glass className="fc-routine-stage-card">
+                        <div className="fc-routine-stage-card__header">
+                          <div>
+                            <span className="fc-text-eyebrow">Paso 2</span>
+                            <h3 className="fc-section-title">Ejercicios del dia</h3>
                           </div>
-
-                          <div className="fc-field">
-                            <label className="fc-field__label" htmlFor="wizard-notes">
-                              Nota opcional
-                            </label>
-                            <textarea
-                              id="wizard-notes"
-                              className="fc-input fc-textarea"
-                              rows={3}
-                              placeholder="Ej. ultima serie cerca del fallo, tecnica controlada, etc."
-                              value={addForm.notes}
-                              onChange={(event) =>
-                                setAddForm((current) => ({
-                                  ...current,
-                                  notes: event.target.value,
-                                }))
-                              }
-                            />
-                          </div>
-
-                          <Button onClick={handleAddExercise}>
-                            <Plus size={16} />
-                            Agregar al dia
+                          <Button variant="ghost" onClick={() => setDayStage("groups")}>
+                            Editar subgrupos
                           </Button>
                         </div>
-                      ) : (
-                        <p className="fc-card-text">
-                          Selecciona un ejercicio del catalogo para agregarlo a {activeDayMeta?.label}.
-                        </p>
-                      )}
-                    </Card>
-                  </div>
 
-                  <div className="fc-routine-day-exercises">
-                    {(activeDay.exercises || []).length === 0 ? (
-                      <Card glass className="fc-empty-state">
-                        <div className="fc-empty-state__icon">
-                          <Dumbbell size={24} />
+                        <div className="fc-helper-list">
+                          {activeDay.muscle_subgroups.map((group) => (
+                            <span key={group} className="fc-pill">
+                              {group}
+                            </span>
+                          ))}
                         </div>
-                        <h3 className="fc-section-title">Este dia todavia no tiene ejercicios</h3>
-                        <p className="fc-card-text">
-                          Elegi subgrupos musculares y suma al menos un ejercicio antes de avanzar.
-                        </p>
                       </Card>
-                    ) : (
-                      activeDay.exercises.map((item, index) => (
-                        <Card key={item.id} glass className="fc-routine-exercise-card">
-                          <div className="fc-routine-exercise-card__top">
-                            <div>
-                              <span className="fc-text-eyebrow">#{item.exercise_order}</span>
-                              <h3 className="fc-section-title">{item.exercise?.name}</h3>
-                            </div>
-                            <div className="fc-catalog-item__meta">
-                              <span className="fc-pill">{item.exercise?.muscle_group_parent || "Sin grupo"}</span>
-                              <span className="fc-pill">{item.exercise?.muscle_subgroup || "Sin subgrupo"}</span>
-                            </div>
-                          </div>
 
-                          <div className="fc-kv-grid">
-                            <div className="fc-kv">
-                              <span className="fc-kv__label">Series</span>
-                              <span className="fc-kv__value">{item.sets_planned}</span>
-                            </div>
-                            <div className="fc-kv">
-                              <span className="fc-kv__label">Reps</span>
-                              <span className="fc-kv__value">{item.reps_planned}</span>
-                            </div>
-                            <div className="fc-kv">
-                              <span className="fc-kv__label">Descanso</span>
-                              <span className="fc-kv__value">{item.rest_seconds}s</span>
-                            </div>
+                      {!catalog.length ? (
+                        <Card glass className="fc-empty-state">
+                          <div className="fc-empty-state__icon">
+                            <Dumbbell size={24} />
                           </div>
-
-                          {item.notes ? <p className="fc-card-text">{item.notes}</p> : null}
-
-                          <div className="fc-routine-card__actions">
-                            <Button
-                              variant="ghost"
-                              disabled={index === 0}
-                              onClick={() => moveDraftExercise(item.id, "up")}
-                            >
-                              <ChevronLeft size={16} />
-                              Subir
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              disabled={index === activeDay.exercises.length - 1}
-                              onClick={() => moveDraftExercise(item.id, "down")}
-                            >
-                              <ChevronRight size={16} />
-                              Bajar
-                            </Button>
-                            <Button variant="ghost" onClick={() => removeDraftExercise(item.id)}>
-                              <Trash2 size={16} />
-                              Quitar
-                            </Button>
-                          </div>
+                          <h3 className="fc-section-title">No hay ejercicios cargados</h3>
+                          <p className="fc-card-text">
+                            El catalogo global esta vacio. Ejecuta `007_expand_muscle_groups.sql` y `008_seed_exercises_full.sql` en Supabase para cargarlo.
+                          </p>
                         </Card>
-                      ))
-                    )}
-                  </div>
+                      ) : (
+                        <div className="fc-routine-builder">
+                          <Card glass className="fc-routine-builder__catalog">
+                            <div className="fc-routine-builder__header">
+                              <div>
+                                <span className="fc-text-eyebrow">Catalogo sugerido</span>
+                                <h3 className="fc-section-title" style={{ margin: "0.25rem 0 0" }}>
+                                  Ejercicios del dia
+                                </h3>
+                              </div>
+                              <span className="fc-pill">{filteredCatalog.length} resultados</span>
+                            </div>
+
+                            <div className="fc-search-input">
+                              <Search size={16} />
+                              <input
+                                className="fc-search-input__field"
+                                placeholder="Buscar por nombre, grupo o equipo"
+                                value={searchTerm}
+                                onChange={(event) => setSearchTerm(event.target.value)}
+                              />
+                            </div>
+
+                            {!activeDay.muscle_subgroups.length ? (
+                              <p className="fc-card-text">Elegi al menos un subgrupo muscular para filtrar el catalogo.</p>
+                            ) : null}
+
+                            {activeDay.muscle_subgroups.length && filteredCatalog.length === 0 ? (
+                              <p className="fc-card-text">No hay ejercicios cargados para esos subgrupos todavia.</p>
+                            ) : null}
+
+                            <div className="fc-catalog-groups">
+                              {Object.entries(groupedCatalog).map(([group, exercises]) => (
+                                <div key={group} className="fc-catalog-group">
+                                  <h4 className="fc-catalog-group__title">{group}</h4>
+                                  <div className="fc-catalog-group__items">
+                                    {exercises.map((exercise) => (
+                                      <button
+                                        key={exercise.id}
+                                        type="button"
+                                        className={`fc-catalog-item ${
+                                          selectedExerciseId === exercise.id ? "is-selected" : ""
+                                        }`}
+                                        onClick={() => setSelectedExerciseId(exercise.id)}
+                                      >
+                                        <div>
+                                          <strong>{exercise.name}</strong>
+                                          <p>{exercise.description || "Sin descripcion."}</p>
+                                        </div>
+                                        <div className="fc-catalog-item__meta">
+                                          <span className="fc-pill">{exercise.muscle_subgroup || "General"}</span>
+                                          <span className="fc-pill">{exercise.equipment || "Libre"}</span>
+                                        </div>
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+
+                            {filteredCatalog.length > CATALOG_PAGE_SIZE ? (
+                              <div className="fc-pagination">
+                                <Button
+                                  variant="ghost"
+                                  disabled={catalogPage === 1}
+                                  onClick={() => setCatalogPage((current) => Math.max(1, current - 1))}
+                                >
+                                  <ChevronLeft size={16} />
+                                  Anterior
+                                </Button>
+                                <span className="fc-pagination__label">
+                                  Pagina {catalogPage} de {totalCatalogPages}
+                                </span>
+                                <Button
+                                  variant="ghost"
+                                  disabled={catalogPage === totalCatalogPages}
+                                  onClick={() =>
+                                    setCatalogPage((current) => Math.min(totalCatalogPages, current + 1))
+                                  }
+                                >
+                                  Siguiente
+                                  <ChevronRight size={16} />
+                                </Button>
+                              </div>
+                            ) : null}
+                          </Card>
+
+                          <Card glass className="fc-routine-builder__setup">
+                            <div className="fc-routine-builder__header">
+                              <div>
+                                <span className="fc-text-eyebrow">Configuracion</span>
+                                <h3 className="fc-section-title" style={{ margin: "0.25rem 0 0" }}>
+                                  {selectedExercise ? selectedExercise.name : "Elegi un ejercicio"}
+                                </h3>
+                              </div>
+                            </div>
+
+                            {selectedExercise ? (
+                              <div className="fc-routine-builder__form">
+                                <div className="fc-grid-3">
+                                  <Input
+                                    id="wizard-sets"
+                                    label="Series"
+                                    inputMode="numeric"
+                                    value={addForm.sets_planned}
+                                    onChange={(event) =>
+                                      setAddForm((current) => ({
+                                        ...current,
+                                        sets_planned: event.target.value,
+                                      }))
+                                    }
+                                  />
+                                  <Input
+                                    id="wizard-reps"
+                                    label="Repeticiones"
+                                    inputMode="numeric"
+                                    value={addForm.reps_planned}
+                                    onChange={(event) =>
+                                      setAddForm((current) => ({
+                                        ...current,
+                                        reps_planned: event.target.value,
+                                      }))
+                                    }
+                                  />
+                                  <Input
+                                    id="wizard-rest"
+                                    label="Descanso (seg)"
+                                    inputMode="numeric"
+                                    value={addForm.rest_seconds}
+                                    onChange={(event) =>
+                                      setAddForm((current) => ({
+                                        ...current,
+                                        rest_seconds: event.target.value,
+                                      }))
+                                    }
+                                  />
+                                </div>
+
+                                <div className="fc-field">
+                                  <label className="fc-field__label" htmlFor="wizard-notes">
+                                    Nota opcional
+                                  </label>
+                                  <textarea
+                                    id="wizard-notes"
+                                    className="fc-input fc-textarea"
+                                    rows={3}
+                                    placeholder="Ej. ultima serie cerca del fallo, tecnica controlada, etc."
+                                    value={addForm.notes}
+                                    onChange={(event) =>
+                                      setAddForm((current) => ({
+                                        ...current,
+                                        notes: event.target.value,
+                                      }))
+                                    }
+                                  />
+                                </div>
+
+                                <Button onClick={handleAddExercise}>
+                                  <Plus size={16} />
+                                  Agregar al dia
+                                </Button>
+                              </div>
+                            ) : (
+                              <p className="fc-card-text">
+                                Selecciona un ejercicio del catalogo para agregarlo a {activeDayMeta?.label}.
+                              </p>
+                            )}
+                          </Card>
+                        </div>
+                      )}
+
+                      <div className="fc-routine-day-exercises">
+                        {(activeDay.exercises || []).length === 0 ? (
+                          <Card glass className="fc-empty-state">
+                            <div className="fc-empty-state__icon">
+                              <Dumbbell size={24} />
+                            </div>
+                            <h3 className="fc-section-title">Este dia todavia no tiene ejercicios</h3>
+                            <p className="fc-card-text">
+                              Selecciona un ejercicio del catalogo y agregalo a este dia.
+                            </p>
+                          </Card>
+                        ) : (
+                          activeDay.exercises.map((item, index) => (
+                            <Card key={item.id} glass className="fc-routine-exercise-card">
+                              <div className="fc-routine-exercise-card__top">
+                                <div>
+                                  <span className="fc-text-eyebrow">#{item.exercise_order}</span>
+                                  <h3 className="fc-section-title">{item.exercise?.name}</h3>
+                                </div>
+                                <div className="fc-catalog-item__meta">
+                                  <span className="fc-pill">{item.exercise?.muscle_group_parent || "Sin grupo"}</span>
+                                  <span className="fc-pill">{item.exercise?.muscle_subgroup || "Sin subgrupo"}</span>
+                                </div>
+                              </div>
+
+                              <div className="fc-kv-grid">
+                                <div className="fc-kv">
+                                  <span className="fc-kv__label">Series</span>
+                                  <span className="fc-kv__value">{item.sets_planned}</span>
+                                </div>
+                                <div className="fc-kv">
+                                  <span className="fc-kv__label">Reps</span>
+                                  <span className="fc-kv__value">{item.reps_planned}</span>
+                                </div>
+                                <div className="fc-kv">
+                                  <span className="fc-kv__label">Descanso</span>
+                                  <span className="fc-kv__value">{item.rest_seconds}s</span>
+                                </div>
+                              </div>
+
+                              {item.notes ? <p className="fc-card-text">{item.notes}</p> : null}
+
+                              <div className="fc-routine-card__actions">
+                                <Button
+                                  variant="ghost"
+                                  disabled={index === 0}
+                                  onClick={() => moveDraftExercise(item.id, "up")}
+                                >
+                                  <ChevronLeft size={16} />
+                                  Subir
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  disabled={index === activeDay.exercises.length - 1}
+                                  onClick={() => moveDraftExercise(item.id, "down")}
+                                >
+                                  <ChevronRight size={16} />
+                                  Bajar
+                                </Button>
+                                <Button variant="ghost" onClick={() => removeDraftExercise(item.id)}>
+                                  <Trash2 size={16} />
+                                  Quitar
+                                </Button>
+                              </div>
+                            </Card>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : null}
 
