@@ -1,3 +1,4 @@
+import asyncio
 from collections import Counter
 from calendar import monthrange
 from datetime import date, datetime, timedelta, timezone
@@ -522,19 +523,31 @@ async def list_routines(user_id: str = Depends(get_current_user_id)):
         return {"items": []}
 
     routine_ids = [routine["id"] for routine in routines]
-    counts_result = (
-        supabase.table("routine_exercises")
-        .select("routine_id")
-        .eq("user_id", user_id)
-        .in_("routine_id", routine_ids)
-        .execute()
+
+    def fetch_exercise_counts():
+        return (
+            supabase.table("routine_exercises")
+            .select("routine_id")
+            .eq("user_id", user_id)
+            .in_("routine_id", routine_ids)
+            .execute()
+        )
+
+    def fetch_day_counts():
+        return (
+            supabase.table("routine_days")
+            .select("routine_id")
+            .in_("routine_id", routine_ids)
+            .execute()
+        )
+
+    counts_result, day_counts_result = await asyncio.gather(
+        asyncio.to_thread(fetch_exercise_counts),
+        asyncio.to_thread(fetch_day_counts),
     )
     routine_exercises = getattr(counts_result, "data", None) or []
     counts = Counter(item["routine_id"] for item in routine_exercises if item.get("routine_id"))
 
-    day_counts_result = (
-        supabase.table("routine_days").select("routine_id").in_("routine_id", routine_ids).execute()
-    )
     routine_days = getattr(day_counts_result, "data", None) or []
     day_counts = Counter(item["routine_id"] for item in routine_days if item.get("routine_id"))
 
