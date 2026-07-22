@@ -112,3 +112,36 @@ La pantalla inicial consulta `GET /health` al backend y muestra el JSON de respu
 4. Confirmar `http://localhost:8000/health`.
 5. Levantar frontend en `http://localhost:3000`.
 6. Confirmar que la pagina renderiza el estado del backend y de Supabase.
+
+## Deploy
+
+### Render
+
+- Root Directory: `backend`
+- Build Command: `pip install -r requirements.txt`
+- Start Command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+
+Variables de entorno a configurar:
+
+- `APP_NAME`
+- `APP_ENV`
+- `PORT`
+- `SUPABASE_URL`
+- `SUPABASE_SECRET_KEY`
+- `FRONTEND_URL`
+
+Notas:
+
+- `FRONTEND_URL` acepta una lista separada por comas para permitir multiples origenes.
+- En desarrollo, `http://localhost:3000` sigue permitido automaticamente por CORS.
+
+### Vercel
+
+- Root Directory: `frontend`
+- Framework Preset: `Create React App`
+
+Variables de entorno a configurar:
+
+- `REACT_APP_API_URL`
+- `REACT_APP_SUPABASE_URL`
+- `REACT_APP_SUPABASE_PUBLISHABLE_KEY`

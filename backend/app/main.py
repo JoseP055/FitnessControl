@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+import uvicorn
 
 from app.core.config import settings
 from app.core.supabase import get_supabase_client
@@ -43,3 +44,7 @@ async def health_check():
         return JSONResponse(status_code=503, content=response_data)
 
     return response_data
+
+
+if __name__ == "__main__":
+    uvicorn.run("app.main:app", host="0.0.0.0", port=settings.port)
