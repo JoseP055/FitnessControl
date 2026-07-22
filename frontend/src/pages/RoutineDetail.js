@@ -3,13 +3,11 @@ import {
   ArrowLeft,
   CalendarCheck,
   CalendarDays,
-  Check,
   ClipboardList,
   Pencil,
-  SkipForward,
   Trash2,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import AppShell from "../components/layout/AppShell";
@@ -18,12 +16,7 @@ import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
 import PageLoader from "../components/ui/PageLoader";
-import {
-  deleteRoutine,
-  getRoutineCalendar,
-  getRoutineOverview,
-  upsertRoutineCompletion,
-} from "../services/api";
+import { deleteRoutine, getRoutineOverview } from "../services/api";
 
 function capitalize(value) {
   if (!value) {
@@ -44,25 +37,6 @@ function RoutineDetail() {
   const [selectedDate, setSelectedDate] = useState("");
   const [busyAction, setBusyAction] = useState("");
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
-
-  const weekdayLabels = useMemo(
-    () => ["Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado", "Domingo"],
-    []
-  );
-  const monthLabels = useMemo(
-    () => ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
-    []
-  );
-
-  function formatActiveDate(dateValue) {
-    if (!dateValue) {
-      return "Elegi una fecha";
-    }
-
-    const date = new Date(`${dateValue}T00:00:00`);
-    const weekday = weekdayLabels[date.getDay() === 0 ? 6 : date.getDay() - 1];
-    return `${weekday} ${String(date.getDate()).padStart(2, "0")} ${monthLabels[date.getMonth()]}`;
-  }
 
   useEffect(() => {
     async function bootstrap() {
@@ -86,18 +60,6 @@ function RoutineDetail() {
     bootstrap();
   }, [routineId]);
 
-  async function refreshData(nextSelectedDate = selectedDate) {
-    const calendarResponse = await getRoutineCalendar(routineId);
-    setCalendar(calendarResponse);
-
-    const availableDate =
-      calendarResponse.items?.some((item) => item.date === nextSelectedDate)
-        ? nextSelectedDate
-        : calendarResponse.next_training_date || calendarResponse.items?.[0]?.date || "";
-
-    setSelectedDate(availableDate);
-  }
-
   async function handleDeleteRoutine() {
     setBusyAction("delete-routine");
     setError("");
@@ -107,24 +69,6 @@ function RoutineDetail() {
       navigate("/routines");
     } catch (deleteError) {
       setError(deleteError.message || "No se pudo eliminar la rutina.");
-    } finally {
-      setBusyAction("");
-    }
-  }
-
-  async function updateCompletionStatus(item, nextStatus) {
-    setBusyAction(`${item.routine_day_id}-${item.date}-${nextStatus}`);
-    setError("");
-
-    try {
-      await upsertRoutineCompletion(routineId, {
-        routine_day_id: item.routine_day_id,
-        completion_date: item.date,
-        status: nextStatus,
-      });
-      await refreshData(item.date);
-    } catch (saveError) {
-      setError(saveError.message || "No se pudo actualizar el estado del entrenamiento.");
     } finally {
       setBusyAction("");
     }
@@ -142,17 +86,6 @@ function RoutineDetail() {
     0
   );
 
-  function renderStatusLabel(status) {
-    switch (status) {
-      case "done":
-        return "Hecho";
-      case "skipped":
-        return "Omitido";
-      default:
-        return "Pendiente";
-    }
-  }
-
   return (
     <AppShell
       activeSection="rutinas"
@@ -161,8 +94,7 @@ function RoutineDetail() {
           <div>
             <h1 className="fc-dashboard__title">{schedule?.name || "Rutina"}</h1>
             <p className="fc-dashboard__subtitle">
-              {schedule?.description ||
-                "Revisa la planificacion semanal y marca cada fecha como hecha, pendiente u omitida."}
+              {schedule?.description || "Revisa la planificacion semanal de tu rutina."}
             </p>
           </div>
 
@@ -234,87 +166,16 @@ function RoutineDetail() {
           </Card>
         ) : null}
 
-        <div className="fc-routine-detail-layout">
-          <Card glass className="fc-routine-detail-layout__calendar">
-            <RoutineCalendar
-              startDate={calendar?.start_date}
-              endDate={calendar?.end_date}
-              items={calendar?.items || []}
-              selectedDate={selectedDate}
-              onSelectDate={setSelectedDate}
-              interactive
-            />
-          </Card>
-
-          <div className="fc-routine-detail-layout__side">
-            <Card glass>
-              <div className="fc-routine-summary">
-                <span className="fc-text-eyebrow">
-                  <CalendarCheck size={14} />
-                  Fecha activa
-                </span>
-                <h2 className="fc-section-title">
-                  {formatActiveDate(selectedDate)}
-                </h2>
-                <p className="fc-card-text">
-                  {selectedItem
-                    ? `Estado actual: ${renderStatusLabel(selectedItem.status)}`
-                    : "Selecciona una fecha marcada en el calendario para ver su detalle."}
-                </p>
-                {selectedItem ? (
-                  <div className="fc-routine-status-inline">
-                    <Button
-                      loading={busyAction === `${selectedItem.routine_day_id}-${selectedItem.date}-done`}
-                      onClick={() => updateCompletionStatus(selectedItem, "done")}
-                    >
-                      <Check size={16} />
-                      Hecho
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      loading={busyAction === `${selectedItem.routine_day_id}-${selectedItem.date}-pending`}
-                      onClick={() => updateCompletionStatus(selectedItem, "pending")}
-                    >
-                      <CalendarCheck size={16} />
-                      Pendiente
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      loading={busyAction === `${selectedItem.routine_day_id}-${selectedItem.date}-skipped`}
-                      onClick={() => updateCompletionStatus(selectedItem, "skipped")}
-                    >
-                      <SkipForward size={16} />
-                      Omitido
-                    </Button>
-                  </div>
-                ) : null}
-              </div>
-            </Card>
-          </div>
-        </div>
-
-        <div className="fc-routine-summary-grid">
-          {(schedule?.days || []).map((day) => (
-            <Card key={day.id} glass className="fc-routine-summary-day">
-              <div className="fc-routine-card__top">
-                <div>
-                  <span className="fc-text-eyebrow">Dia</span>
-                  <h3 className="fc-section-title">
-                    {day.muscle_groups?.length ? day.muscle_groups.join(" / ") : "Plan"}
-                  </h3>
-                </div>
-                <span className="fc-pill">{day.exercise_count || 0} ejercicios</span>
-              </div>
-              <div className="fc-helper-list">
-                {(day.muscle_groups || []).map((group) => (
-                  <span key={group} className="fc-pill">
-                    {group}
-                  </span>
-                ))}
-              </div>
-            </Card>
-          ))}
-        </div>
+        <Card glass>
+          <RoutineCalendar
+            startDate={calendar?.start_date}
+            endDate={calendar?.end_date}
+            items={calendar?.items || []}
+            selectedDate={selectedDate}
+            onSelectDate={setSelectedDate}
+            interactive
+          />
+        </Card>
 
         {selectedDay ? (
           <div className="fc-routine-exercises">
@@ -364,7 +225,7 @@ function RoutineDetail() {
             </div>
             <h2 className="fc-section-title">Elegi una fecha del calendario</h2>
             <p className="fc-card-text">
-              Al seleccionar un dia programado vas a ver sus ejercicios y vas a poder marcarlo como hecho, pendiente u omitido.
+              Al seleccionar un dia programado vas a ver sus ejercicios.
             </p>
           </Card>
         )}
