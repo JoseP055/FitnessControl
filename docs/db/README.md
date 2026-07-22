@@ -2,15 +2,23 @@
 
 Guardar aqui los scripts SQL y migraciones versionadas del proyecto.
 
-## Tablas iniciales sugeridas
+## Orden de ejecución (Supabase SQL Editor)
 
-- `routines`
-- `exercises`
-- `workout_logs`
-- `body_measurements`
+Ejecutar en este orden:
 
-## Convencion sugerida
+1. `001_profiles.sql` — Perfiles 1:1 con `auth.users` + función/trigger `updated_at` + RLS.
+2. `002_routines_exercises.sql` — Rutinas, catálogo de ejercicios (global + custom) y relación rutina-ejercicios + RLS.
+3. `003_workout_logs.sql` — Logs de entrenamiento y detalle por set (`workout_log_exercises`) + RLS.
+4. `004_body_measurements.sql` — Mediciones corporales + RLS.
 
-- `001_initial_schema.sql`
-- `002_add_indexes.sql`
-- `003_add_rls_policies.sql`
+## Qué verificar después de cada script (Table Editor)
+
+- Después de `001_profiles.sql`: tabla `profiles` (RLS habilitado) y función `set_updated_at`.
+- Después de `002_routines_exercises.sql`: tablas `routines`, `exercises`, `routine_exercises` (RLS habilitado).
+- Después de `003_workout_logs.sql`: tablas `workout_logs`, `workout_log_exercises` (RLS habilitado).
+- Después de `004_body_measurements.sql`: tabla `body_measurements` (RLS habilitado).
+
+## Nota sobre RLS
+
+- Todas las tablas con `user_id` solo permiten leer/escribir filas del usuario autenticado (`auth.uid() = user_id`).
+- `exercises` permite leer ejercicios globales (`created_by_user_id is null`) y propios; y solo permite escribir si el ejercicio es propio.
