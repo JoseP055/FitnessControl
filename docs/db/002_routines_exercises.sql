@@ -76,6 +76,25 @@ alter table public.exercises
 alter table public.exercises
   add column if not exists updated_at timestamptz not null default timezone('utc', now());
 
+-- Compatibilidad con esquemas viejos:
+-- en una version previa `exercises` estaba atada directo a una rutina y `routine_id`
+-- quedaba como obligatoria. Para el catalogo global nuevo esa columna ya no participa
+-- del modelo, asi que si existe debe permitir NULL para no bloquear seeds globales.
+do $$
+begin
+  if exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'exercises'
+      and column_name = 'routine_id'
+      and is_nullable = 'NO'
+  ) then
+    alter table public.exercises alter column routine_id drop not null;
+  end if;
+end;
+$$;
+
 drop policy if exists "exercises_select_global_or_own" on public.exercises;
 drop policy if exists "exercises_insert_own" on public.exercises;
 drop policy if exists "exercises_update_own" on public.exercises;

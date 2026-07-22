@@ -35,3 +35,8 @@ Ejecutar en este orden:
   ```sql
   select pg_notify('pgrst', 'reload schema');
   ```
+- Si `005_seed_exercises.sql` falla con `null value in column "routine_id" of relation "exercises"`, tu tabla `exercises` viene de un esquema legado. Re-ejecutá primero `002_routines_exercises.sql` para quitar el `NOT NULL` de `routine_id`, luego ejecutá:
+  ```sql
+  select pg_notify('pgrst', 'reload schema');
+  ```
+  y recién después volvé a correr `005_seed_exercises.sql`.

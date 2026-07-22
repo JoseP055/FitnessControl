@@ -7,6 +7,9 @@ import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import ProfileSetup from "./pages/ProfileSetup";
 import Register from "./pages/Register";
+import RoutineDetail from "./pages/RoutineDetail";
+import RoutineForm from "./pages/RoutineForm";
+import RoutineList from "./pages/RoutineList";
 import { supabaseClient } from "./services/supabaseClient";
 
 function ProtectedRoute({ children }) {
@@ -121,6 +124,38 @@ function App() {
         element={
           <ProtectedRoute>
             <ProfileSetup />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/routines"
+        element={
+          <ProtectedRoute>
+            <RoutineList />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/routines/new"
+        element={
+          <ProtectedRoute>
+            <RoutineForm />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/routines/:routineId"
+        element={
+          <ProtectedRoute>
+            <RoutineDetail />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/routines/:routineId/edit"
+        element={
+          <ProtectedRoute>
+            <RoutineForm />
           </ProtectedRoute>
         }
       />

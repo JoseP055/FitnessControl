@@ -7,6 +7,7 @@ import uvicorn
 from app.core.auth import get_current_user_id
 from app.core.config import settings
 from app.core.supabase import get_supabase_client
+from app.routers.routines import router as routines_router
 
 
 app = FastAPI(title=settings.app_name)
@@ -18,6 +19,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(routines_router)
 
 
 @app.get("/health")
