@@ -166,23 +166,24 @@ function Dashboard() {
         throw error;
       }
 
-      const profilePayload = {
-        user_id: user.id,
-        weight_kg: parsed,
-        updated_at: new Date().toISOString(),
-      };
-
-      const { error: profileError } = await supabaseClient
+      const { data: updatedProfile, error: profileError } = await supabaseClient
         .from("profiles")
-        .upsert(profilePayload, { onConflict: "user_id" });
+        .update({ weight_kg: parsed, updated_at: new Date().toISOString() })
+        .eq("user_id", user.id)
+        .select("weight_kg")
+        .maybeSingle();
 
       if (profileError) {
         throw profileError;
       }
 
+      if (!updatedProfile) {
+        throw new Error("Primero completá tu perfil para poder registrar tu peso.");
+      }
+
       setProfile((current) => ({
         ...(current || {}),
-        weight_kg: parsed,
+        weight_kg: updatedProfile.weight_kg,
       }));
 
       setWeightMessage("Peso registrado.");
