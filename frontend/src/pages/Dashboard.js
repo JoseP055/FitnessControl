@@ -4,6 +4,7 @@ import {
   ClipboardList,
   LayoutGrid,
   LineChart,
+  LogOut,
   User2,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -225,6 +226,13 @@ function Dashboard() {
               );
             })}
           </nav>
+
+          <div className="fc-dashboard__sidebar-footer">
+            <button type="button" className="fc-nav-item" onClick={signOut}>
+              <LogOut size={18} />
+              <span>Cerrar sesión</span>
+            </button>
+          </div>
         </aside>
 
         <main className="fc-dashboard__main">
@@ -240,12 +248,6 @@ function Dashboard() {
                 </p>
               </div>
             </div>
-
-            <Button variant="secondary" onClick={signOut}>
-              <span className="fc-button__label">
-                Cerrar sesión
-              </span>
-            </Button>
           </header>
 
           <motion.div
@@ -432,6 +434,15 @@ function Dashboard() {
                 </button>
               );
             })}
+
+            <button
+              type="button"
+              className="fc-mobile-nav-item"
+              onClick={signOut}
+            >
+              <LogOut size={18} />
+              <span>Salir</span>
+            </button>
           </nav>
         </main>
       </div>
