@@ -1,8 +1,6 @@
 import { supabaseClient } from "./supabaseClient";
 
 const API_URL = process.env.REACT_APP_API_URL || "";
-const DEBUG_URL = "http://127.0.0.1:7777/event";
-const DEBUG_SESSION_ID = "routines-infinite-loading";
 const API_TIMEOUT_MS = 6000;
 
 async function getAuthHeaders() {
@@ -29,76 +27,36 @@ async function apiRequest(path, options = {}) {
   const authHeaders = await getAuthHeaders();
   const controller = new AbortController();
   const timeoutId = window.setTimeout(() => controller.abort(), API_TIMEOUT_MS);
-  // #region debug-point B:api-request-start
-  fetch(DEBUG_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      sessionId: DEBUG_SESSION_ID,
-      runId: "pre-fix",
-      hypothesisId: "B",
-      location: "api.js:apiRequest:start",
-      msg: "[DEBUG] Starting API request",
-      data: {
-        path,
-        method: options.method || "GET",
-        apiUrl: API_URL,
-        hasAuthHeader: Boolean(authHeaders.Authorization),
+  try {
+    const response = await fetch(`${API_URL}${path}`, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeaders,
+        ...(options.headers || {}),
       },
-      ts: Date.now(),
-    }),
-  }).catch(() => {});
-  // #endregion
-  const response = await fetch(`${API_URL}${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...authHeaders,
-      ...(options.headers || {}),
-    },
-    signal: controller.signal,
-  }).catch((error) => {
-    if (error?.name === "AbortError") {
-      throw new Error("El backend tardó demasiado en responder.");
+      signal: controller.signal,
+    }).catch((error) => {
+      if (error?.name === "AbortError") {
+        throw new Error("El backend tardó demasiado en responder.");
+      }
+
+      throw error;
+    });
+
+    const contentType = response.headers.get("content-type") || "";
+    const data = contentType.includes("application/json") ? await response.json() : null;
+
+    if (!response.ok) {
+      const message =
+        data?.detail || data?.supabase?.error || "No se pudo completar la solicitud.";
+      throw new Error(message);
     }
 
-    throw error;
-  });
-
-  window.clearTimeout(timeoutId);
-
-  const contentType = response.headers.get("content-type") || "";
-  // #region debug-point B:api-response
-  fetch(DEBUG_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      sessionId: DEBUG_SESSION_ID,
-      runId: "pre-fix",
-      hypothesisId: "B",
-      location: "api.js:apiRequest:response",
-      msg: "[DEBUG] API response received",
-      data: {
-        path,
-        status: response.status,
-        ok: response.ok,
-        contentType,
-      },
-      ts: Date.now(),
-    }),
-  }).catch(() => {});
-  // #endregion
-  const data = contentType.includes("application/json")
-    ? await response.json()
-    : null;
-
-  if (!response.ok) {
-    const message =
-      data?.detail || data?.supabase?.error || "No se pudo completar la solicitud.";
-    throw new Error(message);
+    return data;
+  } finally {
+    window.clearTimeout(timeoutId);
   }
-
-  return data;
 }
 
 export async function healthCheck() {
@@ -109,8 +67,15 @@ export async function getCurrentUserProfile() {
   return apiRequest("/me", { method: "GET" });
 }
 
-export async function getExercises() {
-  return apiRequest("/exercises", { method: "GET" });
+export async function getExercises(muscleGroup) {
+  const params = new URLSearchParams();
+  if (muscleGroup) {
+    params.set("muscle_group", muscleGroup);
+  }
+
+  return apiRequest(`/exercises${params.toString() ? `?${params.toString()}` : ""}`, {
+    method: "GET",
+  });
 }
 
 export async function getRoutines() {
@@ -137,6 +102,35 @@ export async function updateRoutine(routineId, payload) {
 
 export async function deleteRoutine(routineId) {
   return apiRequest(`/routines/${routineId}`, { method: "DELETE" });
+}
+
+export async function createRoutineDay(routineId, payload) {
+  return apiRequest(`/routines/${routineId}/days`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function addRoutineDayExercise(routineId, routineDayId, payload) {
+  return apiRequest(`/routines/${routineId}/days/${routineDayId}/exercises`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getRoutineSchedule(routineId) {
+  return apiRequest(`/routines/${routineId}/schedule`, { method: "GET" });
+}
+
+export async function getRoutineCalendar(routineId) {
+  return apiRequest(`/routines/${routineId}/calendar`, { method: "GET" });
+}
+
+export async function upsertRoutineCompletion(routineId, payload) {
+  return apiRequest(`/routines/${routineId}/completions`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function addRoutineExercise(routineId, payload) {

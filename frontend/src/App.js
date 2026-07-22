@@ -8,6 +8,7 @@ import Login from "./pages/Login";
 import ProfileSetup from "./pages/ProfileSetup";
 import Register from "./pages/Register";
 import RoutineDetail from "./pages/RoutineDetail";
+import RoutineEditForm from "./pages/RoutineEditForm";
 import RoutineForm from "./pages/RoutineForm";
 import RoutineList from "./pages/RoutineList";
 import { supabaseClient } from "./services/supabaseClient";
@@ -155,7 +156,7 @@ function App() {
         path="/routines/:routineId/edit"
         element={
           <ProtectedRoute>
-            <RoutineForm />
+            <RoutineEditForm />
           </ProtectedRoute>
         }
       />

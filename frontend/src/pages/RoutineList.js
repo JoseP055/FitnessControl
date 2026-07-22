@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ClipboardList, Dumbbell, Plus, Sparkles } from "lucide-react";
+import { CalendarDays, ClipboardList, Dumbbell, Plus, Sparkles } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -9,9 +9,6 @@ import Card from "../components/ui/Card";
 import PageLoader from "../components/ui/PageLoader";
 import { getRoutines } from "../services/api";
 
-const DEBUG_URL = "http://127.0.0.1:7777/event";
-const DEBUG_SESSION_ID = "routines-infinite-loading";
-
 function RoutineList() {
   const navigate = useNavigate();
   const [routines, setRoutines] = useState([]);
@@ -20,76 +17,12 @@ function RoutineList() {
 
   useEffect(() => {
     async function loadRoutines() {
-      // #region debug-point A:routine-list-start
-      fetch(DEBUG_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sessionId: DEBUG_SESSION_ID,
-          runId: "pre-fix",
-          hypothesisId: "A",
-          location: "RoutineList.js:loadRoutines:start",
-          msg: "[DEBUG] RoutineList load started",
-          data: {},
-          ts: Date.now(),
-        }),
-      }).catch(() => {});
-      // #endregion
       try {
         const response = await getRoutines();
-        // #region debug-point A:routine-list-success
-        fetch(DEBUG_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            sessionId: DEBUG_SESSION_ID,
-            runId: "pre-fix",
-            hypothesisId: "A",
-            location: "RoutineList.js:loadRoutines:success",
-            msg: "[DEBUG] RoutineList load succeeded",
-            data: {
-              itemCount: response?.items?.length ?? null,
-            },
-            ts: Date.now(),
-          }),
-        }).catch(() => {});
-        // #endregion
         setRoutines(response.items || []);
       } catch (loadError) {
-        // #region debug-point A:routine-list-error
-        fetch(DEBUG_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            sessionId: DEBUG_SESSION_ID,
-            runId: "pre-fix",
-            hypothesisId: "A",
-            location: "RoutineList.js:loadRoutines:error",
-            msg: "[DEBUG] RoutineList load failed",
-            data: {
-              message: loadError?.message ?? "unknown",
-            },
-            ts: Date.now(),
-          }),
-        }).catch(() => {});
-        // #endregion
         setError(loadError.message || "No se pudieron cargar tus rutinas.");
       } finally {
-        // #region debug-point A:routine-list-finally
-        fetch(DEBUG_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            sessionId: DEBUG_SESSION_ID,
-            runId: "pre-fix",
-            hypothesisId: "A",
-            location: "RoutineList.js:loadRoutines:finally",
-            msg: "[DEBUG] RoutineList load finished",
-            data: {},
-            ts: Date.now(),
-          }),
-        }).catch(() => {});
-        // #endregion
         setLoading(false);
       }
     }
@@ -164,10 +97,10 @@ function RoutineList() {
             <div className="fc-routine-summary">
               <span className="fc-text-eyebrow">
                 <Sparkles size={14} />
-                Siguiente paso
+                Estado
               </span>
               <p className="fc-card-text">
-                Armá primero una base simple y después afiná series, repeticiones y descansos.
+                El wizard nuevo te deja planear duración, días, grupos musculares y calendario en un solo flujo.
               </p>
             </div>
           </Card>
@@ -210,12 +143,22 @@ function RoutineList() {
                       <span className="fc-text-eyebrow">Rutina</span>
                       <h2 className="fc-section-title">{routine.name}</h2>
                     </div>
-                    <span className="fc-pill">{routine.exercise_count || 0} ejercicios</span>
+                    <span className="fc-pill">{routine.day_count || 0} días / {routine.exercise_count || 0} ejercicios</span>
                   </div>
 
                   <p className="fc-card-text">
                     {routine.description || "Sin descripción todavía. Podés agregarla al editar."}
                   </p>
+
+                  <div className="fc-helper-list">
+                    <span className="fc-pill">
+                      <CalendarDays size={12} />
+                      {routine.start_date || "Sin inicio"}
+                    </span>
+                    <span className="fc-pill">
+                      {routine.duration_months || 1} {routine.duration_months === 1 ? "mes" : "meses"}
+                    </span>
+                  </div>
 
                   <div className="fc-routine-card__actions">
                     <Button onClick={() => navigate(`/routines/${routine.id}`)}>
