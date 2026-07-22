@@ -22,3 +22,14 @@ Ejecutar en este orden:
 
 - Todas las tablas con `user_id` solo permiten leer/escribir filas del usuario autenticado (`auth.uid() = user_id`).
 - `exercises` permite leer ejercicios globales (`created_by_user_id is null`) y propios; y solo permite escribir si el ejercicio es propio.
+
+## Troubleshooting
+
+- Si aparece `new row violates row-level security policy` al guardar el perfil, re-ejecutar `001_profiles.sql` (recrea policies) y luego ejecutar:
+  ```sql
+  select pg_notify('pgrst', 'reload schema');
+  ```
+- Si aparece `Could not find the table 'public.<tabla>' in the schema cache`, ejecutar:
+  ```sql
+  select pg_notify('pgrst', 'reload schema');
+  ```
