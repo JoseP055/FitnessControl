@@ -10,6 +10,7 @@ Ejecutar en este orden:
 2. `002_routines_exercises.sql` — Rutinas, catálogo de ejercicios (global + custom) y relación rutina-ejercicios + RLS.
 3. `003_workout_logs.sql` — Logs de entrenamiento y detalle por set (`workout_log_exercises`) + RLS.
 4. `004_body_measurements.sql` — Mediciones corporales + RLS.
+5. `005_seed_exercises.sql` — Catálogo inicial de ejercicios globales para probar el flujo de rutinas.
 
 ## Qué verificar después de cada script (Table Editor)
 
@@ -17,6 +18,7 @@ Ejecutar en este orden:
 - Después de `002_routines_exercises.sql`: tablas `routines`, `exercises`, `routine_exercises` (RLS habilitado).
 - Después de `003_workout_logs.sql`: tablas `workout_logs`, `workout_log_exercises` (RLS habilitado).
 - Después de `004_body_measurements.sql`: tabla `body_measurements` (RLS habilitado).
+- Después de `005_seed_exercises.sql`: filas globales en `exercises` con `created_by_user_id = null`.
 
 ## Nota sobre RLS
 
