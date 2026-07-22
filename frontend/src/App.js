@@ -12,9 +12,35 @@ import RoutineForm from "./pages/RoutineForm";
 import RoutineList from "./pages/RoutineList";
 import { supabaseClient } from "./services/supabaseClient";
 
+const DEBUG_URL = "http://127.0.0.1:7777/event";
+const DEBUG_SESSION_ID = "post-login-blank";
+
 function ProtectedRoute({ children }) {
   const { session, loading } = useAuth();
   const location = useLocation();
+
+  useEffect(() => {
+    // #region debug-point A:protected-route
+    fetch(DEBUG_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sessionId: DEBUG_SESSION_ID,
+        runId: "pre-fix",
+        hypothesisId: "A",
+        location: "App.js:ProtectedRoute",
+        msg: "[DEBUG] ProtectedRoute state",
+        data: {
+          pathname: location.pathname,
+          search: location.search,
+          hasSession: Boolean(session),
+          loading,
+        },
+        ts: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+  }, [loading, location.pathname, location.search, session]);
 
   if (loading) {
     return <PageLoader label="Cargando sesión..." />;
@@ -34,8 +60,49 @@ function PostLoginGate() {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
+    // #region debug-point A:post-login-gate-state
+    fetch(DEBUG_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sessionId: DEBUG_SESSION_ID,
+        runId: "pre-fix",
+        hypothesisId: "A",
+        location: "App.js:PostLoginGate",
+        msg: "[DEBUG] PostLoginGate state",
+        data: {
+          userId: user?.id ?? null,
+          checking,
+          destination,
+          error,
+        },
+        ts: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+  }, [checking, destination, error, user]);
+
+  useEffect(() => {
     async function checkProfile() {
       try {
+        // #region debug-point A:check-profile-start
+        fetch(DEBUG_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sessionId: DEBUG_SESSION_ID,
+            runId: "pre-fix",
+            hypothesisId: "A",
+            location: "App.js:checkProfile:start",
+            msg: "[DEBUG] Starting profile check",
+            data: {
+              hasSupabaseClient: Boolean(supabaseClient),
+              userId: user?.id ?? null,
+            },
+            ts: Date.now(),
+          }),
+        }).catch(() => {});
+        // #endregion
         if (!supabaseClient) {
           setDestination("/profile-setup");
           return;
@@ -62,8 +129,47 @@ function PostLoginGate() {
           Boolean(data?.goal) &&
           Boolean(data?.experience_level);
 
+        // #region debug-point A:check-profile-success
+        fetch(DEBUG_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sessionId: DEBUG_SESSION_ID,
+            runId: "pre-fix",
+            hypothesisId: "A",
+            location: "App.js:checkProfile:success",
+            msg: "[DEBUG] Profile check resolved",
+            data: {
+              completed,
+              hasProfile: Boolean(data?.user_id),
+              fullName: data?.full_name ?? null,
+              goal: data?.goal ?? null,
+              experienceLevel: data?.experience_level ?? null,
+            },
+            ts: Date.now(),
+          }),
+        }).catch(() => {});
+        // #endregion
+
         setDestination(completed ? "/dashboard" : "/profile-setup");
       } catch (gateError) {
+        // #region debug-point A:check-profile-error
+        fetch(DEBUG_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sessionId: DEBUG_SESSION_ID,
+            runId: "pre-fix",
+            hypothesisId: "A",
+            location: "App.js:checkProfile:error",
+            msg: "[DEBUG] Profile check failed",
+            data: {
+              message: gateError?.message ?? "unknown",
+            },
+            ts: Date.now(),
+          }),
+        }).catch(() => {});
+        // #endregion
         setError(gateError.message || "No se pudo verificar el perfil.");
         setDestination("/profile-setup");
       } finally {
@@ -96,6 +202,27 @@ function PostLoginGate() {
 
 function App() {
   const { session, loading } = useAuth();
+
+  useEffect(() => {
+    // #region debug-point E:app-state
+    fetch(DEBUG_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sessionId: DEBUG_SESSION_ID,
+        runId: "pre-fix",
+        hypothesisId: "E",
+        location: "App.js:App",
+        msg: "[DEBUG] App render state",
+        data: {
+          hasSession: Boolean(session),
+          loading,
+        },
+        ts: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+  }, [loading, session]);
 
   if (loading) {
     return <PageLoader label="Cargando autenticación..." />;

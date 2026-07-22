@@ -15,6 +15,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
 const STORAGE_KEY = "fc.sidebar.collapsed";
+const DEBUG_URL = "http://127.0.0.1:7777/event";
+const DEBUG_SESSION_ID = "post-login-blank";
 
 function getStoredCollapsedValue() {
   try {
@@ -52,6 +54,30 @@ function AppShell({ activeSection = "resumen", header, children }) {
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [location.pathname, location.search]);
+
+  useEffect(() => {
+    // #region debug-point B:app-shell
+    fetch(DEBUG_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sessionId: DEBUG_SESSION_ID,
+        runId: "pre-fix",
+        hypothesisId: "B",
+        location: "AppShell.js:AppShell",
+        msg: "[DEBUG] AppShell mounted",
+        data: {
+          activeSection,
+          pathname: location.pathname,
+          search: location.search,
+          collapsed,
+          mobileMenuOpen,
+        },
+        ts: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+  }, [activeSection, collapsed, location.pathname, location.search, mobileMenuOpen]);
 
   function handleNavigate(path) {
     navigate(path);
