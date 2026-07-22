@@ -5,6 +5,8 @@
   "description": "Frontend base para FitnessControl usando React con Create React App.",
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
+    "framer-motion": "^12.42.2",
+    "lucide-react": "^1.25.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^7.18.1",
