@@ -18,6 +18,7 @@ class Settings(BaseModel):
     supabase_url: str = os.getenv("SUPABASE_URL", "")
     supabase_secret_key: str = os.getenv("SUPABASE_SECRET_KEY", "")
     frontend_url: str = os.getenv("FRONTEND_URL", "")
+    frontend_url_regex: str = os.getenv("FRONTEND_URL_REGEX", r"https://.*\.vercel\.app")
 
     @property
     def supabase_configured(self) -> bool:
@@ -36,6 +37,11 @@ class Settings(BaseModel):
 
         # Preserve order while removing duplicates and empty values.
         return list(dict.fromkeys(origin for origin in origins if origin))
+
+    @property
+    def cors_allowed_origin_regex(self) -> str | None:
+        regex = (self.frontend_url_regex or "").strip()
+        return regex or None
 
 
 settings = Settings()

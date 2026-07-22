@@ -1028,6 +1028,7 @@ a:focus-visible {
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.95fr);
   gap: 1rem;
+  align-items: start;
 }
 
 .fc-routine-builder__header {
@@ -1041,6 +1042,18 @@ a:focus-visible {
 .fc-routine-builder__form {
   display: grid;
   gap: 1rem;
+}
+
+.fc-routine-builder__catalog .fc-card__content,
+.fc-routine-builder__setup .fc-card__content {
+  display: grid;
+  align-content: start;
+  gap: 0;
+}
+
+.fc-routine-builder__catalog .fc-card__content {
+  min-height: min(68vh, 760px);
+  max-height: min(68vh, 760px);
 }
 
 .fc-search-input {
@@ -1067,6 +1080,9 @@ a:focus-visible {
 .fc-catalog-groups {
   display: grid;
   gap: 1rem;
+  overflow: auto;
+  padding-right: 0.3rem;
+  max-height: min(48vh, 540px);
 }
 
 .fc-catalog-group {
@@ -1126,6 +1142,22 @@ a:focus-visible {
   display: grid;
   justify-items: end;
   gap: 0.45rem;
+}
+
+.fc-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(174, 147, 217, 0.12);
+  flex-wrap: wrap;
+}
+
+.fc-pagination__label {
+  color: rgba(242, 238, 245, 0.72);
+  font-size: var(--font-size-sm);
 }
 
 .fc-catalog-item.is-selected {
@@ -1377,6 +1409,9 @@ a:focus-visible {
 .fc-routine-day-exercises {
   display: grid;
   gap: 1rem;
+  max-height: min(56vh, 720px);
+  overflow: auto;
+  padding-right: 0.25rem;
 }
 
 .fc-routine-summary-grid {
@@ -1675,6 +1710,16 @@ button.fc-routine-calendar__cell {
     grid-template-columns: 1fr;
   }
 
+  .fc-routine-builder__catalog .fc-card__content {
+    min-height: auto;
+    max-height: none;
+  }
+
+  .fc-catalog-groups,
+  .fc-routine-day-exercises {
+    max-height: none;
+  }
+
   .fc-routine-wizard-sidebar {
     position: static;
   }
@@ -1750,6 +1795,11 @@ button.fc-routine-calendar__cell {
 
   .fc-routine-status-actions {
     flex-direction: column;
+  }
+
+  .fc-pagination {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .fc-auth-layout {

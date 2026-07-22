@@ -64,6 +64,7 @@ const muscleTaxonomy = [
 ];
 
 const monthLabels = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+const CATALOG_PAGE_SIZE = 8;
 
 function createDraftDay(dayOfWeek) {
   return {
@@ -101,6 +102,7 @@ function RoutineForm() {
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedExerciseId, setSelectedExerciseId] = useState("");
+  const [catalogPage, setCatalogPage] = useState(1);
   const [addForm, setAddForm] = useState({
     sets_planned: "4",
     reps_planned: "10",
@@ -192,14 +194,21 @@ function RoutineForm() {
     });
   }, [activeDay, catalog, searchTerm]);
 
+  const totalCatalogPages = Math.max(1, Math.ceil(filteredCatalog.length / CATALOG_PAGE_SIZE));
+
+  const paginatedCatalog = useMemo(() => {
+    const startIndex = (catalogPage - 1) * CATALOG_PAGE_SIZE;
+    return filteredCatalog.slice(startIndex, startIndex + CATALOG_PAGE_SIZE);
+  }, [catalogPage, filteredCatalog]);
+
   const groupedCatalog = useMemo(() => {
-    return filteredCatalog.reduce((groups, exercise) => {
+    return paginatedCatalog.reduce((groups, exercise) => {
       const group = exercise.muscle_group_parent || "Otros";
       groups[group] = groups[group] || [];
       groups[group].push(exercise);
       return groups;
     }, {});
-  }, [filteredCatalog]);
+  }, [paginatedCatalog]);
 
   const calendarPreview = useMemo(
     () =>
@@ -230,6 +239,7 @@ function RoutineForm() {
   useEffect(() => {
     setSearchTerm("");
     setSelectedExerciseId("");
+    setCatalogPage(1);
     setAddForm({
       sets_planned: "4",
       reps_planned: "10",
@@ -237,6 +247,14 @@ function RoutineForm() {
       notes: "",
     });
   }, [activeDay?.day_of_week]);
+
+  useEffect(() => {
+    setCatalogPage(1);
+  }, [searchTerm, activeDay?.muscle_subgroups?.join("|")]);
+
+  useEffect(() => {
+    setCatalogPage((current) => Math.min(current, totalCatalogPages));
+  }, [totalCatalogPages]);
 
   function updateSelectedDays(nextDays) {
     setForm((current) => ({ ...current, selected_days: nextDays }));
@@ -713,6 +731,9 @@ function RoutineForm() {
                             Ejercicios del dia
                           </h3>
                         </div>
+                        <span className="fc-pill">
+                          {filteredCatalog.length} resultados
+                        </span>
                       </div>
 
                       <div className="fc-search-input">
@@ -761,6 +782,32 @@ function RoutineForm() {
                           </div>
                         ))}
                       </div>
+
+                      {filteredCatalog.length > CATALOG_PAGE_SIZE ? (
+                        <div className="fc-pagination">
+                          <Button
+                            variant="ghost"
+                            disabled={catalogPage === 1}
+                            onClick={() => setCatalogPage((current) => Math.max(1, current - 1))}
+                          >
+                            <ChevronLeft size={16} />
+                            Anterior
+                          </Button>
+                          <span className="fc-pagination__label">
+                            Pagina {catalogPage} de {totalCatalogPages}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            disabled={catalogPage === totalCatalogPages}
+                            onClick={() =>
+                              setCatalogPage((current) => Math.min(totalCatalogPages, current + 1))
+                            }
+                          >
+                            Siguiente
+                            <ChevronRight size={16} />
+                          </Button>
+                        </div>
+                      ) : null}
                     </Card>
 
                     <Card glass className="fc-routine-builder__setup">
