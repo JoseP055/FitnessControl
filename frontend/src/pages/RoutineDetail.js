@@ -21,7 +21,7 @@ import PageLoader from "../components/ui/PageLoader";
 import {
   deleteRoutine,
   getRoutineCalendar,
-  getRoutineSchedule,
+  getRoutineOverview,
   upsertRoutineCompletion,
 } from "../services/api";
 
@@ -67,10 +67,9 @@ function RoutineDetail() {
   useEffect(() => {
     async function bootstrap() {
       try {
-        const [scheduleResponse, calendarResponse] = await Promise.all([
-          getRoutineSchedule(routineId),
-          getRoutineCalendar(routineId),
-        ]);
+        const overview = await getRoutineOverview(routineId);
+        const scheduleResponse = overview?.schedule || null;
+        const calendarResponse = overview?.calendar || null;
 
         setSchedule(scheduleResponse);
         setCalendar(calendarResponse);
@@ -88,12 +87,7 @@ function RoutineDetail() {
   }, [routineId]);
 
   async function refreshData(nextSelectedDate = selectedDate) {
-    const [scheduleResponse, calendarResponse] = await Promise.all([
-      getRoutineSchedule(routineId),
-      getRoutineCalendar(routineId),
-    ]);
-
-    setSchedule(scheduleResponse);
+    const calendarResponse = await getRoutineCalendar(routineId);
     setCalendar(calendarResponse);
 
     const availableDate =
@@ -267,20 +261,14 @@ function RoutineDetail() {
                     ? `Estado actual: ${renderStatusLabel(selectedItem.status)}`
                     : "Selecciona una fecha marcada en el calendario para ver su detalle."}
                 </p>
-              </div>
-            </Card>
-
-            {selectedItem ? (
-              <Card glass>
-                <div className="fc-routine-summary">
-                  <span className="fc-text-eyebrow">Acciones rapidas</span>
-                  <div className="fc-routine-status-actions">
+                {selectedItem ? (
+                  <div className="fc-routine-status-inline">
                     <Button
                       loading={busyAction === `${selectedItem.routine_day_id}-${selectedItem.date}-done`}
                       onClick={() => updateCompletionStatus(selectedItem, "done")}
                     >
                       <Check size={16} />
-                      Marcar hecho
+                      Hecho
                     </Button>
                     <Button
                       variant="secondary"
@@ -288,7 +276,7 @@ function RoutineDetail() {
                       onClick={() => updateCompletionStatus(selectedItem, "pending")}
                     >
                       <CalendarCheck size={16} />
-                      Volver a pendiente
+                      Pendiente
                     </Button>
                     <Button
                       variant="ghost"
@@ -296,12 +284,12 @@ function RoutineDetail() {
                       onClick={() => updateCompletionStatus(selectedItem, "skipped")}
                     >
                       <SkipForward size={16} />
-                      Omitir
+                      Omitido
                     </Button>
                   </div>
-                </div>
-              </Card>
-            ) : null}
+                ) : null}
+              </div>
+            </Card>
           </div>
         </div>
 

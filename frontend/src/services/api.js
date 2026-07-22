@@ -150,6 +150,10 @@ export async function getRoutineSchedule(routineId) {
   return apiRequest(`/routines/${routineId}/schedule`, { method: "GET" });
 }
 
+export async function getRoutineOverview(routineId) {
+  return apiRequest(`/routines/${routineId}/overview`, { method: "GET" });
+}
+
 export async function getRoutineCalendar(routineId) {
   return apiRequest(`/routines/${routineId}/calendar`, { method: "GET" });
 }

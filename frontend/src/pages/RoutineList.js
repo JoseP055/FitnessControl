@@ -1,19 +1,22 @@
 import { motion } from "framer-motion";
-import { CalendarDays, ClipboardList, Dumbbell, Plus, Sparkles } from "lucide-react";
+import { CalendarDays, ClipboardList, Dumbbell, Plus, Sparkles, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import AppShell from "../components/layout/AppShell";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
+import ConfirmDialog from "../components/ui/ConfirmDialog";
 import PageLoader from "../components/ui/PageLoader";
-import { getRoutines } from "../services/api";
+import { deleteRoutine, getRoutines } from "../services/api";
 
 function RoutineList() {
   const navigate = useNavigate();
   const [routines, setRoutines] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [busyRoutineId, setBusyRoutineId] = useState("");
+  const [routineToDelete, setRoutineToDelete] = useState(null);
 
   useEffect(() => {
     async function loadRoutines() {
@@ -29,6 +32,25 @@ function RoutineList() {
 
     loadRoutines();
   }, []);
+
+  async function handleDeleteRoutine() {
+    if (!routineToDelete?.id) {
+      return;
+    }
+
+    setBusyRoutineId(routineToDelete.id);
+    setError("");
+
+    try {
+      await deleteRoutine(routineToDelete.id);
+      setRoutines((current) => current.filter((routine) => routine.id !== routineToDelete.id));
+      setRoutineToDelete(null);
+    } catch (deleteError) {
+      setError(deleteError.message || "No se pudo eliminar la rutina.");
+    } finally {
+      setBusyRoutineId("");
+    }
+  }
 
   const summary = useMemo(() => {
     const totalExercises = routines.reduce(
@@ -170,12 +192,31 @@ function RoutineList() {
                     >
                       Editar datos
                     </Button>
+                    <Button
+                      variant="ghost"
+                      loading={busyRoutineId === routine.id}
+                      onClick={() => setRoutineToDelete(routine)}
+                    >
+                      <Trash2 size={16} />
+                      Eliminar
+                    </Button>
                   </div>
                 </Card>
               </motion.div>
             ))}
           </div>
         )}
+
+        <ConfirmDialog
+          open={Boolean(routineToDelete)}
+          title="Eliminar rutina"
+          description={`Vas a borrar ${routineToDelete?.name || "esta rutina"} junto con su planificacion. Esto no se puede deshacer.`}
+          confirmLabel="Eliminar"
+          cancelLabel="Volver"
+          loading={busyRoutineId === routineToDelete?.id}
+          onCancel={() => setRoutineToDelete(null)}
+          onConfirm={handleDeleteRoutine}
+        />
       </div>
     </AppShell>
   );

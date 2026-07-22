@@ -375,8 +375,9 @@ def _build_routine_detail(user_id: str, routine_id: str) -> dict[str, Any]:
     }
 
 
-def _build_routine_calendar(user_id: str, routine_id: str) -> dict[str, Any]:
-    schedule = _build_schedule(user_id, routine_id)
+def _build_routine_calendar_from_schedule(
+    schedule: dict[str, Any], user_id: str, routine_id: str
+) -> dict[str, Any]:
     start_date = _coerce_date(schedule.get("start_date"))
     end_date = _coerce_date(schedule.get("end_date"))
     routine_days = schedule.get("days", [])
@@ -448,6 +449,11 @@ def _build_routine_calendar(user_id: str, routine_id: str) -> dict[str, Any]:
         "next_training_date": next_training_date,
         "items": items,
     }
+
+
+def _build_routine_calendar(user_id: str, routine_id: str) -> dict[str, Any]:
+    schedule = _build_schedule(user_id, routine_id)
+    return _build_routine_calendar_from_schedule(schedule, user_id, routine_id)
 
 
 @router.get("/exercises")
@@ -680,6 +686,16 @@ async def get_routine_calendar(
     user_id: str = Depends(get_current_user_id),
 ):
     return _build_routine_calendar(user_id, routine_id)
+
+
+@router.get("/routines/{routine_id}/overview")
+async def get_routine_overview(
+    routine_id: str,
+    user_id: str = Depends(get_current_user_id),
+):
+    schedule = _build_schedule(user_id, routine_id)
+    calendar = _build_routine_calendar_from_schedule(schedule, user_id, routine_id)
+    return {"schedule": schedule, "calendar": calendar}
 
 
 @router.put("/routines/{routine_id}/completions")

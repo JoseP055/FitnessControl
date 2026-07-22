@@ -168,7 +168,7 @@ function RoutineCalendar({
                   return (
                     <div
                       key={isoDate}
-                      className={`fc-routine-calendar__cell ${statusClass} ${selected ? "is-selected" : ""} ${isToday ? "is-today" : ""}`}
+                      className={`fc-routine-calendar__cell ${hasTraining ? "has-training" : ""} ${statusClass} ${selected ? "is-selected" : ""} ${isToday ? "is-today" : ""}`}
                     >
                       {content}
                     </div>
@@ -179,7 +179,7 @@ function RoutineCalendar({
                   <button
                     key={isoDate}
                     type="button"
-                    className={`fc-routine-calendar__cell ${statusClass} ${selected ? "is-selected" : ""} ${isToday ? "is-today" : ""}`}
+                    className={`fc-routine-calendar__cell ${hasTraining ? "has-training" : ""} ${statusClass} ${selected ? "is-selected" : ""} ${isToday ? "is-today" : ""}`}
                     onClick={() => onSelectDate?.(isoDate)}
                   >
                     {content}
