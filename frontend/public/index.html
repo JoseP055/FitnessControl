@@ -12,16 +12,9 @@
     <script>
       (function () {
         try {
-          var raw = window.localStorage.getItem("fc.theme");
-          if (!raw) return;
-          var theme = JSON.parse(raw);
-          if (theme.preset) {
-            document.documentElement.setAttribute("data-theme", theme.preset);
-          }
-          if (theme.overrides) {
-            Object.keys(theme.overrides).forEach(function (key) {
-              document.documentElement.style.setProperty(key, theme.overrides[key]);
-            });
+          var preset = window.localStorage.getItem("fc.theme");
+          if (preset) {
+            document.documentElement.setAttribute("data-theme", preset);
           }
         } catch (error) {
           // Ignore malformed theme storage; default theme applies.
