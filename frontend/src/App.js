@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 import { Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
 
 import { useAuth } from "./context/AuthContext";
+import PageLoader from "./components/ui/PageLoader";
+import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
+import ProfileSetup from "./pages/ProfileSetup";
 import Register from "./pages/Register";
-import { getCurrentUserProfile, healthCheck } from "./services/api";
 import { supabaseClient } from "./services/supabaseClient";
 
 function ProtectedRoute({ children }) {
@@ -12,7 +14,7 @@ function ProtectedRoute({ children }) {
   const location = useLocation();
 
   if (loading) {
-    return <p>Cargando sesion...</p>;
+    return <PageLoader label="Cargando sesión..." />;
   }
 
   if (!session) {
@@ -22,55 +24,70 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
-function Dashboard() {
-  const { user, signOut } = useAuth();
-  const [health, setHealth] = useState(null);
-  const [profile, setProfile] = useState(null);
+function PostLoginGate() {
+  const { user } = useAuth();
+  const [destination, setDestination] = useState("");
   const [error, setError] = useState("");
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    async function loadData() {
+    async function checkProfile() {
       try {
-        const [healthData, profileData] = await Promise.all([
-          healthCheck(),
-          getCurrentUserProfile(),
-        ]);
-        setHealth(healthData);
-        setProfile(profileData);
-      } catch (requestError) {
-        setError(requestError.message);
+        if (!supabaseClient) {
+          setDestination("/profile-setup");
+          return;
+        }
+
+        if (!user?.id) {
+          setDestination("/login");
+          return;
+        }
+
+        const { data, error: queryError } = await supabaseClient
+          .from("profiles")
+          .select("user_id, full_name, goal, experience_level")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (queryError) {
+          throw queryError;
+        }
+
+        const completed =
+          Boolean(data?.user_id) &&
+          Boolean(data?.full_name) &&
+          Boolean(data?.goal) &&
+          Boolean(data?.experience_level);
+
+        setDestination(completed ? "/dashboard" : "/profile-setup");
+      } catch (gateError) {
+        setError(gateError.message || "No se pudo verificar el perfil.");
+        setDestination("/profile-setup");
+      } finally {
+        setChecking(false);
       }
     }
 
-    loadData();
-  }, []);
+    checkProfile();
+  }, [user]);
+
+  if (checking) {
+    return <PageLoader label="Preparando tu cuenta..." />;
+  }
+
+  if (destination) {
+    return <Navigate to={destination} replace />;
+  }
 
   return (
-    <main>
-      <h1>FitnessControl</h1>
-      <p>Sesion iniciada con: {user?.email || "sin email"}</p>
-      <p>
-        Cliente Supabase en frontend: {supabaseClient ? "configurado" : "pendiente"}
-      </p>
-
-      <button type="button" onClick={signOut}>
-        Cerrar sesion
-      </button>
-
-      {health ? (
-        <pre>{JSON.stringify(health, null, 2)}</pre>
-      ) : (
-        <p>Consultando `GET /health`...</p>
-      )}
-
-      {profile ? (
-        <pre>{JSON.stringify(profile, null, 2)}</pre>
-      ) : (
-        <p>Consultando `GET /me`...</p>
-      )}
-
-      {error ? <p>Error: {error}</p> : null}
-    </main>
+    <div className="fc-page">
+      <div className="fc-page__noise" />
+      <div style={{ position: "relative", zIndex: 1, padding: "2rem" }}>
+        <p style={{ margin: 0, color: "rgba(242, 238, 245, 0.72)" }}>
+          {error || "Redirigiendo..."}
+        </p>
+      </div>
+    </div>
   );
 }
 
@@ -78,7 +95,7 @@ function App() {
   const { session, loading } = useAuth();
 
   if (loading) {
-    return <p>Cargando autenticacion....</p>;
+    return <PageLoader label="Cargando autenticación..." />;
   }
 
   return (
@@ -87,7 +104,23 @@ function App() {
         path="/"
         element={
           <ProtectedRoute>
+            <PostLoginGate />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile-setup"
+        element={
+          <ProtectedRoute>
+            <ProfileSetup />
           </ProtectedRoute>
         }
       />

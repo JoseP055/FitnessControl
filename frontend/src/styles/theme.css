@@ -503,6 +503,91 @@ a:focus-visible {
   font-size: var(--font-size-sm);
 }
 
+.fc-stepper {
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+}
+
+.fc-stepper__dot {
+  flex: 1;
+  height: 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(174, 147, 217, 0.14);
+  background: rgba(23, 18, 28, 0.55);
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.fc-stepper__dot.is-active {
+  border-color: rgba(172, 79, 116, 0.35);
+  background: linear-gradient(
+    90deg,
+    rgba(172, 79, 116, 0.9) 0%,
+    rgba(145, 106, 140, 0.8) 100%
+  );
+}
+
+.fc-stepper__label {
+  color: rgba(242, 238, 245, 0.64);
+  font-size: var(--font-size-sm);
+}
+
+.fc-option-grid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.fc-option-card {
+  text-align: left;
+  border: 1px solid rgba(174, 147, 217, 0.14);
+  border-radius: var(--radius-lg);
+  background: rgba(23, 18, 28, 0.62);
+  padding: 1.1rem 1.15rem;
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  align-items: center;
+  gap: var(--space-4);
+  transition:
+    transform var(--transition-fast),
+    border-color var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.fc-option-card:hover {
+  transform: translateY(-1px);
+  border-color: rgba(174, 147, 217, 0.28);
+}
+
+.fc-option-card.is-selected {
+  border-color: rgba(172, 79, 116, 0.55);
+  background: rgba(172, 79, 116, 0.12);
+}
+
+.fc-option-card__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: rgba(36, 27, 44, 0.85);
+  border: 1px solid rgba(174, 147, 217, 0.12);
+  color: rgba(242, 238, 245, 0.82);
+}
+
+.fc-option-card.is-selected .fc-option-card__icon {
+  background: rgba(172, 79, 116, 0.16);
+  border-color: rgba(172, 79, 116, 0.25);
+}
+
+.fc-option-card__label {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+  font-size: 1.05rem;
+  color: rgba(242, 238, 245, 0.92);
+}
+
 @keyframes fc-spin {
   to {
     transform: rotate(360deg);
