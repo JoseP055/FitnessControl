@@ -4,7 +4,6 @@ import {
   ClipboardList,
   LayoutGrid,
   LineChart,
-  LogOut,
   User2,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -22,6 +21,9 @@ function Dashboard() {
   const location = useLocation();
   const [profile, setProfile] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
+  const [weightKg, setWeightKg] = useState("");
+  const [savingWeight, setSavingWeight] = useState(false);
+  const [weightMessage, setWeightMessage] = useState("");
 
   const tab = useMemo(() => {
     const params = new URLSearchParams(location.search);
@@ -125,6 +127,54 @@ function Dashboard() {
 
   const activeTab = tabs.find((item) => item.value === tab) ? tab : "resumen";
 
+  async function saveWeight() {
+    setWeightMessage("");
+
+    if (!supabaseClient || !user?.id) {
+      setWeightMessage("No se pudo registrar el peso.");
+      return;
+    }
+
+    const parsed = Number.parseFloat(weightKg);
+
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      setWeightMessage("Ingresá un peso válido.");
+      return;
+    }
+
+    setSavingWeight(true);
+
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const dd = String(today.getDate()).padStart(2, "0");
+    const measurementDate = `${yyyy}-${mm}-${dd}`;
+
+    try {
+      const payload = {
+        user_id: user.id,
+        measurement_date: measurementDate,
+        weight_kg: parsed,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error } = await supabaseClient
+        .from("body_measurements")
+        .upsert(payload, { onConflict: "user_id,measurement_date" });
+
+      if (error) {
+        throw error;
+      }
+
+      setWeightMessage("Peso registrado.");
+      setWeightKg("");
+    } catch (saveError) {
+      setWeightMessage(saveError.message || "No se pudo registrar el peso.");
+    } finally {
+      setSavingWeight(false);
+    }
+  }
+
   return (
     <div className="fc-page">
       <div className="fc-page__noise" />
@@ -155,13 +205,6 @@ function Dashboard() {
               );
             })}
           </nav>
-
-          <div className="fc-dashboard__sidebar-footer">
-            <button type="button" className="fc-nav-item" onClick={signOut}>
-              <LogOut size={18} />
-              <span>Cerrar sesión</span>
-            </button>
-          </div>
         </aside>
 
         <main className="fc-dashboard__main">
@@ -180,8 +223,7 @@ function Dashboard() {
 
             <Button variant="secondary" onClick={signOut}>
               <span className="fc-button__label">
-                <LogOut size={16} />
-                Salir
+                Cerrar sesión
               </span>
             </Button>
           </header>
@@ -308,6 +350,42 @@ function Dashboard() {
                           {profile?.weight_kg ? `${profile.weight_kg} kg` : "—"}
                         </span>
                       </div>
+                    </div>
+                    <div style={{ display: "grid", gap: "0.75rem" }}>
+                      <h3
+                        style={{
+                          margin: 0,
+                          fontFamily: "var(--font-display)",
+                          letterSpacing: "-0.03em",
+                          fontSize: "1.15rem",
+                        }}
+                      >
+                        Registrar nuevo peso
+                      </h3>
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "1fr auto",
+                          gap: "0.75rem",
+                          alignItems: "center",
+                        }}
+                      >
+                        <input
+                          className="fc-input"
+                          inputMode="decimal"
+                          placeholder="Peso (kg)"
+                          value={weightKg}
+                          onChange={(event) => setWeightKg(event.target.value)}
+                        />
+                        <Button loading={savingWeight} onClick={saveWeight}>
+                          Guardar
+                        </Button>
+                      </div>
+                      {weightMessage ? (
+                        <p style={{ margin: 0, color: "rgba(242, 238, 245, 0.72)" }}>
+                          {weightMessage}
+                        </p>
+                      ) : null}
                     </div>
                     <Button variant="secondary" onClick={() => navigate("/profile-setup")}>
                       Editar perfil

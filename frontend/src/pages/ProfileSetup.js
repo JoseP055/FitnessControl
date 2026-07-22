@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Dumbbell, Flame, Target, Timer, Zap } from "lucide-react";
+import { ArrowLeft, ArrowRight, Dumbbell, Flame, Target, Timer, User, Users, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import Button from "../components/ui/Button";
@@ -29,6 +29,8 @@ function ProfileSetup() {
   const [experience, setExperience] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [loadingExisting, setLoadingExisting] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
 
   const steps = useMemo(
     () => [
@@ -58,12 +60,73 @@ function ProfileSetup() {
     []
   );
 
+  const genderOptions = useMemo(
+    () => [
+      { value: "masculino", label: "Masculino", icon: User },
+      { value: "femenino", label: "Femenino", icon: Users },
+      { value: "otro", label: "Otro", icon: Target },
+    ],
+    []
+  );
+
   if (loading) {
     return <PageLoader label="Cargando perfil..." />;
   }
 
   if (!user) {
     return <PageLoader label="Redirigiendo..." />;
+  }
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadExistingProfile() {
+      if (!supabaseClient || !user?.id) {
+        if (isMounted) {
+          setLoadingExisting(false);
+        }
+        return;
+      }
+
+      try {
+        const { data, error: queryError } = await supabaseClient
+          .from("profiles")
+          .select(
+            "user_id, full_name, age, gender, height_cm, weight_kg, goal, experience_level"
+          )
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (queryError) {
+          throw queryError;
+        }
+
+        if (isMounted && data?.user_id) {
+          setIsEditing(true);
+          setFullName(data.full_name || "");
+          setAge(data.age ? String(data.age) : "");
+          setGender(data.gender || "");
+          setHeightCm(data.height_cm ? String(data.height_cm) : "");
+          setWeightKg(data.weight_kg ? String(data.weight_kg) : "");
+          setGoal(data.goal || "");
+          setExperience(data.experience_level || "");
+        }
+      } finally {
+        if (isMounted) {
+          setLoadingExisting(false);
+        }
+      }
+    }
+
+    loadExistingProfile();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user]);
+
+  if (loadingExisting) {
+    return <PageLoader label="Cargando perfil..." />;
   }
 
   function next() {
@@ -114,7 +177,7 @@ function ProfileSetup() {
         throw upsertError;
       }
 
-      navigate("/dashboard", { replace: true });
+      navigate("/dashboard?tab=perfil", { replace: true });
     } catch (saveError) {
       setError(saveError.message || "No se pudo guardar el perfil.");
     } finally {
@@ -131,7 +194,7 @@ function ProfileSetup() {
             <div style={{ display: "grid", gap: "0.5rem" }}>
               <span className="fc-text-eyebrow">Perfil</span>
               <h1 style={{ margin: 0, fontFamily: "var(--font-display)", letterSpacing: "-0.04em", fontSize: "clamp(1.9rem, 4vw, 2.8rem)" }}>
-                Configurá tu perfil
+                {isEditing ? "Editar perfil" : "Configurá tu perfil"}
               </h1>
               <p style={{ margin: 0, color: "rgba(242, 238, 245, 0.68)" }}>
                 Un par de datos para personalizar tu experiencia.
@@ -184,13 +247,28 @@ function ProfileSetup() {
                       value={age}
                       onChange={(event) => setAge(event.target.value)}
                     />
-                    <Input
-                      id="profile-gender"
-                      label="Género (opcional)"
-                      placeholder="Opcional"
-                      value={gender}
-                      onChange={(event) => setGender(event.target.value)}
-                    />
+                    <div style={{ display: "grid", gap: "0.5rem" }}>
+                      <span className="fc-field__label">Género (opcional)</span>
+                      <div className="fc-option-grid">
+                        {genderOptions.map((option) => {
+                          const Icon = option.icon;
+                          const selected = gender === option.value;
+                          return (
+                            <button
+                              key={option.value}
+                              type="button"
+                              className={`fc-option-card ${selected ? "is-selected" : ""}`}
+                              onClick={() => setGender(option.value)}
+                            >
+                              <span className="fc-option-card__icon">
+                                <Icon size={18} />
+                              </span>
+                              <span className="fc-option-card__label">{option.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
                     <Input
                       id="profile-height"
                       label="Altura (cm, opcional)"
@@ -287,13 +365,20 @@ function ProfileSetup() {
           ) : null}
 
           <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
-            <Button variant="ghost" onClick={back} disabled={step === 0}>
-              <span className="fc-button__label">
-                <ArrowLeft size={16} />
-                Atrás
-              </span>
-            </Button>
+            <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+              <Button variant="ghost" onClick={back} disabled={step === 0}>
+                <span className="fc-button__label">
+                  <ArrowLeft size={16} />
+                  Atrás
+                </span>
+              </Button>
 
+              {isEditing ? (
+                <Button variant="secondary" onClick={() => navigate("/dashboard?tab=perfil", { replace: true })}>
+                  Volver sin guardar
+                </Button>
+              ) : null}
+            </div>
             {step < steps.length - 1 ? (
               <Button onClick={next} disabled={(step === 0 && !basicValid) || (step === 1 && !goalValid)}>
                 <span className="fc-button__label">
@@ -304,7 +389,7 @@ function ProfileSetup() {
             ) : (
               <Button onClick={handleFinish} loading={saving} disabled={!levelValid}>
                 <span className="fc-button__label">
-                  Finalizar
+                  {isEditing ? "Guardar cambios" : "Finalizar"}
                   <ArrowRight size={16} />
                 </span>
               </Button>
@@ -317,4 +402,3 @@ function ProfileSetup() {
 }
 
 export default ProfileSetup;
-
