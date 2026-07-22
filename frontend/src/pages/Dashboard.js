@@ -10,9 +10,6 @@ import PageLoader from "../components/ui/PageLoader";
 import { useAuth } from "../context/AuthContext";
 import { supabaseClient } from "../services/supabaseClient";
 
-const DEBUG_URL = "http://127.0.0.1:7777/event";
-const DEBUG_SESSION_ID = "post-login-blank";
-
 function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -68,29 +65,6 @@ function Dashboard() {
       isMounted = false;
     };
   }, [user]);
-
-  useEffect(() => {
-    // #region debug-point B:dashboard
-    fetch(DEBUG_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        sessionId: DEBUG_SESSION_ID,
-        runId: "pre-fix",
-        hypothesisId: "B",
-        location: "Dashboard.js:Dashboard",
-        msg: "[DEBUG] Dashboard render state",
-        data: {
-          userId: user?.id ?? null,
-          loadingProfile,
-          hasProfile: Boolean(profile),
-          tab,
-        },
-        ts: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
-  }, [loadingProfile, profile, tab, user]);
 
   const activeTab = useMemo(() => {
     const validTabs = ["resumen", "rutinas", "progreso", "perfil"];

@@ -9,6 +9,9 @@ import Card from "../components/ui/Card";
 import PageLoader from "../components/ui/PageLoader";
 import { getRoutines } from "../services/api";
 
+const DEBUG_URL = "http://127.0.0.1:7777/event";
+const DEBUG_SESSION_ID = "routines-infinite-loading";
+
 function RoutineList() {
   const navigate = useNavigate();
   const [routines, setRoutines] = useState([]);
@@ -17,12 +20,76 @@ function RoutineList() {
 
   useEffect(() => {
     async function loadRoutines() {
+      // #region debug-point A:routine-list-start
+      fetch(DEBUG_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId: DEBUG_SESSION_ID,
+          runId: "pre-fix",
+          hypothesisId: "A",
+          location: "RoutineList.js:loadRoutines:start",
+          msg: "[DEBUG] RoutineList load started",
+          data: {},
+          ts: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
       try {
         const response = await getRoutines();
+        // #region debug-point A:routine-list-success
+        fetch(DEBUG_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sessionId: DEBUG_SESSION_ID,
+            runId: "pre-fix",
+            hypothesisId: "A",
+            location: "RoutineList.js:loadRoutines:success",
+            msg: "[DEBUG] RoutineList load succeeded",
+            data: {
+              itemCount: response?.items?.length ?? null,
+            },
+            ts: Date.now(),
+          }),
+        }).catch(() => {});
+        // #endregion
         setRoutines(response.items || []);
       } catch (loadError) {
+        // #region debug-point A:routine-list-error
+        fetch(DEBUG_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sessionId: DEBUG_SESSION_ID,
+            runId: "pre-fix",
+            hypothesisId: "A",
+            location: "RoutineList.js:loadRoutines:error",
+            msg: "[DEBUG] RoutineList load failed",
+            data: {
+              message: loadError?.message ?? "unknown",
+            },
+            ts: Date.now(),
+          }),
+        }).catch(() => {});
+        // #endregion
         setError(loadError.message || "No se pudieron cargar tus rutinas.");
       } finally {
+        // #region debug-point A:routine-list-finally
+        fetch(DEBUG_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sessionId: DEBUG_SESSION_ID,
+            runId: "pre-fix",
+            hypothesisId: "A",
+            location: "RoutineList.js:loadRoutines:finally",
+            msg: "[DEBUG] RoutineList load finished",
+            data: {},
+            ts: Date.now(),
+          }),
+        }).catch(() => {});
+        // #endregion
         setLoading(false);
       }
     }

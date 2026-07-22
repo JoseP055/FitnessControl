@@ -1,6 +1,9 @@
 import { supabaseClient } from "./supabaseClient";
 
 const API_URL = process.env.REACT_APP_API_URL || "";
+const DEBUG_URL = "http://127.0.0.1:7777/event";
+const DEBUG_SESSION_ID = "routines-infinite-loading";
+const API_TIMEOUT_MS = 6000;
 
 async function getAuthHeaders() {
   if (!supabaseClient) {
@@ -24,6 +27,28 @@ async function getAuthHeaders() {
 
 async function apiRequest(path, options = {}) {
   const authHeaders = await getAuthHeaders();
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+  // #region debug-point B:api-request-start
+  fetch(DEBUG_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      sessionId: DEBUG_SESSION_ID,
+      runId: "pre-fix",
+      hypothesisId: "B",
+      location: "api.js:apiRequest:start",
+      msg: "[DEBUG] Starting API request",
+      data: {
+        path,
+        method: options.method || "GET",
+        apiUrl: API_URL,
+        hasAuthHeader: Boolean(authHeaders.Authorization),
+      },
+      ts: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
     headers: {
@@ -31,9 +56,38 @@ async function apiRequest(path, options = {}) {
       ...authHeaders,
       ...(options.headers || {}),
     },
+    signal: controller.signal,
+  }).catch((error) => {
+    if (error?.name === "AbortError") {
+      throw new Error("El backend tardó demasiado en responder.");
+    }
+
+    throw error;
   });
 
+  window.clearTimeout(timeoutId);
+
   const contentType = response.headers.get("content-type") || "";
+  // #region debug-point B:api-response
+  fetch(DEBUG_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      sessionId: DEBUG_SESSION_ID,
+      runId: "pre-fix",
+      hypothesisId: "B",
+      location: "api.js:apiRequest:response",
+      msg: "[DEBUG] API response received",
+      data: {
+        path,
+        status: response.status,
+        ok: response.ok,
+        contentType,
+      },
+      ts: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
   const data = contentType.includes("application/json")
     ? await response.json()
     : null;

@@ -1,5 +1,7 @@
 from collections import Counter
+import json
 from typing import Any
+import urllib.request
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
@@ -160,6 +162,24 @@ async def list_exercises(user_id: str = Depends(get_current_user_id)):
 
 @router.get("/routines")
 async def list_routines(user_id: str = Depends(get_current_user_id)):
+    # #region debug-point C:list-routines-start
+    urllib.request.urlopen(
+        urllib.request.Request(
+            "http://127.0.0.1:7777/event",
+            data=json.dumps(
+                {
+                    "sessionId": "routines-infinite-loading",
+                    "runId": "pre-fix",
+                    "hypothesisId": "C",
+                    "location": "routines.py:list_routines:start",
+                    "msg": "[DEBUG] Entered list_routines",
+                    "data": {"user_id": user_id},
+                }
+            ).encode(),
+            headers={"Content-Type": "application/json"},
+        )
+    ).read()
+    # #endregion
     supabase = get_supabase_client()
     routines_result = (
         supabase.table("routines")
@@ -191,6 +211,24 @@ async def list_routines(user_id: str = Depends(get_current_user_id)):
         }
         for routine in routines
     ]
+    # #region debug-point C:list-routines-success
+    urllib.request.urlopen(
+        urllib.request.Request(
+            "http://127.0.0.1:7777/event",
+            data=json.dumps(
+                {
+                    "sessionId": "routines-infinite-loading",
+                    "runId": "pre-fix",
+                    "hypothesisId": "C",
+                    "location": "routines.py:list_routines:success",
+                    "msg": "[DEBUG] Returning routines list",
+                    "data": {"count": len(items)},
+                }
+            ).encode(),
+            headers={"Content-Type": "application/json"},
+        )
+    ).read()
+    # #endregion
     return {"items": items}
 
 
