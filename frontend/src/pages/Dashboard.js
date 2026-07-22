@@ -92,6 +92,11 @@ function Dashboard() {
     // #endregion
   }, [loadingProfile, profile, tab, user]);
 
+  const activeTab = useMemo(() => {
+    const validTabs = ["resumen", "rutinas", "progreso", "perfil"];
+    return validTabs.includes(tab) ? tab : "resumen";
+  }, [tab]);
+
   if (loadingProfile) {
     return <PageLoader label="Cargando dashboard..." />;
   }
@@ -135,11 +140,6 @@ function Dashboard() {
         return "Sin definir";
     }
   }
-
-  const activeTab = useMemo(() => {
-    const validTabs = ["resumen", "rutinas", "progreso", "perfil"];
-    return validTabs.includes(tab) ? tab : "resumen";
-  }, [tab]);
 
   async function saveWeight() {
     setWeightMessage("");

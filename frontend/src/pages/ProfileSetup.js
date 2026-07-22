@@ -69,14 +69,6 @@ function ProfileSetup() {
     []
   );
 
-  if (loading) {
-    return <PageLoader label="Cargando perfil..." />;
-  }
-
-  if (!user) {
-    return <PageLoader label="Redirigiendo..." />;
-  }
-
   useEffect(() => {
     let isMounted = true;
 
@@ -124,6 +116,14 @@ function ProfileSetup() {
       isMounted = false;
     };
   }, [user]);
+
+  if (loading) {
+    return <PageLoader label="Cargando perfil..." />;
+  }
+
+  if (!user) {
+    return <PageLoader label="Redirigiendo..." />;
+  }
 
   if (loadingExisting) {
     return <PageLoader label="Cargando perfil..." />;

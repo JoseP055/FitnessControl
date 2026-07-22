@@ -19,10 +19,15 @@
 | E | Hay un problema de navegación/rutas después del redirect inicial | Med | Low | Pending |
 
 ## Log Evidence
-- Pendiente.
+- Consola del navegador: `Minified React error #310`.
+- El fallo aparece después del login con usuario existente y muestra pantalla oscura vacía.
+- Revisión estática y runtime: `Dashboard.js` tenía `useMemo` (`activeTab`) después de `if (loadingProfile) return ...`.
+- Revisión estática: `ProfileSetup.js` tenía `useEffect` después de `if (loading) return ...` y `if (!user) return ...`.
 
 ## Verification Conclusion
-- Pendiente.
+- Causa confirmada: violación de reglas de Hooks en React por declarar hooks después de retornos condicionales.
+- Fix aplicado: reordenar hooks para que se ejecuten siempre antes de cualquier return condicional en `Dashboard.js` y `ProfileSetup.js`.
+- Estado: pendiente de verificación del usuario.
 
 ## Instrumentation
 - `frontend/src/App.js`: estado de `App`, `ProtectedRoute` y `PostLoginGate`.
