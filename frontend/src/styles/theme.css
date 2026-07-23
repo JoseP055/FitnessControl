@@ -1153,17 +1153,10 @@ a:focus-visible {
 }
 
 .fc-routine-table-row__position .fc-input {
-  width: 56px;
+  width: 68px;
   text-align: center;
   padding-left: 0.4rem;
-  padding-right: 0.4rem;
-}
-
-.fc-routine-table-row__reorder {
-  display: flex;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-  justify-content: flex-end;
+  padding-right: 1.6rem;
 }
 
 .fc-routine-table-row__exercise {
@@ -2182,10 +2175,6 @@ button.fc-routine-calendar__cell {
 
   .fc-routine-table-row__header {
     flex-wrap: wrap;
-  }
-
-  .fc-routine-table-row__reorder {
-    justify-content: flex-start;
   }
 
   .fc-auth-layout {

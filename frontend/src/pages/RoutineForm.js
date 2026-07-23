@@ -547,15 +547,17 @@ function RoutineForm() {
     }
   }
 
-  function moveDraftExercise(exerciseId, direction) {
+  // Mueve el ejercicio a la posicion elegida en el combo y renumera el resto
+  // para que las posiciones sigan siendo unicas y consecutivas (1..N).
+  function setExercisePosition(exerciseId, newPosition) {
     if (!activeDay) {
       return;
     }
 
     const currentIndex = activeDay.exercises.findIndex((item) => item.id === exerciseId);
-    const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+    const targetIndex = Math.min(Math.max(newPosition - 1, 0), activeDay.exercises.length - 1);
 
-    if (currentIndex < 0 || targetIndex < 0 || targetIndex >= activeDay.exercises.length) {
+    if (currentIndex < 0 || currentIndex === targetIndex) {
       return;
     }
 
@@ -1132,40 +1134,29 @@ function RoutineForm() {
                                 <p>Todavia no agregaste ejercicios para {activeDayMeta?.label}.</p>
                               </div>
                             ) : (
-                              activeDay.exercises.map((item, index) => (
+                              activeDay.exercises.map((item) => (
                                 <div key={item.id} className="fc-routine-table-row">
                                   <div className="fc-routine-table-row__header">
                                     <div className="fc-routine-table-row__position">
                                       <span className="fc-text-eyebrow">Pos</span>
-                                      <input
-                                        className="fc-input"
-                                        inputMode="numeric"
+                                      <select
+                                        className="fc-input fc-select"
                                         value={item.exercise_order}
                                         onChange={(event) =>
-                                          updateDraftExercise(item.id, "exercise_order", event.target.value)
+                                          setExercisePosition(item.id, Number(event.target.value))
                                         }
-                                      />
+                                      >
+                                        {activeDay.exercises.map((_, positionIndex) => (
+                                          <option key={positionIndex + 1} value={positionIndex + 1}>
+                                            {positionIndex + 1}
+                                          </option>
+                                        ))}
+                                      </select>
                                     </div>
 
-                                    <div className="fc-routine-table-row__reorder">
-                                      <Button
-                                        variant="ghost"
-                                        disabled={index === 0}
-                                        onClick={() => moveDraftExercise(item.id, "up")}
-                                      >
-                                        <ChevronLeft size={16} />
-                                      </Button>
-                                      <Button
-                                        variant="ghost"
-                                        disabled={index === activeDay.exercises.length - 1}
-                                        onClick={() => moveDraftExercise(item.id, "down")}
-                                      >
-                                        <ChevronRight size={16} />
-                                      </Button>
-                                      <Button variant="ghost-danger" onClick={() => removeDraftExercise(item.id)}>
-                                        <Trash2 size={16} />
-                                      </Button>
-                                    </div>
+                                    <Button variant="ghost-danger" onClick={() => removeDraftExercise(item.id)}>
+                                      <Trash2 size={16} />
+                                    </Button>
                                   </div>
 
                                   <div className="fc-routine-table-row__exercise">
