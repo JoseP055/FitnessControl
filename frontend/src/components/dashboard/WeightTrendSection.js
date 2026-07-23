@@ -1,6 +1,7 @@
 import { LineChart, Target } from "lucide-react";
 
 import Card from "../ui/Card";
+import WeightLineChart from "./WeightLineChart";
 
 function formatShortDate(isoDate) {
   const date = new Date(`${isoDate}T00:00:00`);
@@ -94,13 +95,8 @@ function WeightTrendSection({ measurements, weightGoalKg }) {
     );
   }
 
-  const values = points.map((point) => point.weight_kg);
   const first = points[0];
   const previous = points[points.length - 2];
-
-  const rangeMin = Math.min(...values, weightGoalKg || Infinity);
-  const rangeMax = Math.max(...values, weightGoalKg || -Infinity);
-  const range = rangeMax - rangeMin || 1;
 
   const deltaTotal = latest.weight_kg - first.weight_kg;
   const deltaPrevious = latest.weight_kg - previous.weight_kg;
@@ -119,8 +115,6 @@ function WeightTrendSection({ measurements, weightGoalKg }) {
         ? Math.max(0, Math.min(100, Math.round(((latest.weight_kg - first.weight_kg) / totalChange) * 100)))
         : 100;
   }
-
-  const goalHeightPercent = weightGoalKg ? 18 + ((weightGoalKg - rangeMin) / range) * 82 : null;
 
   return (
     <Card glass>
@@ -152,23 +146,7 @@ function WeightTrendSection({ measurements, weightGoalKg }) {
           </div>
         </div>
 
-        <div className="fc-sparkline" role="img" aria-label={`Tendencia de peso: de ${first.weight_kg} a ${latest.weight_kg} kg`}>
-          {goalHeightPercent !== null ? (
-            <div className="fc-sparkline__goal-line" style={{ bottom: `${goalHeightPercent}%` }} />
-          ) : null}
-          {points.map((point, index) => {
-            const heightPercent = 18 + ((point.weight_kg - rangeMin) / range) * 82;
-            const isLatest = index === points.length - 1;
-            return (
-              <div
-                key={point.measurement_date}
-                className={`fc-sparkline__bar ${isLatest ? "is-latest" : ""}`}
-                style={{ height: `${heightPercent}%` }}
-                title={`${formatShortDate(point.measurement_date)}: ${point.weight_kg} kg`}
-              />
-            );
-          })}
-        </div>
+        <WeightLineChart points={points} weightGoalKg={weightGoalKg} />
 
         {weightGoalKg ? (
           <div style={{ display: "grid", gap: "0.5rem" }}>

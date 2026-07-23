@@ -31,6 +31,7 @@ function MeasurementsSection({ userId, isSelf, section, weightGoalKg, onRefresh 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [ageGender, setAgeGender] = useState({ age: null, gender: null });
+  const [measurementDate, setMeasurementDate] = useState(todayIso());
   const [goalInput, setGoalInput] = useState(weightGoalKg ?? "");
   const [savingGoal, setSavingGoal] = useState(false);
   const [goalError, setGoalError] = useState("");
@@ -89,7 +90,17 @@ function MeasurementsSection({ userId, isSelf, section, weightGoalKg, onRefresh 
   async function handleSave() {
     setError("");
 
-    const payload = { measurement_date: todayIso() };
+    if (!measurementDate) {
+      setError("Elegi una fecha para la medida.");
+      return;
+    }
+
+    if (measurementDate > todayIso()) {
+      setError("No podes registrar una medida en una fecha futura.");
+      return;
+    }
+
+    const payload = { measurement_date: measurementDate };
     let hasValue = false;
 
     for (const field of FIELDS) {
@@ -110,6 +121,7 @@ function MeasurementsSection({ userId, isSelf, section, weightGoalKg, onRefresh 
     try {
       await upsertMeasurement(userId, payload);
       setForm({});
+      setMeasurementDate(todayIso());
       await onRefresh();
     } catch (saveError) {
       setError(saveError.message || "No se pudo registrar la medida.");
@@ -201,6 +213,16 @@ function MeasurementsSection({ userId, isSelf, section, weightGoalKg, onRefresh 
                 <Plus size={15} />
                 Registrar nueva medida
               </p>
+              <div style={{ maxWidth: "200px" }}>
+                <Input
+                  id="measurement-date"
+                  label="Fecha"
+                  type="date"
+                  max={todayIso()}
+                  value={measurementDate}
+                  onChange={(event) => setMeasurementDate(event.target.value)}
+                />
+              </div>
               <div style={{ display: "grid", gap: "0.75rem", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))" }}>
                 {FIELDS.map((field) =>
                   field.key === "body_fat_percent" ? (

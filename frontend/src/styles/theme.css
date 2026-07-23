@@ -2611,33 +2611,81 @@ button.fc-routine-calendar__cell {
 /* Sparkline de peso (Progreso)                                             */
 /* ------------------------------------------------------------------------ */
 
-.fc-sparkline {
+.fc-weight-chart {
   position: relative;
-  display: flex;
-  align-items: flex-end;
-  gap: 4px;
-  height: 64px;
+  width: 100%;
+  height: 180px;
 }
 
-.fc-sparkline__bar {
-  flex: 1 1 0;
-  min-width: 6px;
-  background: rgba(var(--color-accent-rgb), 0.35);
-  border-radius: 4px 4px 0 0;
-  transition: background var(--transition-fast);
+.fc-weight-chart__svg {
+  display: block;
+  overflow: visible;
 }
 
-.fc-sparkline__bar.is-latest {
-  background: rgba(var(--color-accent-rgb), 0.9);
+.fc-weight-chart__svg text {
+  font-family: var(--font-body);
 }
 
-.fc-sparkline__goal-line {
+.fc-weight-chart__area {
+  fill: rgba(var(--color-accent-rgb), 0.1);
+  stroke: none;
+}
+
+.fc-weight-chart__line {
+  fill: none;
+  stroke: rgba(var(--color-accent-rgb), 0.9);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.fc-weight-chart__dot {
+  fill: rgba(var(--color-accent-rgb), 0.95);
+  stroke: rgb(var(--color-surface-rgb));
+  stroke-width: 2;
+}
+
+.fc-weight-chart__goal-line {
+  stroke: rgba(var(--color-text-secondary-rgb), 0.55);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 4;
+}
+
+.fc-weight-chart__goal-label {
+  fill: rgba(var(--color-text-secondary-rgb), 0.85);
+  font-size: 11px;
+}
+
+.fc-weight-chart__axis-label {
+  fill: rgba(var(--color-text-secondary-rgb), 0.65);
+  font-size: 10px;
+}
+
+.fc-weight-chart__crosshair {
+  stroke: rgba(var(--color-text-secondary-rgb), 0.35);
+  stroke-width: 1;
+}
+
+.fc-weight-chart__tooltip {
   position: absolute;
-  left: 0;
-  right: 0;
-  height: 0;
-  border-top: 2px dashed rgba(var(--color-text-secondary-rgb), 0.55);
+  top: 0;
+  transform: translate(-50%, -100%);
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: var(--radius-sm, 8px);
+  background: rgb(var(--color-surface-rgb));
+  border: 1px solid rgba(var(--color-text-secondary-rgb), 0.18);
+  box-shadow: var(--shadow-card);
+  font-size: 0.75rem;
+  color: rgba(var(--color-text-secondary-rgb), 0.85);
   pointer-events: none;
+  white-space: nowrap;
+}
+
+.fc-weight-chart__tooltip strong {
+  font-family: var(--font-display);
+  color: rgba(var(--color-text-rgb), 0.92);
 }
 
 /* ------------------------------------------------------------------------ */
