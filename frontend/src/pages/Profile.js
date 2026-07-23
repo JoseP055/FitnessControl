@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 
 import AppShell from "../components/layout/AppShell";
+import Button from "../components/ui/Button";
 import PageLoader from "../components/ui/PageLoader";
 import FavoriteFoodsSection from "../components/profile/FavoriteFoodsSection";
 import GymScheduleSection from "../components/profile/GymScheduleSection";
@@ -17,6 +19,7 @@ import { getFriendshipWith } from "../services/socialClient";
 
 function Profile() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { userId: routeUserId } = useParams();
 
   const targetUserId = routeUserId || user.id;
@@ -68,6 +71,12 @@ function Profile() {
       header={
         <div className="fc-shell-header">
           <div>
+            {!isSelf ? (
+              <Button variant="ghost" onClick={() => navigate(-1)}>
+                <ArrowLeft size={16} />
+                Volver
+              </Button>
+            ) : null}
             <h1 className="fc-dashboard__title">{isSelf ? "Tu perfil" : profileData.identity.full_name}</h1>
             <p className="fc-dashboard__subtitle">
               {isSelf
