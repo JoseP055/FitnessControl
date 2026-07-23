@@ -8,6 +8,7 @@ import {
   Menu,
   Salad,
   User2,
+  Users,
   X,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -38,6 +39,7 @@ function AppShell({ activeSection = "resumen", header, children }) {
       { value: "rutinas", label: "Rutinas", icon: ClipboardList, path: "/routines" },
       { value: "nutricion", label: "Nutricion", icon: Salad, path: "/nutrition" },
       { value: "progreso", label: "Progreso", icon: LineChart, path: "/dashboard?tab=progreso" },
+      { value: "amigos", label: "Amigos", icon: Users, path: "/friends" },
       { value: "perfil", label: "Perfil", icon: User2, path: "/profile" },
     ],
     []
@@ -85,6 +87,10 @@ function AppShell({ activeSection = "resumen", header, children }) {
 
     if (item.value === "nutricion") {
       return location.pathname.startsWith("/nutrition");
+    }
+
+    if (item.value === "amigos") {
+      return location.pathname.startsWith("/friends");
     }
 
     if (item.value === "resumen") {

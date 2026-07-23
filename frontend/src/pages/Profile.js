@@ -4,7 +4,6 @@ import { useParams } from "react-router-dom";
 import AppShell from "../components/layout/AppShell";
 import PageLoader from "../components/ui/PageLoader";
 import FavoriteFoodsSection from "../components/profile/FavoriteFoodsSection";
-import FriendsPanel from "../components/profile/FriendsPanel";
 import GymScheduleSection from "../components/profile/GymScheduleSection";
 import MeasurementsSection from "../components/profile/MeasurementsSection";
 import PersonalRecordsSection from "../components/profile/PersonalRecordsSection";
@@ -87,6 +86,7 @@ function Profile() {
           isSelf={isSelf}
           friendshipStatus={profileData.friendship_status}
           friendshipId={friendshipId}
+          friendsCount={profileData.friends_count}
           onRefresh={load}
         />
 
@@ -135,7 +135,6 @@ function Profile() {
           onRefresh={load}
         />
 
-        {isSelf ? <FriendsPanel userId={targetUserId} /> : null}
         {isSelf ? <ThemeSection /> : null}
       </div>
     </AppShell>

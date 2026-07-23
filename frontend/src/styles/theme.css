@@ -2633,3 +2633,38 @@ button.fc-routine-calendar__cell {
   color: rgba(var(--color-text-rgb), 0.92);
 }
 
+/* ------------------------------------------------------------------------ */
+/* Busqueda de personas (modulo Amigos)                                     */
+/* ------------------------------------------------------------------------ */
+
+.fc-search-input {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0 0.9rem;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(var(--color-text-secondary-rgb), 0.16);
+  background: rgba(var(--color-bg-rgb), 0.72);
+  color: rgba(var(--color-text-rgb), 0.56);
+}
+
+.fc-search-input:focus-within {
+  border-color: rgba(var(--color-accent-rgb), 0.9);
+  box-shadow: 0 0 0 4px rgba(var(--color-accent-rgb), 0.14);
+}
+
+.fc-search-input .fc-input {
+  border: none;
+  background: none;
+  padding: 0.95rem 0;
+  box-shadow: none;
+}
+
+.fc-search-input .fc-input:focus {
+  box-shadow: none;
+}
+
+.fc-friends-count {
+  cursor: pointer;
+}
+

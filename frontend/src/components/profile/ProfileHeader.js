@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Camera, Check, Copy, Pencil, UserMinus, UserPlus, UserX, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Camera, Check, Copy, Pencil, UserMinus, UserPlus, Users, UserX, X } from "lucide-react";
 
 import Button from "../ui/Button";
 import Card from "../ui/Card";
@@ -25,7 +26,8 @@ function initialsFromName(name) {
     .join("");
 }
 
-function ProfileHeader({ userId, viewerId, identity, isSelf, friendshipStatus, friendshipId, onRefresh }) {
+function ProfileHeader({ userId, viewerId, identity, isSelf, friendshipStatus, friendshipId, friendsCount, onRefresh }) {
+  const navigate = useNavigate();
   const fileInputRef = useRef(null);
   const [editing, setEditing] = useState(false);
   const [fullName, setFullName] = useState(identity.full_name || "");
@@ -331,6 +333,15 @@ function ProfileHeader({ userId, viewerId, identity, isSelf, friendshipStatus, f
                     ID: {identity.public_id} {copied ? "(copiado)" : ""}
                   </button>
                 ) : null}
+                <span
+                  className={`fc-pill ${isSelf ? "fc-friends-count" : ""}`}
+                  role={isSelf ? "button" : undefined}
+                  tabIndex={isSelf ? 0 : undefined}
+                  onClick={isSelf ? () => navigate("/friends") : undefined}
+                >
+                  <Users size={12} />
+                  {friendsCount ?? 0} {friendsCount === 1 ? "amigo" : "amigos"}
+                </span>
               </div>
               <p className="fc-card-text">{identity.bio || (isSelf ? "Todavia no escribiste tu biografia." : "")}</p>
             </>

@@ -20,6 +20,7 @@ Ejecutar en este orden:
 12. `012_nutrition.sql` — Módulo de Nutrición: `nutrition_logs` (comidas por día con macros opcionales) y `water_logs` (agua acumulada por día), ambas con RLS solo-dueño.
 13. `013_profile_goals_multi.sql` — `goal` pasa a ser opcional (nullable) y se agrega `goals` (text[]) para elegir más de un objetivo en el onboarding; `goal` se mantiene poblado con el primero elegido por compatibilidad.
 14. `014_profile_username_cooldown.sql` — Agrega `username_changed_at` a `profiles` para limitar el cambio de username a una vez cada 15 días (se valida en el frontend).
+15. `015_friends_search_optimization.sql` — Habilita `pg_trgm` e índices GIN de trigramas sobre `full_name`/`username` para que la búsqueda de personas use índice, y actualiza `search_profiles` para rankear resultados (coincidencia exacta > prefijo de username > prefijo de nombre > resto) en vez de orden alfabético plano.
 
 ## Qué verificar después de cada script (Table Editor)
 

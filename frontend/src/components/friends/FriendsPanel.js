@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Search, UserPlus, Users } from "lucide-react";
 
-import Button from "../ui/Button";
 import Card from "../ui/Card";
 import { getProfile } from "../../services/api";
 import {
@@ -20,6 +19,8 @@ const TABS = [
   { key: "sent", label: "Enviadas" },
   { key: "search", label: "Buscar" },
 ];
+
+const SEARCH_DEBOUNCE_MS = 350;
 
 function otherUserId(row, userId) {
   return row.requester_id === userId ? row.addressee_id : row.requester_id;
@@ -64,6 +65,29 @@ function FriendsPanel({ userId }) {
     loadFriendships();
   }, [userId]);
 
+  // Busqueda en vivo (estilo Instagram): dispara sola a medida que se escribe,
+  // sin boton, con un pequeno debounce para no pegarle a la API en cada tecla.
+  useEffect(() => {
+    const query = searchQuery.trim();
+
+    if (!query) {
+      setSearchResults([]);
+      setSearching(false);
+      return undefined;
+    }
+
+    setSearching(true);
+
+    const timeoutId = setTimeout(() => {
+      searchProfiles(query)
+        .then((results) => setSearchResults(results))
+        .catch((searchError) => setError(searchError.message || "No se pudo buscar."))
+        .finally(() => setSearching(false));
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
+
   const { friends, received, sent } = categorizeFriendships(rows, userId);
   const existingIds = new Set(rows.map((row) => otherUserId(row, userId)));
 
@@ -92,20 +116,6 @@ function FriendsPanel({ userId }) {
       setError(removeError.message || "No se pudo eliminar.");
     } finally {
       setBusyId("");
-    }
-  }
-
-  async function handleSearch() {
-    setSearching(true);
-    setError("");
-
-    try {
-      const results = await searchProfiles(searchQuery);
-      setSearchResults(results);
-    } catch (searchError) {
-      setError(searchError.message || "No se pudo buscar.");
-    } finally {
-      setSearching(false);
     }
   }
 
@@ -203,19 +213,22 @@ function FriendsPanel({ userId }) {
 
             {tab === "search" ? (
               <div style={{ display: "grid", gap: "0.75rem" }}>
-                <div className="fc-inline-form">
+                <div className="fc-search-input">
+                  <Search size={16} />
                   <input
                     className="fc-input"
                     placeholder="Buscar por nombre, usuario o ID..."
                     value={searchQuery}
                     onChange={(event) => setSearchQuery(event.target.value)}
-                    onKeyDown={(event) => event.key === "Enter" && handleSearch()}
+                    autoFocus
                   />
-                  <Button loading={searching} onClick={handleSearch}>
-                    <Search size={16} />
-                    Buscar
-                  </Button>
                 </div>
+
+                {searching ? <p className="fc-card-text">Buscando...</p> : null}
+
+                {!searching && searchQuery.trim() && !searchResults.length ? (
+                  <p className="fc-card-text">No encontramos a nadie con ese nombre, usuario o ID.</p>
+                ) : null}
 
                 {searchResults.map((result) => (
                   <FriendCard

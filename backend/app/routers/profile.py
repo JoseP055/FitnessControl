@@ -71,6 +71,18 @@ def _get_friendship_status(viewer_id: str, target_id: str) -> str:
     return "pending_sent" if friendship["requester_id"] == viewer_id else "pending_received"
 
 
+def _count_friends(user_id: str) -> int:
+    supabase = get_supabase_client()
+    result = (
+        supabase.table("friendships")
+        .select("id", count="exact")
+        .eq("status", "accepted")
+        .or_(f"requester_id.eq.{user_id},addressee_id.eq.{user_id}")
+        .execute()
+    )
+    return result.count or 0
+
+
 def _is_visible(visibility: str, friendship_status: str | None, is_self: bool) -> bool:
     if is_self:
         return True
@@ -214,6 +226,7 @@ async def get_profile(user_id: str, viewer_id: str = Depends(get_current_user_id
         "user_id": user_id,
         "is_self": is_self,
         "friendship_status": "self" if is_self else friendship_status,
+        "friends_count": _count_friends(user_id),
         "identity": {
             "full_name": profile.get("full_name"),
             "avatar_url": profile.get("avatar_url"),
