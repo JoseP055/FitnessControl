@@ -345,13 +345,15 @@ function Dashboard() {
         ) : null}
 
         {activeTab === "progreso" ? (
-          <div className="fc-dashboard-grid">
+          <div className="fc-dashboard-stack">
             <RoutineProgressSection
               routineId={stats.routinePreview?.routine_id}
               routineName={stats.routinePreview?.name}
             />
-            <WeightTrendSection measurements={stats.measurements} />
-            <RecentPRsSection prs={stats.prs} />
+            <div className="fc-dashboard-grid">
+              <WeightTrendSection measurements={stats.measurements} />
+              <RecentPRsSection prs={stats.prs} />
+            </div>
           </div>
         ) : null}
       </motion.div>
