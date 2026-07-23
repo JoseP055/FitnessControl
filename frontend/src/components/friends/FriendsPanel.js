@@ -49,7 +49,7 @@ function FriendsPanel({ userId }) {
       const profiles = await Promise.all(
         ids.map((id) =>
           getProfile(id)
-            .then((response) => [id, response.identity])
+            .then((response) => [id, { ...response.identity, user_id: id }])
             .catch(() => [id, null])
         )
       );

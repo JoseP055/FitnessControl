@@ -2318,6 +2318,30 @@ button.fc-routine-calendar__cell {
   min-width: 0;
 }
 
+.fc-friend-card__meta--button {
+  border: none;
+  background: none;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-radius: var(--radius-md);
+}
+
+.fc-friend-card__meta--button:hover:not(:disabled) {
+  opacity: 0.82;
+}
+
+.fc-friend-card__meta--button:disabled {
+  cursor: default;
+}
+
+.fc-friend-card__meta--button:focus-visible {
+  outline: 2px solid rgba(var(--color-accent-rgb), 0.7);
+  outline-offset: 2px;
+}
+
 .fc-friend-card__meta .fc-avatar {
   width: 40px;
   height: 40px;
