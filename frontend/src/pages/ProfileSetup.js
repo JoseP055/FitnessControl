@@ -110,7 +110,17 @@ function ProfileSetup() {
   }
 
   function scrollToTop() {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    // En iOS Safari, si habia un input enfocado el teclado se cierra recien
+    // despues de este tick y su animacion pisa el scroll inmediato, dejandolo
+    // sin efecto visible. Se saca el foco y se espera un instante antes de
+    // scrollear para que nuestro scroll sea lo ultimo que se aplique.
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+
+    window.setTimeout(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+    }, 120);
   }
 
   function next() {
