@@ -28,6 +28,7 @@ import {
   createRoutineDay,
   getExercises,
 } from "../services/api";
+import { getLocalDateIso } from "../utils/date";
 
 const stepTransition = {
   initial: { opacity: 0, x: 24 },
@@ -146,7 +147,7 @@ function RoutineForm() {
     name: "",
     description: "",
     duration_months: 3,
-    start_date: "",
+    start_date: getLocalDateIso(),
     selected_days: [],
   });
 
