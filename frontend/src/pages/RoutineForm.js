@@ -1077,7 +1077,7 @@ function RoutineForm() {
                             ) : (
                               activeDay.exercises.map((item, index) => (
                                 <div key={item.id} className="fc-routine-table-row">
-                                  <div className="fc-routine-table-row__top">
+                                  <div className="fc-routine-table-row__header">
                                     <div className="fc-routine-table-row__position">
                                       <span className="fc-text-eyebrow">Pos</span>
                                       <input
@@ -1090,46 +1090,7 @@ function RoutineForm() {
                                       />
                                     </div>
 
-                                    <div className="fc-routine-table-row__exercise">
-                                      <select
-                                        className="fc-input fc-select"
-                                        value={item.exercise_id}
-                                        onChange={(event) =>
-                                          updateDraftExercise(item.id, "exercise_id", event.target.value)
-                                        }
-                                      >
-                                        <option value="">Selecciona ejercicio</option>
-                                        {filteredCatalog.map((exercise) => (
-                                          <option key={exercise.id} value={exercise.id}>
-                                            {exercise.name}
-                                          </option>
-                                        ))}
-                                      </select>
-                                      <div className="fc-catalog-item__meta">
-                                        <span className="fc-pill">
-                                          {item.exercise?.muscle_group_parent || "Sin grupo"}
-                                        </span>
-                                        <span className="fc-pill">
-                                          {item.exercise?.muscle_subgroup || "Sin subgrupo"}
-                                        </span>
-                                      </div>
-                                    </div>
-
-                                    <div className="fc-routine-table-row__actions">
-                                      <button
-                                        type="button"
-                                        className={`fc-mode-chip ${item.planning_mode === "reps" ? "is-active" : ""}`}
-                                        onClick={() => updateDraftExercise(item.id, "planning_mode", "reps")}
-                                      >
-                                        Reps
-                                      </button>
-                                      <button
-                                        type="button"
-                                        className={`fc-mode-chip ${item.planning_mode === "duration" ? "is-active" : ""}`}
-                                        onClick={() => updateDraftExercise(item.id, "planning_mode", "duration")}
-                                      >
-                                        Min
-                                      </button>
+                                    <div className="fc-routine-table-row__reorder">
                                       <Button
                                         variant="ghost"
                                         disabled={index === 0}
@@ -1144,10 +1105,52 @@ function RoutineForm() {
                                       >
                                         <ChevronRight size={16} />
                                       </Button>
-                                      <Button variant="ghost" onClick={() => removeDraftExercise(item.id)}>
+                                      <Button variant="ghost-danger" onClick={() => removeDraftExercise(item.id)}>
                                         <Trash2 size={16} />
                                       </Button>
                                     </div>
+                                  </div>
+
+                                  <div className="fc-routine-table-row__exercise">
+                                    <select
+                                      className="fc-input fc-select"
+                                      value={item.exercise_id}
+                                      onChange={(event) =>
+                                        updateDraftExercise(item.id, "exercise_id", event.target.value)
+                                      }
+                                    >
+                                      <option value="">Selecciona ejercicio</option>
+                                      {filteredCatalog.map((exercise) => (
+                                        <option key={exercise.id} value={exercise.id}>
+                                          {exercise.name}
+                                        </option>
+                                      ))}
+                                    </select>
+                                    <div className="fc-catalog-item__meta">
+                                      <span className="fc-pill">
+                                        {item.exercise?.muscle_group_parent || "Sin grupo"}
+                                      </span>
+                                      <span className="fc-pill">
+                                        {item.exercise?.muscle_subgroup || "Sin subgrupo"}
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  <div className="fc-routine-table-row__modes">
+                                    <button
+                                      type="button"
+                                      className={`fc-mode-chip ${item.planning_mode === "reps" ? "is-active" : ""}`}
+                                      onClick={() => updateDraftExercise(item.id, "planning_mode", "reps")}
+                                    >
+                                      Reps
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className={`fc-mode-chip ${item.planning_mode === "duration" ? "is-active" : ""}`}
+                                      onClick={() => updateDraftExercise(item.id, "planning_mode", "duration")}
+                                    >
+                                      Min
+                                    </button>
                                   </div>
 
                                   <div className="fc-routine-table-row__metrics">
