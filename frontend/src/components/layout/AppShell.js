@@ -127,10 +127,6 @@ function AppShell({ activeSection = "resumen", header, children }) {
               >
                 {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
               </button>
-              <div className="fc-dashboard__brand-copy">
-                <div className="fc-dashboard__brand-title">FitnessControl</div>
-                <div className="fc-dashboard__brand-subtitle">Entrena con claridad</div>
-              </div>
             </div>
 
             <div className="fc-dashboard__sidebar-actions">

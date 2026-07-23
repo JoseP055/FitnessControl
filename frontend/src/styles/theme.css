@@ -139,7 +139,6 @@ a:focus-visible {
 .fc-page {
   min-height: 100vh;
   position: relative;
-  overflow: hidden;
 }
 
 .fc-page__noise {
@@ -668,12 +667,6 @@ a:focus-visible {
   min-width: 0;
 }
 
-.fc-dashboard__brand-copy {
-  display: grid;
-  gap: 0.15rem;
-  transition: opacity var(--transition-fast), transform var(--transition-fast);
-}
-
 .fc-dashboard__logo {
   width: 44px;
   height: 44px;
@@ -686,17 +679,6 @@ a:focus-visible {
   background: rgba(var(--color-primary-rgb), 0.22);
   border: 1px solid rgba(var(--color-primary-rgb), 0.28);
   box-shadow: 0 18px 40px rgba(10, 8, 14, 0.18);
-}
-
-.fc-dashboard__brand-title {
-  font-family: var(--font-display);
-  font-weight: 600;
-  letter-spacing: -0.03em;
-}
-
-.fc-dashboard__brand-subtitle {
-  color: rgba(var(--color-text-rgb), 0.6);
-  font-size: var(--font-size-sm);
 }
 
 .fc-dashboard__sidebar-actions {
@@ -774,7 +756,6 @@ a:focus-visible {
   color: rgba(var(--color-text-rgb), 0.92);
 }
 
-.fc-dashboard.is-collapsed .fc-dashboard__brand-copy,
 .fc-dashboard.is-collapsed .fc-nav-item span,
 .fc-dashboard.is-collapsed .fc-dashboard__sidebar-footer .fc-nav-item span {
   opacity: 0;
@@ -2014,7 +1995,6 @@ button.fc-routine-calendar__cell {
     opacity: 1;
   }
 
-  .fc-dashboard__brand-copy,
   .fc-nav-item span,
   .fc-dashboard__sidebar-footer .fc-nav-item span {
     opacity: 1;
