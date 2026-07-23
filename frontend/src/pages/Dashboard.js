@@ -8,6 +8,7 @@ import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import PageLoader from "../components/ui/PageLoader";
 import RecentPRsSection from "../components/dashboard/RecentPRsSection";
+import TodayWorkoutSection from "../components/dashboard/TodayWorkoutSection";
 import WeightTrendSection from "../components/dashboard/WeightTrendSection";
 import { useAuth } from "../context/AuthContext";
 import { getProfile } from "../services/api";
@@ -219,7 +220,9 @@ function Dashboard() {
         className="fc-dashboard-stack"
       >
         {activeTab === "resumen" ? (
-          <div className="fc-dashboard-grid">
+          <div className="fc-dashboard-stack">
+            <TodayWorkoutSection />
+            <div className="fc-dashboard-grid">
             <Card glass>
               <div style={{ display: "grid", gap: "0.75rem" }}>
                 <span className="fc-text-eyebrow">
@@ -310,6 +313,7 @@ function Dashboard() {
                 </p>
               </div>
             </Card>
+            </div>
           </div>
         ) : null}
 

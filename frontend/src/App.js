@@ -4,6 +4,7 @@ import { Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import PageLoader from "./components/ui/PageLoader";
 import Dashboard from "./pages/Dashboard";
+import FocusMode from "./pages/FocusMode";
 import Friends from "./pages/Friends";
 import Login from "./pages/Login";
 import Nutrition from "./pages/Nutrition";
@@ -161,6 +162,14 @@ function App() {
         element={
           <ProtectedRoute>
             <Friends />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/focus"
+        element={
+          <ProtectedRoute>
+            <FocusMode />
           </ProtectedRoute>
         }
       />

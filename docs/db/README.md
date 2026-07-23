@@ -22,6 +22,7 @@ Ejecutar en este orden:
 14. `014_profile_username_cooldown.sql` — Agrega `username_changed_at` a `profiles` para limitar el cambio de username a una vez cada 15 días (se valida en el frontend).
 15. `015_friends_search_optimization.sql` — Habilita `pg_trgm` e índices GIN de trigramas sobre `full_name`/`username` para que la búsqueda de personas use índice, y actualiza `search_profiles` para rankear resultados (coincidencia exacta > prefijo de username > prefijo de nombre > resto) en vez de orden alfabético plano.
 16. `016_body_measurements_height.sql` — Agrega `height_cm` a `body_measurements` para trackear la altura junto con el resto de las medidas a lo largo del tiempo.
+17. `017_exercise_completions.sql` — Tabla `exercise_completions`: cumplimiento por ejercicio individual (no solo por día), usada por el resumen "hoy" y el modo enfoque. El backend resincroniza `workout_completions` automáticamente en base a esta tabla.
 
 ## Qué verificar después de cada script (Table Editor)
 

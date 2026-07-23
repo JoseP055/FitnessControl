@@ -188,3 +188,14 @@ export async function deleteRoutineExercise(routineId, routineExerciseId) {
     method: "DELETE",
   });
 }
+
+export async function getTodaysTraining() {
+  return apiRequest("/routines/today", { method: "GET" });
+}
+
+export async function toggleTodaysExercise(routineExerciseId, completed) {
+  return apiRequest(`/routines/today/exercises/${routineExerciseId}`, {
+    method: "PUT",
+    body: JSON.stringify({ completed }),
+  });
+}
