@@ -126,6 +126,16 @@ export async function updateVisibility(userId, field, value) {
   throwIfError(error, "No se pudo actualizar la visibilidad.");
 }
 
+export async function updateWeightGoal(userId, weightGoalKg) {
+  const client = ensureClient();
+  const { error } = await client
+    .from("profiles")
+    .update({ weight_goal_kg: weightGoalKg, updated_at: new Date().toISOString() })
+    .eq("user_id", userId);
+
+  throwIfError(error, "No se pudo actualizar la meta de peso.");
+}
+
 // ---------------------------------------------------------------------------
 // Medidas corporales
 // ---------------------------------------------------------------------------

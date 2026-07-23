@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { Calculator, Plus, Ruler } from "lucide-react";
+import { Calculator, Plus, Ruler, Target } from "lucide-react";
 
 import Button from "../ui/Button";
 import Card from "../ui/Card";
 import Input from "../ui/Input";
 import SectionLocked from "./SectionLocked";
 import VisibilitySelector from "./VisibilitySelector";
-import { updateVisibility, upsertMeasurement } from "../../services/socialClient";
+import { updateVisibility, updateWeightGoal, upsertMeasurement } from "../../services/socialClient";
 import { supabaseClient } from "../../services/supabaseClient";
 import { estimateBodyFatPercent } from "../../utils/bodyComposition";
 
@@ -26,11 +26,18 @@ function todayIso() {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 }
 
-function MeasurementsSection({ userId, isSelf, section, onRefresh }) {
+function MeasurementsSection({ userId, isSelf, section, weightGoalKg, onRefresh }) {
   const [form, setForm] = useState({});
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [ageGender, setAgeGender] = useState({ age: null, gender: null });
+  const [goalInput, setGoalInput] = useState(weightGoalKg ?? "");
+  const [savingGoal, setSavingGoal] = useState(false);
+  const [goalError, setGoalError] = useState("");
+
+  useEffect(() => {
+    setGoalInput(weightGoalKg ?? "");
+  }, [weightGoalKg]);
 
   useEffect(() => {
     if (!isSelf || !supabaseClient) {
@@ -111,6 +118,27 @@ function MeasurementsSection({ userId, isSelf, section, onRefresh }) {
     }
   }
 
+  async function handleSaveGoal() {
+    setGoalError("");
+
+    const parsed = goalInput === "" ? null : Number.parseFloat(goalInput);
+    if (goalInput !== "" && (Number.isNaN(parsed) || parsed <= 0)) {
+      setGoalError("Ingresa un peso valido para tu meta.");
+      return;
+    }
+
+    setSavingGoal(true);
+
+    try {
+      await updateWeightGoal(userId, parsed);
+      await onRefresh();
+    } catch (saveError) {
+      setGoalError(saveError.message || "No se pudo guardar la meta de peso.");
+    } finally {
+      setSavingGoal(false);
+    }
+  }
+
   async function handleVisibilityChange(value) {
     try {
       await updateVisibility(userId, "measurements_visibility", value);
@@ -145,6 +173,29 @@ function MeasurementsSection({ userId, isSelf, section, onRefresh }) {
 
         {isSelf ? (
           <>
+            <div className="fc-add-panel">
+              <p className="fc-add-panel__title">
+                <Target size={15} />
+                Meta de peso
+              </p>
+              <div style={{ display: "flex", gap: "0.5rem", alignItems: "flex-end", flexWrap: "wrap" }}>
+                <div style={{ flex: "1 1 160px" }}>
+                  <Input
+                    id="weight-goal-input"
+                    label="Peso objetivo (kg)"
+                    type="number"
+                    inputMode="decimal"
+                    value={goalInput}
+                    onChange={(event) => setGoalInput(event.target.value)}
+                  />
+                </div>
+                <Button loading={savingGoal} onClick={handleSaveGoal}>
+                  Guardar meta
+                </Button>
+              </div>
+              {goalError ? <p className="fc-form-message">{goalError}</p> : null}
+            </div>
+
             <div className="fc-add-panel">
               <p className="fc-add-panel__title">
                 <Plus size={15} />

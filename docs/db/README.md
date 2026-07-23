@@ -23,6 +23,7 @@ Ejecutar en este orden:
 15. `015_friends_search_optimization.sql` — Habilita `pg_trgm` e índices GIN de trigramas sobre `full_name`/`username` para que la búsqueda de personas use índice, y actualiza `search_profiles` para rankear resultados (coincidencia exacta > prefijo de username > prefijo de nombre > resto) en vez de orden alfabético plano.
 16. `016_body_measurements_height.sql` — Agrega `height_cm` a `body_measurements` para trackear la altura junto con el resto de las medidas a lo largo del tiempo.
 17. `017_exercise_completions.sql` — Tabla `exercise_completions`: cumplimiento por ejercicio individual (no solo por día), usada por el resumen "hoy" y el modo enfoque. El backend resincroniza `workout_completions` automáticamente en base a esta tabla.
+18. `018_weight_goal.sql` — Agrega `weight_goal_kg` a `profiles` para que el usuario defina una meta de peso, usada en el widget de tendencia de peso del tab Progreso.
 
 ## Qué verificar después de cada script (Table Editor)
 

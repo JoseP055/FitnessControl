@@ -120,6 +120,7 @@ function Profile() {
           userId={targetUserId}
           isSelf={isSelf}
           section={profileData.sections.measurements}
+          weightGoalKg={profileData.identity.weight_goal_kg}
           onRefresh={load}
         />
 

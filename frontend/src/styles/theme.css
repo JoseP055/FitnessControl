@@ -2612,6 +2612,7 @@ button.fc-routine-calendar__cell {
 /* ------------------------------------------------------------------------ */
 
 .fc-sparkline {
+  position: relative;
   display: flex;
   align-items: flex-end;
   gap: 4px;
@@ -2628,6 +2629,15 @@ button.fc-routine-calendar__cell {
 
 .fc-sparkline__bar.is-latest {
   background: rgba(var(--color-accent-rgb), 0.9);
+}
+
+.fc-sparkline__goal-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 2px dashed rgba(var(--color-text-secondary-rgb), 0.55);
+  pointer-events: none;
 }
 
 /* ------------------------------------------------------------------------ */

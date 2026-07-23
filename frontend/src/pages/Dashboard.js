@@ -42,6 +42,7 @@ function Dashboard() {
     weeklyDoneCount: 0,
     streak: null,
     routinePreview: null,
+    weightGoalKg: null,
     measurements: [],
     prs: [],
     waterMl: 0,
@@ -119,10 +120,10 @@ function Dashboard() {
         getProfile(user.id).catch(() => null),
         supabaseClient
           .from("body_measurements")
-          .select("measurement_date, weight_kg")
+          .select("measurement_date, weight_kg, updated_at")
           .eq("user_id", user.id)
           .order("measurement_date", { ascending: false })
-          .limit(6),
+          .limit(20),
         supabaseClient
           .from("personal_records")
           .select("id, exercise_name, record_type, value, unit, achieved_date")
@@ -137,6 +138,7 @@ function Dashboard() {
           weeklyDoneCount: weeklyResult.count || 0,
           streak: profileSummary?.sections?.streak?.data || null,
           routinePreview: profileSummary?.sections?.routine_preview?.data || null,
+          weightGoalKg: profileSummary?.identity?.weight_goal_kg ?? null,
           measurements: measurementsResult.data || [],
           prs: prsResult.data || [],
           waterMl,
@@ -351,7 +353,7 @@ function Dashboard() {
               routineName={stats.routinePreview?.name}
             />
             <div className="fc-dashboard-grid">
-              <WeightTrendSection measurements={stats.measurements} />
+              <WeightTrendSection measurements={stats.measurements} weightGoalKg={stats.weightGoalKg} />
               <RecentPRsSection prs={stats.prs} />
             </div>
           </div>
