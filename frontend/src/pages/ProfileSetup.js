@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Dumbbell, Flame, Target, Timer, User, Users, Zap } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import Input from "../components/ui/Input";
 import PageLoader from "../components/ui/PageLoader";
+import { EXPERIENCE_OPTIONS, GENDER_OPTIONS, GOAL_OPTIONS } from "../constants/profileOptions";
 import { useAuth } from "../context/AuthContext";
 import { USERNAME_PATTERN } from "../services/socialClient";
 import { supabaseClient } from "../services/supabaseClient";
@@ -43,33 +44,9 @@ function ProfileSetup() {
     []
   );
 
-  const goalOptions = useMemo(
-    () => [
-      { value: "perder_peso", label: "Perder peso", icon: Flame },
-      { value: "ganar_musculo", label: "Ganar musculo", icon: Dumbbell },
-      { value: "mantenerse", label: "Mantenerse", icon: Target },
-      { value: "resistencia", label: "Resistencia", icon: Timer },
-    ],
-    []
-  );
-
-  const experienceOptions = useMemo(
-    () => [
-      { value: "principiante", label: "Principiante", icon: Zap },
-      { value: "intermedio", label: "Intermedio", icon: Target },
-      { value: "avanzado", label: "Avanzado", icon: Dumbbell },
-    ],
-    []
-  );
-
-  const genderOptions = useMemo(
-    () => [
-      { value: "masculino", label: "Masculino", icon: User },
-      { value: "femenino", label: "Femenino", icon: Users },
-      { value: "otro", label: "Otro", icon: Target },
-    ],
-    []
-  );
+  const goalOptions = GOAL_OPTIONS;
+  const experienceOptions = EXPERIENCE_OPTIONS;
+  const genderOptions = GENDER_OPTIONS;
 
   useEffect(() => {
     let isMounted = true;

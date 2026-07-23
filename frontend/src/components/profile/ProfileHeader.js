@@ -1,17 +1,20 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Camera, Check, Copy, Pencil, UserMinus, UserPlus, UserX, X } from "lucide-react";
 
 import Button from "../ui/Button";
 import Card from "../ui/Card";
 import ConfirmDialog from "../ui/ConfirmDialog";
 import Input from "../ui/Input";
+import { EXPERIENCE_OPTIONS, GENDER_OPTIONS, GOAL_OPTIONS } from "../../constants/profileOptions";
 import {
+  getUsernameCooldownDaysRemaining,
   removeFriendship,
   respondToFriendRequest,
   sendFriendRequest,
   updateIdentity,
   uploadAvatar,
 } from "../../services/socialClient";
+import { supabaseClient } from "../../services/supabaseClient";
 
 function initialsFromName(name) {
   return (name || "")
@@ -28,12 +31,46 @@ function ProfileHeader({ userId, viewerId, identity, isSelf, friendshipStatus, f
   const [fullName, setFullName] = useState(identity.full_name || "");
   const [bio, setBio] = useState(identity.bio || "");
   const [username, setUsername] = useState(identity.username || "");
+  const [gender, setGender] = useState("");
+  const [goals, setGoals] = useState([]);
+  const [experience, setExperience] = useState("");
+  const [usernameChangedAt, setUsernameChangedAt] = useState(null);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [busyAction, setBusyAction] = useState(false);
   const [error, setError] = useState("");
   const [confirmRemoveOpen, setConfirmRemoveOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (!isSelf || !supabaseClient) {
+      return;
+    }
+
+    supabaseClient
+      .from("profiles")
+      .select("gender, goals, goal, experience_level, username_changed_at")
+      .eq("user_id", userId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!data) {
+          return;
+        }
+
+        setGender(data.gender || "");
+        setGoals(data.goals?.length ? data.goals : data.goal ? [data.goal] : []);
+        setExperience(data.experience_level || "principiante");
+        setUsernameChangedAt(data.username_changed_at || null);
+      });
+  }, [isSelf, userId]);
+
+  const usernameCooldownDays = getUsernameCooldownDaysRemaining(usernameChangedAt);
+
+  function toggleGoal(value) {
+    setGoals((current) =>
+      current.includes(value) ? current.filter((item) => item !== value) : [...current, value]
+    );
+  }
 
   async function handleCopyId() {
     try {
@@ -72,7 +109,16 @@ function ProfileHeader({ userId, viewerId, identity, isSelf, friendshipStatus, f
     setSaving(true);
 
     try {
-      await updateIdentity(userId, { full_name: fullName.trim(), bio: bio.trim(), username });
+      await updateIdentity(userId, {
+        full_name: fullName.trim(),
+        bio: bio.trim(),
+        username,
+        goals,
+        // Si todavia no cargaron (carrera con el fetch inicial), no se
+        // mandan: evita pisar estas columnas obligatorias con "".
+        ...(gender ? { gender } : {}),
+        ...(experience ? { experience_level: experience } : {}),
+      });
       await onRefresh();
       setEditing(false);
     } catch (saveError) {
@@ -173,7 +219,83 @@ function ProfileHeader({ userId, viewerId, identity, isSelf, friendshipStatus, f
                 placeholder="tu_usuario"
                 value={username}
                 onChange={(event) => setUsername(event.target.value.toLowerCase())}
+                disabled={usernameCooldownDays > 0}
+                helperText={
+                  usernameCooldownDays > 0
+                    ? `Ya lo cambiaste hace poco. Podes volver a cambiarlo en ${usernameCooldownDays} dia${usernameCooldownDays === 1 ? "" : "s"}.`
+                    : "Se puede cambiar una vez cada 15 dias."
+                }
               />
+
+              <div style={{ display: "grid", gap: "0.5rem" }}>
+                <span className="fc-field__label">Genero</span>
+                <div className="fc-option-grid fc-option-grid--compact">
+                  {GENDER_OPTIONS.map((option) => {
+                    const Icon = option.icon;
+                    const selected = gender === option.value;
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        className={`fc-option-card ${selected ? "is-selected" : ""}`}
+                        onClick={() => setGender(option.value)}
+                      >
+                        <span className="fc-option-card__icon">
+                          <Icon size={18} />
+                        </span>
+                        <span className="fc-option-card__label">{option.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gap: "0.5rem" }}>
+                <span className="fc-field__label">Objetivo (opcional, podes elegir varios)</span>
+                <div className="fc-option-grid fc-option-grid--compact">
+                  {GOAL_OPTIONS.map((option) => {
+                    const Icon = option.icon;
+                    const selected = goals.includes(option.value);
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        className={`fc-option-card ${selected ? "is-selected" : ""}`}
+                        onClick={() => toggleGoal(option.value)}
+                      >
+                        <span className="fc-option-card__icon">
+                          <Icon size={18} />
+                        </span>
+                        <span className="fc-option-card__label">{option.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gap: "0.5rem" }}>
+                <span className="fc-field__label">Nivel de experiencia</span>
+                <div className="fc-option-grid fc-option-grid--compact">
+                  {EXPERIENCE_OPTIONS.map((option) => {
+                    const Icon = option.icon;
+                    const selected = experience === option.value;
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        className={`fc-option-card ${selected ? "is-selected" : ""}`}
+                        onClick={() => setExperience(option.value)}
+                      >
+                        <span className="fc-option-card__icon">
+                          <Icon size={18} />
+                        </span>
+                        <span className="fc-option-card__label">{option.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               <div className="fc-field">
                 <label className="fc-field__label" htmlFor="profile-bio">
                   Biografia

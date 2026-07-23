@@ -15,18 +15,39 @@ function throwIfError(error, fallbackMessage) {
 }
 
 export const USERNAME_PATTERN = /^[a-z0-9_]{3,24}$/;
+export const USERNAME_COOLDOWN_DAYS = 15;
+
+// Dias restantes para poder volver a cambiar el username (0 si ya se puede).
+export function getUsernameCooldownDaysRemaining(usernameChangedAt) {
+  if (!usernameChangedAt) {
+    return 0;
+  }
+
+  const daysSince = (Date.now() - new Date(usernameChangedAt).getTime()) / (1000 * 60 * 60 * 24);
+  return Math.max(0, Math.ceil(USERNAME_COOLDOWN_DAYS - daysSince));
+}
 
 // ---------------------------------------------------------------------------
 // Identidad, avatar y visibilidad
 // ---------------------------------------------------------------------------
 
-export async function updateIdentity(userId, { full_name, bio, avatar_url, username } = {}) {
+export async function updateIdentity(
+  userId,
+  { full_name, bio, avatar_url, username, gender, goals, experience_level } = {}
+) {
   const client = ensureClient();
   const payload = { updated_at: new Date().toISOString() };
 
   if (full_name !== undefined) payload.full_name = full_name;
   if (bio !== undefined) payload.bio = bio;
   if (avatar_url !== undefined) payload.avatar_url = avatar_url;
+  if (gender !== undefined) payload.gender = gender || null;
+  if (experience_level !== undefined) payload.experience_level = experience_level;
+
+  if (goals !== undefined) {
+    payload.goals = goals.length ? goals : null;
+    payload.goal = goals[0] || null;
+  }
 
   if (username !== undefined) {
     const trimmed = username.trim().toLowerCase();
@@ -35,7 +56,30 @@ export async function updateIdentity(userId, { full_name, bio, avatar_url, usern
       throw new Error("El usuario debe tener 3-24 caracteres: minusculas, numeros y guion bajo.");
     }
 
-    payload.username = trimmed || null;
+    const { data: current, error: currentError } = await client
+      .from("profiles")
+      .select("username, username_changed_at")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    throwIfError(currentError, "No se pudo verificar tu usuario actual.");
+
+    const nextUsername = trimmed || null;
+    const usernameChanged = (current?.username || null) !== nextUsername;
+
+    if (usernameChanged) {
+      const daysRemaining = getUsernameCooldownDaysRemaining(current?.username_changed_at);
+
+      if (daysRemaining > 0) {
+        throw new Error(
+          `Ya cambiaste tu usuario hace poco. Podes volver a cambiarlo en ${daysRemaining} dia${daysRemaining === 1 ? "" : "s"}.`
+        );
+      }
+
+      payload.username_changed_at = new Date().toISOString();
+    }
+
+    payload.username = nextUsername;
   }
 
   // Update, no upsert: a esta altura el perfil ya existe siempre (se crea en
