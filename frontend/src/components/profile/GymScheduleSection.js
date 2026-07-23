@@ -18,7 +18,7 @@ function GymScheduleSection({ userId, isSelf, section, onRefresh }) {
   const [error, setError] = useState("");
 
   if (!isSelf && !section.visible) {
-    return <SectionLocked label="El horario de gym de este usuario no es visible para vos." />;
+    return <SectionLocked label="El usuario tiene el horario de gym oculto." />;
   }
 
   const days = section.data || [];

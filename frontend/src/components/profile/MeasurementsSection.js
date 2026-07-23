@@ -29,7 +29,7 @@ function MeasurementsSection({ userId, isSelf, section, onRefresh }) {
   const [error, setError] = useState("");
 
   if (!isSelf && !section.visible) {
-    return <SectionLocked label="Las medidas de este usuario no son visibles para vos." />;
+    return <SectionLocked label="El usuario tiene las medidas ocultas." />;
   }
 
   async function handleSave() {

@@ -26,7 +26,7 @@ function FavoriteFoodsSection({ userId, isSelf, section, onRefresh }) {
   const [error, setError] = useState("");
 
   if (!isSelf && !section.visible) {
-    return <SectionLocked label="Las comidas favoritas de este usuario no son visibles para vos." />;
+    return <SectionLocked label="El usuario tiene las comidas favoritas ocultas." />;
   }
 
   const foods = section.data || [];

@@ -47,7 +47,7 @@ function PersonalRecordsSection({ userId, isSelf, section, onRefresh }) {
   }, [exerciseQuery, catalog]);
 
   if (!isSelf && !section.visible) {
-    return <SectionLocked label="Los records de este usuario no son visibles para vos." />;
+    return <SectionLocked label="El usuario tiene los records ocultos." />;
   }
 
   const records = section.data || [];

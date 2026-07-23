@@ -11,7 +11,7 @@ function RoutinePreviewSection({ userId, isSelf, section, onRefresh }) {
   const navigate = useNavigate();
 
   if (!isSelf && !section.visible) {
-    return <SectionLocked label="La rutina de este usuario no es visible para vos." />;
+    return <SectionLocked label="El usuario tiene la rutina oculta." />;
   }
 
   async function handleVisibilityChange(value) {

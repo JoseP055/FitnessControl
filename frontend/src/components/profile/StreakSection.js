@@ -7,7 +7,7 @@ import { updateVisibility } from "../../services/socialClient";
 
 function StreakSection({ userId, isSelf, section, onRefresh }) {
   if (!isSelf && !section.visible) {
-    return <SectionLocked label="La racha de este usuario no es visible para vos." />;
+    return <SectionLocked label="El usuario tiene la racha oculta." />;
   }
 
   async function handleVisibilityChange(value) {
