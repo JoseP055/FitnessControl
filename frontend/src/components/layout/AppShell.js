@@ -1,10 +1,11 @@
 import {
+  ChevronLeft,
+  ChevronRight,
   ClipboardList,
   LayoutGrid,
   LineChart,
   LogOut,
-  PanelLeftClose,
-  PanelLeftOpen,
+  Menu,
   Salad,
   User2,
   X,
@@ -100,16 +101,16 @@ function AppShell({ activeSection = "resumen", header, children }) {
     <div className="fc-page">
       <div className="fc-page__noise" />
 
-      {mobileMenuOpen ? (
-        <button
-          type="button"
-          className="fc-sidebar-backdrop"
-          aria-label="Cerrar menu"
-          onClick={() => setMobileMenuOpen(false)}
-        />
-      ) : null}
-
       <div className={`fc-dashboard ${collapsed ? "is-collapsed" : ""}`}>
+        {mobileMenuOpen ? (
+          <button
+            type="button"
+            className="fc-sidebar-backdrop"
+            aria-label="Cerrar menu"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+        ) : null}
+
         <aside
           id="fc-main-sidebar"
           className={`fc-dashboard__sidebar ${mobileMenuOpen ? "is-open" : ""}`}
@@ -124,7 +125,7 @@ function AppShell({ activeSection = "resumen", header, children }) {
                 onClick={() => setCollapsed((current) => !current)}
                 aria-label={collapsed ? "Expandir menu" : "Colapsar menu"}
               >
-                {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+                {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
               </button>
               <div className="fc-dashboard__brand-copy">
                 <div className="fc-dashboard__brand-title">FitnessControl</div>
@@ -186,7 +187,7 @@ function AppShell({ activeSection = "resumen", header, children }) {
               aria-expanded={mobileMenuOpen}
               aria-controls="fc-main-sidebar"
             >
-              <PanelLeftOpen size={18} />
+              <Menu size={18} />
             </button>
             {header}
           </header>
