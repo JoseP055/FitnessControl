@@ -6,6 +6,7 @@ import Button from "../ui/Button";
 import Card from "../ui/Card";
 import { getTodaysTraining, toggleTodaysExercise } from "../../services/api";
 import { downloadWorkoutReportPdf } from "../../utils/workoutReport";
+import { getLocalDateIso } from "../../utils/date";
 
 function formatFullDate(isoDate) {
   const date = new Date(`${isoDate}T00:00:00`);
@@ -63,9 +64,11 @@ function TodayWorkoutSection() {
         <div style={{ display: "grid", gap: "0.75rem" }}>
           <span className="fc-text-eyebrow">
             <Target size={14} />
-            Hoy, {formatFullDate(training.date)}
+            Hoy, {formatFullDate(training?.date || getLocalDateIso())}
           </span>
-          <p className="fc-card-text">No tenes entrenamiento programado para hoy. Aprovecha para descansar.</p>
+          <p className="fc-card-text">
+            {error || "No tenes entrenamiento programado para hoy. Aprovecha para descansar."}
+          </p>
         </div>
       </Card>
     );
