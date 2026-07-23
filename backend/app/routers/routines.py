@@ -590,6 +590,257 @@ async def create_routine(
     return {**routine, "exercise_count": 0, "day_count": 0}
 
 
+# =====================================================================
+# Entrenamiento de hoy: resumen + modo enfoque (ejercicio por ejercicio)
+# =====================================================================
+# IMPORTANTE: estas rutas literales (/routines/today, /routines/today/...)
+# tienen que estar registradas ANTES que las rutas parametrizadas de mas
+# abajo (/routines/{routine_id}, /routines/{routine_id}/exercises/{...}).
+# FastAPI/Starlette matchea rutas en el orden en que se registran, asi que
+# si {routine_id} se registrara primero, capturaria "today" como si fuera
+# un id de rutina (y la consulta a la base fallaria con un id invalido).
+
+
+class ExerciseCompletionPayload(BaseModel):
+    completed: bool
+    local_date: str | None = None
+
+
+def _resolve_today(local_date: str | None) -> date:
+    """Usa la fecha local del dispositivo del usuario si la manda (asi el dia
+    "de hoy" nunca depende de en que zona horaria este el servidor), y cae a
+    la fecha del servidor solo si no se especifica."""
+    if local_date:
+        return _coerce_date(local_date)
+    return date.today()
+
+
+def _get_todays_routine_day(user_id: str, today: date) -> dict[str, Any] | None:
+    supabase = get_supabase_client()
+    today_iso = today.isoformat()
+    weekday = today.weekday()
+
+    routines_result = (
+        supabase.table("routines")
+        .select("id, name, start_date, end_date")
+        .eq("user_id", user_id)
+        .lte("start_date", today_iso)
+        .gte("end_date", today_iso)
+        .order("created_at", desc=True)
+        .execute()
+    )
+    routines = getattr(routines_result, "data", None) or []
+
+    for routine in routines:
+        day_result = (
+            supabase.table("routine_days")
+            .select("id, day_of_week, muscle_subgroups")
+            .eq("routine_id", routine["id"])
+            .eq("day_of_week", weekday)
+            .limit(1)
+            .execute()
+        )
+        routine_day = _first_row(day_result)
+        if routine_day:
+            return {"routine": routine, "routine_day": routine_day}
+
+    return None
+
+
+def _resync_day_completion(user_id: str, routine_id: str, routine_day_id: str, today: date) -> None:
+    """Recalcula el estado (done/pending) de `workout_completions` para HOY en
+    base a si todos los ejercicios de ese dia estan marcados en
+    `exercise_completions`. Se llama despues de tildar/destildar un ejercicio."""
+    supabase = get_supabase_client()
+    today_iso = today.isoformat()
+
+    all_exercises_result = (
+        supabase.table("routine_exercises")
+        .select("id")
+        .eq("routine_day_id", routine_day_id)
+        .execute()
+    )
+    all_ids = [item["id"] for item in getattr(all_exercises_result, "data", None) or []]
+
+    completed_count = 0
+    if all_ids:
+        completions_result = (
+            supabase.table("exercise_completions")
+            .select("routine_exercise_id")
+            .eq("user_id", user_id)
+            .eq("completion_date", today_iso)
+            .in_("routine_exercise_id", all_ids)
+            .execute()
+        )
+        completed_count = len(getattr(completions_result, "data", None) or [])
+
+    all_done = bool(all_ids) and completed_count == len(all_ids)
+    new_status = "done" if all_done else "pending"
+
+    existing_result = (
+        supabase.table("workout_completions")
+        .select("id")
+        .eq("user_id", user_id)
+        .eq("routine_day_id", routine_day_id)
+        .eq("completion_date", today_iso)
+        .limit(1)
+        .execute()
+    )
+    existing_row = _first_row(existing_result)
+
+    if existing_row:
+        supabase.table("workout_completions").update(
+            {
+                "status": new_status,
+                "completed_at": datetime.now(timezone.utc).isoformat() if all_done else None,
+            }
+        ).eq("id", existing_row["id"]).execute()
+    elif all_done:
+        supabase.table("workout_completions").insert(
+            {
+                "user_id": user_id,
+                "routine_id": routine_id,
+                "routine_day_id": routine_day_id,
+                "completion_date": today_iso,
+                "status": "done",
+                "completed_at": datetime.now(timezone.utc).isoformat(),
+            }
+        ).execute()
+
+
+@router.get("/routines/today")
+async def get_todays_training(
+    local_date: str | None = Query(None),
+    user_id: str = Depends(get_current_user_id),
+):
+    supabase = get_supabase_client()
+    today = _resolve_today(local_date)
+    today_iso = today.isoformat()
+    match = _get_todays_routine_day(user_id, today)
+
+    if not match:
+        return {"date": today_iso, "has_training_today": False}
+
+    routine = match["routine"]
+    routine_day = match["routine_day"]
+
+    exercises_result = (
+        supabase.table("routine_exercises")
+        .select(
+            "id, exercise_id, sets_planned, reps_planned, duration_minutes, "
+            "rest_seconds, exercise_order, notes"
+        )
+        .eq("routine_day_id", routine_day["id"])
+        .order("exercise_order")
+        .execute()
+    )
+    routine_exercises = getattr(exercises_result, "data", None) or []
+
+    exercise_ids = [item["exercise_id"] for item in routine_exercises if item.get("exercise_id")]
+    exercises_by_id: dict[str, dict[str, Any]] = {}
+    if exercise_ids:
+        catalog_result = (
+            supabase.table("exercises")
+            .select("id, name, muscle_group_parent, muscle_subgroup")
+            .in_("id", exercise_ids)
+            .execute()
+        )
+        exercises_by_id = {
+            item["id"]: item for item in getattr(catalog_result, "data", None) or []
+        }
+
+    completed_ids: set[str] = set()
+    routine_exercise_ids = [item["id"] for item in routine_exercises]
+    if routine_exercise_ids:
+        completions_result = (
+            supabase.table("exercise_completions")
+            .select("routine_exercise_id")
+            .eq("user_id", user_id)
+            .eq("completion_date", today_iso)
+            .in_("routine_exercise_id", routine_exercise_ids)
+            .execute()
+        )
+        completed_ids = {
+            item["routine_exercise_id"]
+            for item in getattr(completions_result, "data", None) or []
+        }
+
+    exercises = [
+        {
+            "routine_exercise_id": item["id"],
+            "name": exercises_by_id.get(item["exercise_id"], {}).get("name", "Ejercicio"),
+            "muscle_group_parent": exercises_by_id.get(item["exercise_id"], {}).get("muscle_group_parent"),
+            "muscle_subgroup": exercises_by_id.get(item["exercise_id"], {}).get("muscle_subgroup"),
+            "sets_planned": item.get("sets_planned"),
+            "reps_planned": item.get("reps_planned"),
+            "duration_minutes": item.get("duration_minutes"),
+            "rest_seconds": item.get("rest_seconds"),
+            "notes": item.get("notes"),
+            "completed": item["id"] in completed_ids,
+        }
+        for item in routine_exercises
+    ]
+
+    return {
+        "date": today_iso,
+        "has_training_today": True,
+        "routine_id": routine["id"],
+        "routine_name": routine["name"],
+        "routine_day_id": routine_day["id"],
+        "muscle_groups": routine_day.get("muscle_subgroups") or [],
+        "exercises": exercises,
+        "all_completed": bool(exercises) and all(item["completed"] for item in exercises),
+    }
+
+
+@router.put("/routines/today/exercises/{routine_exercise_id}")
+async def toggle_todays_exercise(
+    routine_exercise_id: str,
+    payload: ExerciseCompletionPayload,
+    user_id: str = Depends(get_current_user_id),
+):
+    supabase = get_supabase_client()
+    today = _resolve_today(payload.local_date)
+    today_iso = today.isoformat()
+
+    exercise_result = (
+        supabase.table("routine_exercises")
+        .select("id, routine_id, routine_day_id")
+        .eq("id", routine_exercise_id)
+        .eq("user_id", user_id)
+        .limit(1)
+        .execute()
+    )
+    routine_exercise = _first_row(exercise_result)
+
+    if not routine_exercise:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No se encontró el ejercicio.",
+        )
+
+    if payload.completed:
+        supabase.table("exercise_completions").upsert(
+            {
+                "user_id": user_id,
+                "routine_exercise_id": routine_exercise_id,
+                "completion_date": today_iso,
+                "completed_at": datetime.now(timezone.utc).isoformat(),
+            },
+            on_conflict="user_id,routine_exercise_id,completion_date",
+        ).execute()
+    else:
+        supabase.table("exercise_completions").delete().eq("user_id", user_id).eq(
+            "routine_exercise_id", routine_exercise_id
+        ).eq("completion_date", today_iso).execute()
+
+    routine_day_id = routine_exercise.get("routine_day_id")
+    if routine_day_id:
+        _resync_day_completion(user_id, routine_exercise["routine_id"], routine_day_id, today)
+
+    return {"completed": payload.completed}
+
+
 @router.post("/routines/{routine_id}/days", status_code=status.HTTP_201_CREATED)
 async def create_routine_day(
     routine_id: str,
@@ -956,248 +1207,3 @@ async def delete_routine_exercise(
     ).eq("user_id", user_id).execute()
 
     return _build_routine_detail(user_id, routine_id)
-
-
-# =====================================================================
-# Entrenamiento de hoy: resumen + modo enfoque (ejercicio por ejercicio)
-# =====================================================================
-
-
-class ExerciseCompletionPayload(BaseModel):
-    completed: bool
-    local_date: str | None = None
-
-
-def _resolve_today(local_date: str | None) -> date:
-    """Usa la fecha local del dispositivo del usuario si la manda (asi el dia
-    "de hoy" nunca depende de en que zona horaria este el servidor), y cae a
-    la fecha del servidor solo si no se especifica."""
-    if local_date:
-        return _coerce_date(local_date)
-    return date.today()
-
-
-def _get_todays_routine_day(user_id: str, today: date) -> dict[str, Any] | None:
-    supabase = get_supabase_client()
-    today_iso = today.isoformat()
-    weekday = today.weekday()
-
-    routines_result = (
-        supabase.table("routines")
-        .select("id, name, start_date, end_date")
-        .eq("user_id", user_id)
-        .lte("start_date", today_iso)
-        .gte("end_date", today_iso)
-        .order("created_at", desc=True)
-        .execute()
-    )
-    routines = getattr(routines_result, "data", None) or []
-
-    for routine in routines:
-        day_result = (
-            supabase.table("routine_days")
-            .select("id, day_of_week, muscle_subgroups")
-            .eq("routine_id", routine["id"])
-            .eq("day_of_week", weekday)
-            .limit(1)
-            .execute()
-        )
-        routine_day = _first_row(day_result)
-        if routine_day:
-            return {"routine": routine, "routine_day": routine_day}
-
-    return None
-
-
-def _resync_day_completion(user_id: str, routine_id: str, routine_day_id: str, today: date) -> None:
-    """Recalcula el estado (done/pending) de `workout_completions` para HOY en
-    base a si todos los ejercicios de ese dia estan marcados en
-    `exercise_completions`. Se llama despues de tildar/destildar un ejercicio."""
-    supabase = get_supabase_client()
-    today_iso = today.isoformat()
-
-    all_exercises_result = (
-        supabase.table("routine_exercises")
-        .select("id")
-        .eq("routine_day_id", routine_day_id)
-        .execute()
-    )
-    all_ids = [item["id"] for item in getattr(all_exercises_result, "data", None) or []]
-
-    completed_count = 0
-    if all_ids:
-        completions_result = (
-            supabase.table("exercise_completions")
-            .select("routine_exercise_id")
-            .eq("user_id", user_id)
-            .eq("completion_date", today_iso)
-            .in_("routine_exercise_id", all_ids)
-            .execute()
-        )
-        completed_count = len(getattr(completions_result, "data", None) or [])
-
-    all_done = bool(all_ids) and completed_count == len(all_ids)
-    new_status = "done" if all_done else "pending"
-
-    existing_result = (
-        supabase.table("workout_completions")
-        .select("id")
-        .eq("user_id", user_id)
-        .eq("routine_day_id", routine_day_id)
-        .eq("completion_date", today_iso)
-        .limit(1)
-        .execute()
-    )
-    existing_row = _first_row(existing_result)
-
-    if existing_row:
-        supabase.table("workout_completions").update(
-            {
-                "status": new_status,
-                "completed_at": datetime.now(timezone.utc).isoformat() if all_done else None,
-            }
-        ).eq("id", existing_row["id"]).execute()
-    elif all_done:
-        supabase.table("workout_completions").insert(
-            {
-                "user_id": user_id,
-                "routine_id": routine_id,
-                "routine_day_id": routine_day_id,
-                "completion_date": today_iso,
-                "status": "done",
-                "completed_at": datetime.now(timezone.utc).isoformat(),
-            }
-        ).execute()
-
-
-@router.get("/routines/today")
-async def get_todays_training(
-    local_date: str | None = Query(None),
-    user_id: str = Depends(get_current_user_id),
-):
-    supabase = get_supabase_client()
-    today = _resolve_today(local_date)
-    today_iso = today.isoformat()
-    match = _get_todays_routine_day(user_id, today)
-
-    if not match:
-        return {"date": today_iso, "has_training_today": False}
-
-    routine = match["routine"]
-    routine_day = match["routine_day"]
-
-    exercises_result = (
-        supabase.table("routine_exercises")
-        .select(
-            "id, exercise_id, sets_planned, reps_planned, duration_minutes, "
-            "rest_seconds, exercise_order, notes"
-        )
-        .eq("routine_day_id", routine_day["id"])
-        .order("exercise_order")
-        .execute()
-    )
-    routine_exercises = getattr(exercises_result, "data", None) or []
-
-    exercise_ids = [item["exercise_id"] for item in routine_exercises if item.get("exercise_id")]
-    exercises_by_id: dict[str, dict[str, Any]] = {}
-    if exercise_ids:
-        catalog_result = (
-            supabase.table("exercises")
-            .select("id, name, muscle_group_parent, muscle_subgroup")
-            .in_("id", exercise_ids)
-            .execute()
-        )
-        exercises_by_id = {
-            item["id"]: item for item in getattr(catalog_result, "data", None) or []
-        }
-
-    completed_ids: set[str] = set()
-    routine_exercise_ids = [item["id"] for item in routine_exercises]
-    if routine_exercise_ids:
-        completions_result = (
-            supabase.table("exercise_completions")
-            .select("routine_exercise_id")
-            .eq("user_id", user_id)
-            .eq("completion_date", today_iso)
-            .in_("routine_exercise_id", routine_exercise_ids)
-            .execute()
-        )
-        completed_ids = {
-            item["routine_exercise_id"]
-            for item in getattr(completions_result, "data", None) or []
-        }
-
-    exercises = [
-        {
-            "routine_exercise_id": item["id"],
-            "name": exercises_by_id.get(item["exercise_id"], {}).get("name", "Ejercicio"),
-            "muscle_group_parent": exercises_by_id.get(item["exercise_id"], {}).get("muscle_group_parent"),
-            "muscle_subgroup": exercises_by_id.get(item["exercise_id"], {}).get("muscle_subgroup"),
-            "sets_planned": item.get("sets_planned"),
-            "reps_planned": item.get("reps_planned"),
-            "duration_minutes": item.get("duration_minutes"),
-            "rest_seconds": item.get("rest_seconds"),
-            "notes": item.get("notes"),
-            "completed": item["id"] in completed_ids,
-        }
-        for item in routine_exercises
-    ]
-
-    return {
-        "date": today_iso,
-        "has_training_today": True,
-        "routine_id": routine["id"],
-        "routine_name": routine["name"],
-        "routine_day_id": routine_day["id"],
-        "muscle_groups": routine_day.get("muscle_subgroups") or [],
-        "exercises": exercises,
-        "all_completed": bool(exercises) and all(item["completed"] for item in exercises),
-    }
-
-
-@router.put("/routines/today/exercises/{routine_exercise_id}")
-async def toggle_todays_exercise(
-    routine_exercise_id: str,
-    payload: ExerciseCompletionPayload,
-    user_id: str = Depends(get_current_user_id),
-):
-    supabase = get_supabase_client()
-    today = _resolve_today(payload.local_date)
-    today_iso = today.isoformat()
-
-    exercise_result = (
-        supabase.table("routine_exercises")
-        .select("id, routine_id, routine_day_id")
-        .eq("id", routine_exercise_id)
-        .eq("user_id", user_id)
-        .limit(1)
-        .execute()
-    )
-    routine_exercise = _first_row(exercise_result)
-
-    if not routine_exercise:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No se encontró el ejercicio.",
-        )
-
-    if payload.completed:
-        supabase.table("exercise_completions").upsert(
-            {
-                "user_id": user_id,
-                "routine_exercise_id": routine_exercise_id,
-                "completion_date": today_iso,
-                "completed_at": datetime.now(timezone.utc).isoformat(),
-            },
-            on_conflict="user_id,routine_exercise_id,completion_date",
-        ).execute()
-    else:
-        supabase.table("exercise_completions").delete().eq("user_id", user_id).eq(
-            "routine_exercise_id", routine_exercise_id
-        ).eq("completion_date", today_iso).execute()
-
-    routine_day_id = routine_exercise.get("routine_day_id")
-    if routine_day_id:
-        _resync_day_completion(user_id, routine_exercise["routine_id"], routine_day_id, today)
-
-    return {"completed": payload.completed}
