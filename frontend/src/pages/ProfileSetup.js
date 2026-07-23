@@ -276,27 +276,28 @@ function ProfileSetup() {
                       onChange={(event) => setAge(event.target.value)}
                       required
                     />
-                    <div style={{ display: "grid", gap: "0.5rem" }}>
-                      <span className="fc-field__label">Genero</span>
-                      <div className="fc-option-grid">
-                        {genderOptions.map((option) => {
-                          const Icon = option.icon;
-                          const selected = gender === option.value;
-                          return (
-                            <button
-                              key={option.value}
-                              type="button"
-                              className={`fc-option-card ${selected ? "is-selected" : ""}`}
-                              onClick={() => setGender(option.value)}
-                            >
-                              <span className="fc-option-card__icon">
-                                <Icon size={18} />
-                              </span>
-                              <span className="fc-option-card__label">{option.label}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
+                  </div>
+
+                  <div style={{ display: "grid", gap: "0.5rem" }}>
+                    <span className="fc-field__label">Genero</span>
+                    <div className="fc-option-grid fc-option-grid--compact">
+                      {genderOptions.map((option) => {
+                        const Icon = option.icon;
+                        const selected = gender === option.value;
+                        return (
+                          <button
+                            key={option.value}
+                            type="button"
+                            className={`fc-option-card ${selected ? "is-selected" : ""}`}
+                            onClick={() => setGender(option.value)}
+                          >
+                            <span className="fc-option-card__icon">
+                              <Icon size={18} />
+                            </span>
+                            <span className="fc-option-card__label">{option.label}</span>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 
