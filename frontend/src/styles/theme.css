@@ -1986,6 +1986,12 @@ button.fc-routine-calendar__cell {
     width: min(84vw, 320px);
     transform: translateX(-100%);
     opacity: 0;
+    /* Solido y sin backdrop-filter en mobile: el blur + fondo semitransparente
+       usado en desktop no compone de forma confiable sobre position:fixed en
+       varios navegadores mobile y el drawer termina viendose "transparente". */
+    background: var(--color-bg);
+    backdrop-filter: none;
+    border-right: none;
     box-shadow: 0 20px 40px rgba(10, 8, 14, 0.28);
   }
 

@@ -22,7 +22,7 @@ const USERNAME_PATTERN = /^[a-z0-9_]{3,24}$/;
 
 export async function updateIdentity(userId, { full_name, bio, avatar_url, username } = {}) {
   const client = ensureClient();
-  const payload = { user_id: userId, updated_at: new Date().toISOString() };
+  const payload = { updated_at: new Date().toISOString() };
 
   if (full_name !== undefined) payload.full_name = full_name;
   if (bio !== undefined) payload.bio = bio;
@@ -38,9 +38,14 @@ export async function updateIdentity(userId, { full_name, bio, avatar_url, usern
     payload.username = trimmed || null;
   }
 
+  // Update, no upsert: a esta altura el perfil ya existe siempre (se crea en
+  // /profile-setup). Un upsert construye primero la fila candidata para el
+  // INSERT y Postgres valida sus NOT NULL (goal, experience_level) antes de
+  // llegar a resolver el ON CONFLICT, así que fallaría aunque la fila exista.
   const { data, error } = await client
     .from("profiles")
-    .upsert(payload, { onConflict: "user_id" })
+    .update(payload)
+    .eq("user_id", userId)
     .select()
     .maybeSingle();
 
