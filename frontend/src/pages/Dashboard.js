@@ -8,6 +8,7 @@ import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import PageLoader from "../components/ui/PageLoader";
 import RecentPRsSection from "../components/dashboard/RecentPRsSection";
+import RoutineProgressSection from "../components/dashboard/RoutineProgressSection";
 import TodayWorkoutSection from "../components/dashboard/TodayWorkoutSection";
 import WeightTrendSection from "../components/dashboard/WeightTrendSection";
 import { useAuth } from "../context/AuthContext";
@@ -46,6 +47,7 @@ function Dashboard() {
     waterMl: 0,
   });
   const [loadingStats, setLoadingStats] = useState(true);
+  const [statsRefreshKey, setStatsRefreshKey] = useState(0);
 
   const tab = useMemo(() => {
     const params = new URLSearchParams(location.search);
@@ -148,7 +150,11 @@ function Dashboard() {
     return () => {
       isMounted = false;
     };
-  }, [user]);
+  }, [user, statsRefreshKey]);
+
+  function refreshStats() {
+    setStatsRefreshKey((current) => current + 1);
+  }
 
   const activeTab = useMemo(() => {
     const validTabs = ["resumen", "rutinas", "progreso"];
@@ -221,7 +227,7 @@ function Dashboard() {
       >
         {activeTab === "resumen" ? (
           <div className="fc-dashboard-stack">
-            <TodayWorkoutSection />
+            <TodayWorkoutSection onCompletionChange={refreshStats} />
             <div className="fc-dashboard-grid">
             <Card glass>
               <div style={{ display: "grid", gap: "0.75rem" }}>
@@ -340,6 +346,10 @@ function Dashboard() {
 
         {activeTab === "progreso" ? (
           <div className="fc-dashboard-grid">
+            <RoutineProgressSection
+              routineId={stats.routinePreview?.routine_id}
+              routineName={stats.routinePreview?.name}
+            />
             <WeightTrendSection measurements={stats.measurements} />
             <RecentPRsSection prs={stats.prs} />
           </div>

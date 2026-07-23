@@ -15,7 +15,7 @@ function formatFullDate(isoDate) {
   return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
-function TodayWorkoutSection() {
+function TodayWorkoutSection({ onCompletionChange }) {
   const navigate = useNavigate();
   const [training, setTraining] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -48,6 +48,7 @@ function TodayWorkoutSection() {
     try {
       await toggleTodaysExercise(exercise.routine_exercise_id, !exercise.completed);
       await load();
+      onCompletionChange?.();
     } catch (toggleError) {
       setError(toggleError.message || "No se pudo actualizar el ejercicio.");
     } finally {
