@@ -2305,6 +2305,7 @@ button.fc-routine-calendar__cell {
 
 .fc-option-grid--compact .fc-option-card {
   grid-template-columns: 1fr;
+  justify-items: center;
   padding: 0.6rem 0.75rem;
   text-align: center;
 }
