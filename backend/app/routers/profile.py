@@ -29,7 +29,7 @@ def _get_profile_or_404(user_id: str) -> dict[str, Any]:
         supabase.table("profiles")
         .select(
             "user_id, full_name, bio, avatar_url, goal, experience_level, "
-            "username, public_id, "
+            "username, public_id, height_cm, weight_kg, "
             "measurements_visibility, prs_visibility, favorite_foods_visibility, "
             "gym_schedule_visibility, streak_visibility, routine_preview_visibility"
         )
@@ -190,7 +190,24 @@ async def get_profile(user_id: str, viewer_id: str = Depends(get_current_user_id
             .limit(1)
             .execute()
         )
-        sections["measurements"]["data"] = _first_row(result)
+        latest = _first_row(result)
+
+        # Si todavia no cargo una medicion (o la mas reciente no tiene altura/peso
+        # porque es de antes de que existieran esas columnas), se completa con
+        # los datos que ya cargo en el onboarding de perfil.
+        if latest is None:
+            if profile.get("height_cm") is not None or profile.get("weight_kg") is not None:
+                latest = {
+                    "height_cm": profile.get("height_cm"),
+                    "weight_kg": profile.get("weight_kg"),
+                }
+        else:
+            if latest.get("height_cm") is None and profile.get("height_cm") is not None:
+                latest["height_cm"] = profile.get("height_cm")
+            if latest.get("weight_kg") is None and profile.get("weight_kg") is not None:
+                latest["weight_kg"] = profile.get("weight_kg")
+
+        sections["measurements"]["data"] = latest
 
     if sections["personal_records"]["visible"]:
         result = (
