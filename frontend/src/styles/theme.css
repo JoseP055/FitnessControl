@@ -437,6 +437,12 @@ a:focus-visible {
   box-shadow: 0 14px 34px rgba(var(--color-danger-rgb), 0.12);
 }
 
+.fc-button--success {
+  color: rgba(10, 8, 14, 0.92);
+  background: linear-gradient(135deg, rgba(var(--color-success-rgb), 0.95), rgba(var(--color-success-rgb), 0.68));
+  box-shadow: 0 14px 34px rgba(var(--color-success-rgb), 0.2);
+}
+
 .fc-button.is-loading {
   pointer-events: none;
 }

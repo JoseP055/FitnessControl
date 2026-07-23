@@ -577,6 +577,16 @@ function RoutineForm() {
     scrollToTop();
   }
 
+  function continueAfterSavingDay() {
+    if (dayCursor < selectedDays.length - 1) {
+      goToNextDay();
+      return;
+    }
+
+    setStep(3);
+    scrollToTop();
+  }
+
   function goNext() {
     setError("");
 
@@ -1231,13 +1241,30 @@ function RoutineForm() {
                               Agregar fila
                             </Button>
                             <Button
+                              variant={activeDay.is_configured ? "success" : "primary"}
                               disabled={!activeDay.exercises.length}
                               onClick={saveDayConfiguration}
                             >
                               <Check size={16} />
-                              Guardar dia
+                              {activeDay.is_configured
+                                ? `Dia ${activeDayMeta?.label || ""} guardado`
+                                : "Guardar dia"}
                             </Button>
                           </div>
+
+                          {activeDay.is_configured ? (
+                            <motion.div
+                              initial={{ opacity: 0, y: 8 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                              style={{ marginTop: "0.75rem" }}
+                            >
+                              <Button onClick={continueAfterSavingDay} style={{ width: "100%" }}>
+                                {dayCursor < selectedDays.length - 1 ? "Ir al dia siguiente" : "Ir al resumen"}
+                                <ArrowRight size={16} />
+                              </Button>
+                            </motion.div>
+                          ) : null}
                         </Card>
                       )}
                     </div>
