@@ -26,15 +26,55 @@ function formatSignedKg(value) {
   return value > 0 ? `+${value.toFixed(1)} kg` : `${value.toFixed(1)} kg`;
 }
 
+// Alcanzar la meta es llegar a un numero exacto: da igual si la meta implica
+// bajar o subir de peso, siempre se compara el peso actual contra ese numero.
 function buildGoalMessage(latestWeight, weightGoalKg) {
   const diff = latestWeight - weightGoalKg;
   if (Math.abs(diff) < 0.05) {
-    return "Meta alcanzada.";
+    return "Meta alcanzada. Estas en tu peso objetivo.";
   }
   if (diff > 0) {
-    return `Te faltan ${diff.toFixed(1)} kg para tu meta de ${weightGoalKg} kg.`;
+    return `Te faltan ${diff.toFixed(1)} kg para llegar a tu meta de ${weightGoalKg} kg (bajando de peso).`;
   }
-  return `Superaste tu meta de ${weightGoalKg} kg por ${Math.abs(diff).toFixed(1)} kg.`;
+  return `Te faltan ${Math.abs(diff).toFixed(1)} kg para llegar a tu meta de ${weightGoalKg} kg (subiendo de peso).`;
+}
+
+// Progreso desde el primer registro hacia la meta, en cualquier direccion
+// (bajar o subir de peso). Con un solo registro da 0%: todavia no hay
+// historia para medir avance.
+function computeGoalProgressPercent(startWeight, latestWeight, weightGoalKg) {
+  const totalChange = weightGoalKg - startWeight;
+  if (Math.abs(totalChange) < 0.001) {
+    return 100;
+  }
+  const currentChange = latestWeight - startWeight;
+  return Math.max(0, Math.min(100, Math.round((currentChange / totalChange) * 100)));
+}
+
+function GoalSummary({ latestWeight, startWeight, weightGoalKg, showHint }) {
+  const percent = computeGoalProgressPercent(startWeight, latestWeight, weightGoalKg);
+
+  return (
+    <div style={{ display: "grid", gap: "0.5rem" }}>
+      <p className="fc-card-text" style={{ margin: 0 }}>
+        <Target size={14} style={{ verticalAlign: "-2px", marginRight: "0.3rem" }} />
+        {buildGoalMessage(latestWeight, weightGoalKg)}
+      </p>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.5rem" }}>
+        <div className="fc-progress" style={{ flex: 1 }}>
+          <div className="fc-progress__bar" style={{ width: `${percent}%` }} />
+        </div>
+        <span className="fc-text-eyebrow" style={{ whiteSpace: "nowrap" }}>
+          {percent}%
+        </span>
+      </div>
+      {showHint ? (
+        <p className="fc-card-text" style={{ margin: 0, fontSize: "0.8rem" }}>
+          Vas a ver tu progreso avanzar a medida que registres mas pesajes.
+        </p>
+      ) : null}
+    </div>
+  );
 }
 
 function WeightTrendSection({ measurements, weightGoalKg }) {
@@ -65,6 +105,7 @@ function WeightTrendSection({ measurements, weightGoalKg }) {
   }
 
   const latest = points[points.length - 1];
+  const first = points[0];
 
   if (points.length === 1) {
     return (
@@ -81,21 +122,17 @@ function WeightTrendSection({ measurements, weightGoalKg }) {
           </div>
 
           <p className="fc-card-text">
-            Registra tu peso una vez mas para ver tu tendencia y el ritmo de cambio.
+            Registra tu peso una vez mas (en otro dia) para ver tu tendencia y el ritmo de cambio.
           </p>
 
           {weightGoalKg ? (
-            <p className="fc-card-text" style={{ margin: 0 }}>
-              <Target size={14} style={{ verticalAlign: "-2px", marginRight: "0.3rem" }} />
-              {buildGoalMessage(latest.weight_kg, weightGoalKg)}
-            </p>
+            <GoalSummary latestWeight={latest.weight_kg} startWeight={first.weight_kg} weightGoalKg={weightGoalKg} showHint />
           ) : null}
         </div>
       </Card>
     );
   }
 
-  const first = points[0];
   const previous = points[points.length - 2];
 
   const deltaTotal = latest.weight_kg - first.weight_kg;
@@ -106,15 +143,6 @@ function WeightTrendSection({ measurements, weightGoalKg }) {
     Math.round((new Date(`${latest.measurement_date}T00:00:00`) - new Date(`${first.measurement_date}T00:00:00`)) / 86400000)
   );
   const weeklyRate = (deltaTotal / daysBetween) * 7;
-
-  let goalProgressPercent = null;
-  if (weightGoalKg) {
-    const totalChange = weightGoalKg - first.weight_kg;
-    goalProgressPercent =
-      Math.abs(totalChange) > 0.001
-        ? Math.max(0, Math.min(100, Math.round(((latest.weight_kg - first.weight_kg) / totalChange) * 100)))
-        : 100;
-  }
 
   return (
     <Card glass>
@@ -149,17 +177,7 @@ function WeightTrendSection({ measurements, weightGoalKg }) {
         <WeightLineChart points={points} weightGoalKg={weightGoalKg} />
 
         {weightGoalKg ? (
-          <div style={{ display: "grid", gap: "0.5rem" }}>
-            <p className="fc-card-text" style={{ margin: 0 }}>
-              <Target size={14} style={{ verticalAlign: "-2px", marginRight: "0.3rem" }} />
-              {buildGoalMessage(latest.weight_kg, weightGoalKg)}
-            </p>
-            {goalProgressPercent !== null ? (
-              <div className="fc-progress">
-                <div className="fc-progress__bar" style={{ width: `${goalProgressPercent}%` }} />
-              </div>
-            ) : null}
-          </div>
+          <GoalSummary latestWeight={latest.weight_kg} startWeight={first.weight_kg} weightGoalKg={weightGoalKg} />
         ) : null}
       </div>
     </Card>
