@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Plus, Ruler } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Calculator, Plus, Ruler } from "lucide-react";
 
 import Button from "../ui/Button";
 import Card from "../ui/Card";
@@ -7,6 +7,8 @@ import Input from "../ui/Input";
 import SectionLocked from "./SectionLocked";
 import VisibilitySelector from "./VisibilitySelector";
 import { updateVisibility, upsertMeasurement } from "../../services/socialClient";
+import { supabaseClient } from "../../services/supabaseClient";
+import { estimateBodyFatPercent } from "../../utils/bodyComposition";
 
 const FIELDS = [
   { key: "height_cm", label: "Altura (cm)" },
@@ -28,9 +30,53 @@ function MeasurementsSection({ userId, isSelf, section, onRefresh }) {
   const [form, setForm] = useState({});
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [ageGender, setAgeGender] = useState({ age: null, gender: null });
+
+  useEffect(() => {
+    if (!isSelf || !supabaseClient) {
+      return;
+    }
+
+    supabaseClient
+      .from("profiles")
+      .select("age, gender")
+      .eq("user_id", userId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          setAgeGender({ age: data.age, gender: data.gender });
+        }
+      });
+  }, [isSelf, userId]);
 
   if (!isSelf && !section.visible) {
     return <SectionLocked label="El usuario tiene las medidas ocultas." />;
+  }
+
+  const latest = section.data;
+
+  function handleField(key, value) {
+    setForm((current) => ({ ...current, [key]: value }));
+  }
+
+  function handleEstimateBodyFat() {
+    setError("");
+
+    const weightKg = Number.parseFloat(form.weight_kg || latest?.weight_kg);
+    const heightCm = Number.parseFloat(form.height_cm || latest?.height_cm);
+    const estimate = estimateBodyFatPercent({
+      weight_kg: weightKg,
+      height_cm: heightCm,
+      age: ageGender.age,
+      gender: ageGender.gender,
+    });
+
+    if (estimate === null) {
+      setError("Para calcular necesito tu altura, peso, edad y genero (completa tu perfil si falta alguno).");
+      return;
+    }
+
+    handleField("body_fat_percent", String(estimate));
   }
 
   async function handleSave() {
@@ -74,8 +120,6 @@ function MeasurementsSection({ userId, isSelf, section, onRefresh }) {
     }
   }
 
-  const latest = section.data;
-
   return (
     <Card glass>
       <div style={{ display: "grid", gap: "1rem" }}>
@@ -107,17 +151,36 @@ function MeasurementsSection({ userId, isSelf, section, onRefresh }) {
                 Registrar nueva medida
               </p>
               <div style={{ display: "grid", gap: "0.75rem", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))" }}>
-                {FIELDS.map((field) => (
-                  <Input
-                    key={field.key}
-                    id={`measurement-${field.key}`}
-                    label={field.label}
-                    type="number"
-                    inputMode="decimal"
-                    value={form[field.key] || ""}
-                    onChange={(event) => setForm((current) => ({ ...current, [field.key]: event.target.value }))}
-                  />
-                ))}
+                {FIELDS.map((field) =>
+                  field.key === "body_fat_percent" ? (
+                    <div key={field.key} style={{ display: "flex", gap: "0.5rem", alignItems: "flex-end", flexWrap: "wrap" }}>
+                      <div style={{ flex: "1 1 140px" }}>
+                        <Input
+                          id={`measurement-${field.key}`}
+                          label={field.label}
+                          type="number"
+                          inputMode="decimal"
+                          value={form[field.key] || ""}
+                          onChange={(event) => handleField(field.key, event.target.value)}
+                        />
+                      </div>
+                      <Button variant="secondary" onClick={handleEstimateBodyFat}>
+                        <Calculator size={14} />
+                        Calcular aprox
+                      </Button>
+                    </div>
+                  ) : (
+                    <Input
+                      key={field.key}
+                      id={`measurement-${field.key}`}
+                      label={field.label}
+                      type="number"
+                      inputMode="decimal"
+                      value={form[field.key] || ""}
+                      onChange={(event) => handleField(field.key, event.target.value)}
+                    />
+                  )
+                )}
               </div>
               {error ? <p className="fc-form-message">{error}</p> : null}
               <Button loading={saving} onClick={handleSave}>

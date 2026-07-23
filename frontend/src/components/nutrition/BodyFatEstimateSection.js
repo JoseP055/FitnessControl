@@ -1,19 +1,7 @@
 import { PieChart } from "lucide-react";
 
 import Card from "../ui/Card";
-
-function estimateBodyFatPercent({ weight_kg, height_cm, age, gender }) {
-  if (!weight_kg || !height_cm || !age) {
-    return null;
-  }
-
-  const heightM = height_cm / 100;
-  const bmi = weight_kg / (heightM * heightM);
-  const genderValue = gender === "masculino" ? 1 : gender === "femenino" ? 0 : 0.5;
-  const percent = 1.2 * bmi + 0.23 * age - 10.8 * genderValue - 5.4;
-
-  return Math.max(0, Math.round(percent * 10) / 10);
-}
+import { estimateBodyFatPercent } from "../../utils/bodyComposition";
 
 function BodyFatEstimateSection({ profile }) {
   const percent = estimateBodyFatPercent(profile || {});
