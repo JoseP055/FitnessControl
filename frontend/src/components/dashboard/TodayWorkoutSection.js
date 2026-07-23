@@ -7,6 +7,7 @@ import Card from "../ui/Card";
 import { getTodaysTraining, toggleTodaysExercise } from "../../services/api";
 import { downloadWorkoutReportPdf } from "../../utils/workoutReport";
 import { getLocalDateIso } from "../../utils/date";
+import { getRandomMotivationalMessage } from "../../constants/motivationalMessages";
 
 function formatFullDate(isoDate) {
   const date = new Date(`${isoDate}T00:00:00`);
@@ -20,10 +21,14 @@ function TodayWorkoutSection() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState("");
+  const [motivationalMessage, setMotivationalMessage] = useState("");
 
   async function load() {
     try {
       const data = await getTodaysTraining();
+      if (data.all_completed && !training?.all_completed) {
+        setMotivationalMessage(getRandomMotivationalMessage());
+      }
       setTraining(data);
     } catch (loadError) {
       setError(loadError.message || "No se pudo cargar el entrenamiento de hoy.");
@@ -138,11 +143,16 @@ function TodayWorkoutSection() {
         </div>
 
         {training.all_completed ? (
-          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-            <Button variant="secondary" onClick={() => downloadWorkoutReportPdf(training)}>
-              <Download size={16} />
-              Descargar reporte PDF
-            </Button>
+          <div style={{ display: "grid", gap: "0.5rem" }}>
+            <p className="fc-card-text">
+              <strong>Dia completado.</strong> {motivationalMessage}
+            </p>
+            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+              <Button variant="secondary" onClick={() => downloadWorkoutReportPdf(training)}>
+                <Download size={16} />
+                Descargar reporte PDF
+              </Button>
+            </div>
           </div>
         ) : (
           <Button onClick={() => navigate("/focus")}>

@@ -7,6 +7,7 @@ import Card from "../components/ui/Card";
 import PageLoader from "../components/ui/PageLoader";
 import { getTodaysTraining, toggleTodaysExercise } from "../services/api";
 import { downloadWorkoutReportPdf } from "../utils/workoutReport";
+import { getRandomMotivationalMessage } from "../constants/motivationalMessages";
 
 function formatSeconds(totalSeconds) {
   const minutes = Math.floor(totalSeconds / 60);
@@ -30,6 +31,7 @@ function FocusMode() {
   const [phase, setPhase] = useState("set-manual");
   const [remainingSeconds, setRemainingSeconds] = useState(0);
   const [finishedTraining, setFinishedTraining] = useState(null);
+  const [motivationalMessage, setMotivationalMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const intervalRef = useRef(null);
 
@@ -52,6 +54,7 @@ function FocusMode() {
         if (!remaining.length) {
           setPhase("done");
           setFinishedTraining(data);
+          setMotivationalMessage(getRandomMotivationalMessage());
           return;
         }
 
@@ -138,6 +141,7 @@ function FocusMode() {
 
   async function finishSession() {
     setPhase("done");
+    setMotivationalMessage(getRandomMotivationalMessage());
     try {
       const data = await getTodaysTraining();
       setFinishedTraining(data);
@@ -235,9 +239,9 @@ function FocusMode() {
 
           {phase === "done" ? (
             <div className="fc-focus-screen">
-              <span className="fc-text-eyebrow">Listo</span>
+              <span className="fc-text-eyebrow">Dia completado</span>
               <h1 className="fc-focus-screen__exercise">Entrenamiento completado</h1>
-              <p className="fc-card-text">Marcaste todos los ejercicios de hoy. Buen trabajo.</p>
+              <p className="fc-card-text">{motivationalMessage}</p>
               <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", justifyContent: "center" }}>
                 {finishedTraining ? (
                   <Button variant="secondary" onClick={() => downloadWorkoutReportPdf(finishedTraining)}>
