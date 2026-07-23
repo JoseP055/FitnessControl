@@ -109,12 +109,18 @@ function ProfileSetup() {
     return <PageLoader label="Cargando perfil..." />;
   }
 
+  function scrollToTop() {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
   function next() {
     setStep((current) => Math.min(current + 1, steps.length - 1));
+    scrollToTop();
   }
 
   function back() {
     setStep((current) => Math.max(current - 1, 0));
+    scrollToTop();
   }
 
   function toggleGoal(value) {
