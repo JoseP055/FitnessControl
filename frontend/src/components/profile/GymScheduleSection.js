@@ -10,7 +10,7 @@ import { deleteGymScheduleDay, updateVisibility, upsertGymScheduleDay } from "..
 const WEEKDAY_LABELS = ["Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado", "Domingo"];
 
 function GymScheduleSection({ userId, isSelf, section, onRefresh }) {
-  const [selectedDay, setSelectedDay] = useState(null);
+  const [selectedDays, setSelectedDays] = useState([]);
   const [startTime, setStartTime] = useState("18:00");
   const [endTime, setEndTime] = useState("19:00");
   const [saving, setSaving] = useState(false);
@@ -24,15 +24,24 @@ function GymScheduleSection({ userId, isSelf, section, onRefresh }) {
   const days = section.data || [];
   const byDay = new Map(days.map((day) => [day.day_of_week, day]));
 
-  function openDay(dayOfWeek) {
-    const existing = byDay.get(dayOfWeek);
-    setSelectedDay(dayOfWeek);
-    setStartTime(existing?.start_time?.slice(0, 5) || "18:00");
-    setEndTime(existing?.end_time?.slice(0, 5) || "19:00");
+  function toggleDay(dayOfWeek) {
     setError("");
+    setSelectedDays((current) => {
+      if (current.includes(dayOfWeek)) {
+        return current.filter((day) => day !== dayOfWeek);
+      }
+
+      if (current.length === 0) {
+        const existing = byDay.get(dayOfWeek);
+        setStartTime(existing?.start_time?.slice(0, 5) || "18:00");
+        setEndTime(existing?.end_time?.slice(0, 5) || "19:00");
+      }
+
+      return [...current, dayOfWeek].sort();
+    });
   }
 
-  async function handleSaveDay() {
+  async function handleSaveDays() {
     setError("");
 
     if (startTime >= endTime) {
@@ -43,12 +52,16 @@ function GymScheduleSection({ userId, isSelf, section, onRefresh }) {
     setSaving(true);
 
     try {
-      await upsertGymScheduleDay(userId, {
-        day_of_week: selectedDay,
-        start_time: startTime,
-        end_time: endTime,
-      });
-      setSelectedDay(null);
+      await Promise.all(
+        selectedDays.map((dayOfWeek) =>
+          upsertGymScheduleDay(userId, {
+            day_of_week: dayOfWeek,
+            start_time: startTime,
+            end_time: endTime,
+          })
+        )
+      );
+      setSelectedDays([]);
       await onRefresh();
     } catch (saveError) {
       setError(saveError.message || "No se pudo guardar el horario.");
@@ -63,6 +76,7 @@ function GymScheduleSection({ userId, isSelf, section, onRefresh }) {
 
     try {
       await deleteGymScheduleDay(id);
+      setSelectedDays([]);
       await onRefresh();
     } catch (deleteError) {
       setError(deleteError.message || "No se pudo eliminar el horario.");
@@ -80,6 +94,9 @@ function GymScheduleSection({ userId, isSelf, section, onRefresh }) {
     }
   }
 
+  const selectedLabel = selectedDays.map((day) => WEEKDAY_LABELS[day]).join(", ");
+  const singleExisting = selectedDays.length === 1 ? byDay.get(selectedDays[0]) : null;
+
   return (
     <Card glass>
       <div style={{ display: "grid", gap: "1rem" }}>
@@ -87,6 +104,9 @@ function GymScheduleSection({ userId, isSelf, section, onRefresh }) {
           <CalendarClock size={14} />
           Horario de gym
         </span>
+        {isSelf ? (
+          <p className="fc-card-text">Elegi uno o varios dias y asignales el mismo horario, por ejemplo Lunes, Martes y Miercoles de 18 a 19.</p>
+        ) : null}
 
         <div className="fc-day-picker">
           {WEEKDAY_LABELS.map((label, index) => {
@@ -95,8 +115,8 @@ function GymScheduleSection({ userId, isSelf, section, onRefresh }) {
               <button
                 key={label}
                 type="button"
-                className={`fc-day-picker__day ${scheduled ? "is-scheduled" : ""} ${selectedDay === index ? "is-selected" : ""}`}
-                onClick={() => (isSelf ? openDay(index) : null)}
+                className={`fc-day-picker__day ${scheduled ? "is-scheduled" : ""} ${selectedDays.includes(index) ? "is-selected" : ""}`}
+                onClick={() => (isSelf ? toggleDay(index) : null)}
                 disabled={!isSelf}
               >
                 <span>{label.slice(0, 3)}</span>
@@ -112,11 +132,11 @@ function GymScheduleSection({ userId, isSelf, section, onRefresh }) {
 
         {!days.length ? <p className="fc-card-text">Todavia no hay horario cargado.</p> : null}
 
-        {isSelf && selectedDay !== null ? (
+        {isSelf && selectedDays.length ? (
           <div className="fc-add-panel">
             <p className="fc-add-panel__title">
               <Plus size={15} />
-              Horario para {WEEKDAY_LABELS[selectedDay]}
+              Horario para {selectedLabel}
             </p>
             <div className="fc-inline-form">
               <input
@@ -131,14 +151,14 @@ function GymScheduleSection({ userId, isSelf, section, onRefresh }) {
                 value={endTime}
                 onChange={(event) => setEndTime(event.target.value)}
               />
-              <Button loading={saving} onClick={handleSaveDay}>
-                Guardar {WEEKDAY_LABELS[selectedDay]}
+              <Button loading={saving} onClick={handleSaveDays}>
+                Guardar {selectedDays.length > 1 ? `${selectedDays.length} dias` : selectedLabel}
               </Button>
-              {byDay.get(selectedDay) ? (
+              {singleExisting ? (
                 <Button
                   variant="ghost"
-                  loading={busyId === byDay.get(selectedDay)?.id}
-                  onClick={() => handleDelete(byDay.get(selectedDay).id)}
+                  loading={busyId === singleExisting.id}
+                  onClick={() => handleDelete(singleExisting.id)}
                 >
                   <Trash2 size={16} />
                 </Button>

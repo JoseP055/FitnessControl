@@ -9,6 +9,7 @@ import VisibilitySelector from "./VisibilitySelector";
 import { updateVisibility, upsertMeasurement } from "../../services/socialClient";
 
 const FIELDS = [
+  { key: "height_cm", label: "Altura (cm)" },
   { key: "weight_kg", label: "Peso (kg)" },
   { key: "body_fat_percent", label: "% grasa corporal" },
   { key: "chest_cm", label: "Pecho (cm)" },
