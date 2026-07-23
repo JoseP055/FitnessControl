@@ -143,6 +143,7 @@ function RoutineForm() {
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [catalogPage, setCatalogPage] = useState(1);
+  const [addingExerciseId, setAddingExerciseId] = useState(null);
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -204,6 +205,11 @@ function RoutineForm() {
     [catalog]
   );
 
+  const addedExerciseIds = useMemo(
+    () => new Set((activeDay?.exercises || []).map((item) => item.exercise_id).filter(Boolean)),
+    [activeDay]
+  );
+
   const filteredCatalog = useMemo(() => {
     if (!activeDay?.muscle_subgroups?.length) {
       return [];
@@ -211,6 +217,10 @@ function RoutineForm() {
 
     const normalizedSearch = searchTerm.trim().toLowerCase();
     return catalog.filter((exercise) => {
+      if (addedExerciseIds.has(exercise.id)) {
+        return false;
+      }
+
       const matchesSubgroup = activeDay.muscle_subgroups.includes(exercise.muscle_subgroup || "");
       if (!matchesSubgroup) {
         return false;
@@ -230,7 +240,19 @@ function RoutineForm() {
         .filter(Boolean)
         .some((value) => value.toLowerCase().includes(normalizedSearch));
     });
-  }, [activeDay, catalog, searchTerm]);
+  }, [activeDay, catalog, searchTerm, addedExerciseIds]);
+
+  // El select de cada fila tiene que seguir mostrando el ejercicio que ya
+  // tiene asignado, aunque ese ejercicio ya no aparezca en filteredCatalog
+  // (porque filteredCatalog excluye los que ya estan agregados al dia).
+  function getRowSelectableExercises(currentExerciseId) {
+    if (!currentExerciseId || filteredCatalog.some((exercise) => exercise.id === currentExerciseId)) {
+      return filteredCatalog;
+    }
+
+    const currentExercise = catalogById[currentExerciseId];
+    return currentExercise ? [currentExercise, ...filteredCatalog] : filteredCatalog;
+  }
 
   const totalCatalogPages = Math.max(1, Math.ceil(filteredCatalog.length / CATALOG_PAGE_SIZE));
 
@@ -377,6 +399,21 @@ function RoutineForm() {
       exercises: [...day.exercises, createExerciseRow(firstAvailableExercise, day.exercises.length)],
     }));
     setError("");
+  }
+
+  // Marca el ejercicio como "agregado" un instante (flash verde) antes de
+  // sacarlo de la lista de sugerencias, para que el cambio se note en vez de
+  // desaparecer de golpe.
+  function handleSelectSuggestion(exercise) {
+    if (addingExerciseId) {
+      return;
+    }
+
+    setAddingExerciseId(exercise.id);
+    window.setTimeout(() => {
+      addExerciseRow(exercise);
+      setAddingExerciseId(null);
+    }, 320);
   }
 
   function updateDraftExercise(exerciseRowId, field, value) {
@@ -1038,12 +1075,21 @@ function RoutineForm() {
                                       <button
                                         key={exercise.id}
                                         type="button"
-                                        className="fc-routine-suggestion"
-                                        onClick={() => addExerciseRow(exercise)}
+                                        className={`fc-routine-suggestion ${addingExerciseId === exercise.id ? "is-added" : ""}`}
+                                        disabled={addingExerciseId === exercise.id}
+                                        onClick={() => handleSelectSuggestion(exercise)}
                                       >
                                         <strong>{exercise.name}</strong>
                                         <span>
-                                          {exercise.muscle_subgroup || "General"} · {exercise.equipment || "Libre"}
+                                          {addingExerciseId === exercise.id ? (
+                                            <>
+                                              <Check size={14} /> Agregado
+                                            </>
+                                          ) : (
+                                            <>
+                                              {exercise.muscle_subgroup || "General"} · {exercise.equipment || "Libre"}
+                                            </>
+                                          )}
                                         </span>
                                       </button>
                                     ))}
@@ -1131,7 +1177,7 @@ function RoutineForm() {
                                       }
                                     >
                                       <option value="">Selecciona ejercicio</option>
-                                      {filteredCatalog.map((exercise) => (
+                                      {getRowSelectableExercises(item.exercise_id).map((exercise) => (
                                         <option key={exercise.id} value={exercise.id}>
                                           {exercise.name}
                                         </option>

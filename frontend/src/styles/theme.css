@@ -1295,11 +1295,25 @@ a:focus-visible {
   background: rgba(var(--color-surface-rgb), 0.62);
 }
 
+.fc-routine-suggestion.is-added {
+  border-color: rgba(var(--color-success-rgb), 0.6);
+  background: rgba(var(--color-success-rgb), 0.24);
+  color: rgba(var(--color-text-rgb), 0.96);
+  transform: scale(0.98);
+}
+
+.fc-routine-suggestion.is-added span {
+  color: rgba(var(--color-success-text-rgb), 0.95);
+}
+
 .fc-routine-suggestion strong {
   display: block;
 }
 
 .fc-routine-suggestion span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
   color: rgba(var(--color-text-rgb), 0.62);
   font-size: var(--font-size-sm);
 }
