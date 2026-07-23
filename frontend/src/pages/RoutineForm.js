@@ -551,14 +551,30 @@ function RoutineForm() {
     }));
   }
 
+  function scrollToTop() {
+    // En iOS Safari, si habia un input enfocado el teclado se cierra recien
+    // despues de este tick y su animacion pisa el scroll inmediato, dejandolo
+    // sin efecto visible. Se saca el foco y se espera un instante antes de
+    // scrollear para que nuestro scroll sea lo ultimo que se aplique.
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+
+    window.setTimeout(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+    }, 120);
+  }
+
   function goToPreviousDay() {
     setDayCursor((current) => Math.max(current - 1, 0));
     setDayStage("groups");
+    scrollToTop();
   }
 
   function goToNextDay() {
     setDayCursor((current) => Math.min(current + 1, selectedDays.length - 1));
     setDayStage("groups");
+    scrollToTop();
   }
 
   function goNext() {
@@ -576,6 +592,7 @@ function RoutineForm() {
       }
 
       setStep(1);
+      scrollToTop();
       return;
     }
 
@@ -588,6 +605,7 @@ function RoutineForm() {
       setDayCursor(0);
       setDayStage("groups");
       setStep(2);
+      scrollToTop();
       return;
     }
 
@@ -599,6 +617,7 @@ function RoutineForm() {
         }
 
         setDayStage("exercises");
+        scrollToTop();
         return;
       }
 
@@ -618,6 +637,7 @@ function RoutineForm() {
       }
 
       setStep(3);
+      scrollToTop();
     }
   }
 
@@ -626,6 +646,7 @@ function RoutineForm() {
 
     if (step === 2 && dayStage === "exercises") {
       setDayStage("groups");
+      scrollToTop();
       return;
     }
 
@@ -635,6 +656,7 @@ function RoutineForm() {
     }
 
     setStep((current) => Math.max(current - 1, 0));
+    scrollToTop();
   }
 
   async function handleCreateRoutine() {
