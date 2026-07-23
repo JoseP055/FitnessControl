@@ -345,7 +345,8 @@ a:focus-visible {
   color: rgba(var(--color-text-rgb), 0.76);
 }
 
-.fc-input {
+.fc-input,
+.fc-textarea {
   width: 100%;
   border: 1px solid rgba(var(--color-text-secondary-rgb), 0.16);
   border-radius: var(--radius-md);
@@ -358,17 +359,21 @@ a:focus-visible {
     transform var(--transition-fast);
 }
 
-.fc-input::placeholder {
+.fc-input::placeholder,
+.fc-textarea::placeholder {
   color: rgba(var(--color-text-rgb), 0.28);
 }
 
-.fc-input:hover {
+.fc-input:hover,
+.fc-textarea:hover {
   border-color: rgba(var(--color-text-secondary-rgb), 0.28);
 }
 
-.fc-input:focus {
+.fc-input:focus,
+.fc-textarea:focus {
   border-color: rgba(var(--color-accent-rgb), 0.9);
   box-shadow: 0 0 0 4px rgba(var(--color-accent-rgb), 0.14);
+  outline: none;
 }
 
 .fc-button {
