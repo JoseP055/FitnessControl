@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Trash2, UtensilsCrossed } from "lucide-react";
+import { Plus, Trash2, UtensilsCrossed } from "lucide-react";
 
 import Button from "../ui/Button";
 import Card from "../ui/Card";
@@ -115,35 +115,42 @@ function FavoriteFoodsSection({ userId, isSelf, section, onRefresh }) {
 
         {isSelf ? (
           <>
-            <Input
-              id="food-name"
-              label="Comida"
-              value={form.name}
-              onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-            />
+            <div className="fc-add-panel">
+              <p className="fc-add-panel__title">
+                <Plus size={15} />
+                Agregar comida favorita
+              </p>
 
-            <div className="fc-option-grid fc-option-grid--compact">
-              {MEAL_TYPES.map((type) => (
-                <button
-                  key={type.value}
-                  type="button"
-                  className={`fc-option-card ${form.meal_type === type.value ? "is-selected" : ""}`}
-                  onClick={() =>
-                    setForm((current) => ({
-                      ...current,
-                      meal_type: current.meal_type === type.value ? "" : type.value,
-                    }))
-                  }
-                >
-                  <span className="fc-option-card__label">{type.label}</span>
-                </button>
-              ))}
+              <Input
+                id="food-name"
+                label="Comida"
+                value={form.name}
+                onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
+              />
+
+              <div className="fc-option-grid fc-option-grid--compact">
+                {MEAL_TYPES.map((type) => (
+                  <button
+                    key={type.value}
+                    type="button"
+                    className={`fc-option-card ${form.meal_type === type.value ? "is-selected" : ""}`}
+                    onClick={() =>
+                      setForm((current) => ({
+                        ...current,
+                        meal_type: current.meal_type === type.value ? "" : type.value,
+                      }))
+                    }
+                  >
+                    <span className="fc-option-card__label">{type.label}</span>
+                  </button>
+                ))}
+              </div>
+
+              {error ? <p className="fc-form-message">{error}</p> : null}
+              <Button loading={saving} onClick={handleAdd}>
+                Agregar comida
+              </Button>
             </div>
-
-            {error ? <p className="fc-form-message">{error}</p> : null}
-            <Button loading={saving} onClick={handleAdd}>
-              Agregar comida
-            </Button>
             <VisibilitySelector value={section.visibility} onChange={handleVisibilityChange} />
           </>
         ) : null}

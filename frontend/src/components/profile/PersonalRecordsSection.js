@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Trash2, Trophy, X } from "lucide-react";
+import { Plus, Trash2, Trophy, X } from "lucide-react";
 
 import Button from "../ui/Button";
 import Card from "../ui/Card";
@@ -150,77 +150,84 @@ function PersonalRecordsSection({ userId, isSelf, section, onRefresh }) {
 
         {isSelf ? (
           <>
-            <div style={{ display: "grid", gap: "0.5rem" }}>
-              <span className="fc-field__label">Ejercicio (del catalogo)</span>
-              {form.exercise_id ? (
-                <span className="fc-pill">
-                  {form.exercise_name}
-                  <button type="button" className="fc-pill-clear" onClick={clearExercise} aria-label="Cambiar ejercicio">
-                    <X size={12} />
+            <div className="fc-add-panel">
+              <p className="fc-add-panel__title">
+                <Plus size={15} />
+                Agregar record
+              </p>
+
+              <div style={{ display: "grid", gap: "0.5rem" }}>
+                <span className="fc-field__label">Ejercicio (del catalogo)</span>
+                {form.exercise_id ? (
+                  <span className="fc-pill">
+                    {form.exercise_name}
+                    <button type="button" className="fc-pill-clear" onClick={clearExercise} aria-label="Cambiar ejercicio">
+                      <X size={12} />
+                    </button>
+                  </span>
+                ) : (
+                  <div style={{ position: "relative" }}>
+                    <input
+                      className="fc-input"
+                      placeholder="Buscar ejercicio del catalogo..."
+                      value={exerciseQuery}
+                      onChange={(event) => setExerciseQuery(event.target.value)}
+                    />
+                    {matches.length ? (
+                      <div className="fc-autocomplete">
+                        {matches.map((exercise) => (
+                          <button
+                            key={exercise.id}
+                            type="button"
+                            className="fc-autocomplete__item"
+                            onClick={() => selectExercise(exercise)}
+                          >
+                            {exercise.name}
+                            <small>{exercise.muscle_group_parent}</small>
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                )}
+              </div>
+
+              <div style={{ display: "grid", gap: "0.75rem", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))" }}>
+                <Input
+                  id="pr-value"
+                  label="Valor"
+                  type="number"
+                  inputMode="decimal"
+                  value={form.value}
+                  onChange={(event) => setForm((current) => ({ ...current, value: event.target.value }))}
+                />
+                <Input
+                  id="pr-unit"
+                  label="Unidad (opcional)"
+                  placeholder="kg, seg, km..."
+                  value={form.unit}
+                  onChange={(event) => setForm((current) => ({ ...current, unit: event.target.value }))}
+                />
+              </div>
+
+              <div className="fc-option-grid fc-option-grid--compact">
+                {RECORD_TYPES.map((type) => (
+                  <button
+                    key={type.value}
+                    type="button"
+                    className={`fc-option-card ${form.record_type === type.value ? "is-selected" : ""}`}
+                    onClick={() => setForm((current) => ({ ...current, record_type: type.value }))}
+                  >
+                    <span className="fc-option-card__label">{type.label}</span>
                   </button>
-                </span>
-              ) : (
-                <div style={{ position: "relative" }}>
-                  <input
-                    className="fc-input"
-                    placeholder="Buscar ejercicio del catalogo..."
-                    value={exerciseQuery}
-                    onChange={(event) => setExerciseQuery(event.target.value)}
-                  />
-                  {matches.length ? (
-                    <div className="fc-autocomplete">
-                      {matches.map((exercise) => (
-                        <button
-                          key={exercise.id}
-                          type="button"
-                          className="fc-autocomplete__item"
-                          onClick={() => selectExercise(exercise)}
-                        >
-                          {exercise.name}
-                          <small>{exercise.muscle_group_parent}</small>
-                        </button>
-                      ))}
-                    </div>
-                  ) : null}
-                </div>
-              )}
-            </div>
+                ))}
+              </div>
 
-            <div style={{ display: "grid", gap: "0.75rem", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))" }}>
-              <Input
-                id="pr-value"
-                label="Valor"
-                type="number"
-                inputMode="decimal"
-                value={form.value}
-                onChange={(event) => setForm((current) => ({ ...current, value: event.target.value }))}
-              />
-              <Input
-                id="pr-unit"
-                label="Unidad (opcional)"
-                placeholder="kg, seg, km..."
-                value={form.unit}
-                onChange={(event) => setForm((current) => ({ ...current, unit: event.target.value }))}
-              />
+              {error ? <p className="fc-form-message">{error}</p> : null}
+              <Button loading={saving} onClick={handleAdd}>
+                Agregar record
+              </Button>
             </div>
-
-            <div className="fc-option-grid fc-option-grid--compact">
-              {RECORD_TYPES.map((type) => (
-                <button
-                  key={type.value}
-                  type="button"
-                  className={`fc-option-card ${form.record_type === type.value ? "is-selected" : ""}`}
-                  onClick={() => setForm((current) => ({ ...current, record_type: type.value }))}
-                >
-                  <span className="fc-option-card__label">{type.label}</span>
-                </button>
-              ))}
-            </div>
-
-            {error ? <p className="fc-form-message">{error}</p> : null}
-            <Button loading={saving} onClick={handleAdd}>
-              Agregar record
-            </Button>
             <VisibilitySelector value={section.visibility} onChange={handleVisibilityChange} />
           </>
         ) : null}

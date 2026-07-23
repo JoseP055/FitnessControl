@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CalendarClock, Trash2 } from "lucide-react";
+import { CalendarClock, Plus, Trash2 } from "lucide-react";
 
 import Button from "../ui/Button";
 import Card from "../ui/Card";
@@ -113,7 +113,11 @@ function GymScheduleSection({ userId, isSelf, section, onRefresh }) {
         {!days.length ? <p className="fc-card-text">Todavia no hay horario cargado.</p> : null}
 
         {isSelf && selectedDay !== null ? (
-          <div style={{ display: "grid", gap: "0.75rem" }}>
+          <div className="fc-add-panel">
+            <p className="fc-add-panel__title">
+              <Plus size={15} />
+              Horario para {WEEKDAY_LABELS[selectedDay]}
+            </p>
             <div className="fc-inline-form">
               <input
                 className="fc-input"

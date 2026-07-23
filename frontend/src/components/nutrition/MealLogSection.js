@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Trash2, UtensilsCrossed } from "lucide-react";
+import { Plus, Trash2, UtensilsCrossed } from "lucide-react";
 
 import Button from "../ui/Button";
 import Card from "../ui/Card";
@@ -122,65 +122,72 @@ function MealLogSection({ userId }) {
           <p className="fc-card-text">Todavia no registraste comidas hoy.</p>
         )}
 
-        <div className="fc-option-grid fc-option-grid--compact">
-          {MEAL_TYPES.map((type) => (
-            <button
-              key={type.value}
-              type="button"
-              className={`fc-option-card ${form.meal_type === type.value ? "is-selected" : ""}`}
-              onClick={() => setForm((current) => ({ ...current, meal_type: type.value }))}
-            >
-              <span className="fc-option-card__label">{type.label}</span>
-            </button>
-          ))}
+        <div className="fc-add-panel">
+          <p className="fc-add-panel__title">
+            <Plus size={15} />
+            Registrar comida
+          </p>
+
+          <div className="fc-option-grid fc-option-grid--compact">
+            {MEAL_TYPES.map((type) => (
+              <button
+                key={type.value}
+                type="button"
+                className={`fc-option-card ${form.meal_type === type.value ? "is-selected" : ""}`}
+                onClick={() => setForm((current) => ({ ...current, meal_type: type.value }))}
+              >
+                <span className="fc-option-card__label">{type.label}</span>
+              </button>
+            ))}
+          </div>
+
+          <Input
+            id="meal-description"
+            label="Que comiste"
+            value={form.description}
+            onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
+          />
+
+          <div style={{ display: "grid", gap: "0.75rem", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))" }}>
+            <Input
+              id="meal-calories"
+              label="Calorias (opcional)"
+              type="number"
+              inputMode="decimal"
+              value={form.calories}
+              onChange={(event) => setForm((current) => ({ ...current, calories: event.target.value }))}
+            />
+            <Input
+              id="meal-protein"
+              label="Proteina g (opcional)"
+              type="number"
+              inputMode="decimal"
+              value={form.protein_g}
+              onChange={(event) => setForm((current) => ({ ...current, protein_g: event.target.value }))}
+            />
+            <Input
+              id="meal-carbs"
+              label="Carbos g (opcional)"
+              type="number"
+              inputMode="decimal"
+              value={form.carbs_g}
+              onChange={(event) => setForm((current) => ({ ...current, carbs_g: event.target.value }))}
+            />
+            <Input
+              id="meal-fat"
+              label="Grasas g (opcional)"
+              type="number"
+              inputMode="decimal"
+              value={form.fat_g}
+              onChange={(event) => setForm((current) => ({ ...current, fat_g: event.target.value }))}
+            />
+          </div>
+
+          {error ? <p className="fc-form-message">{error}</p> : null}
+          <Button loading={saving} onClick={handleAdd}>
+            Agregar comida
+          </Button>
         </div>
-
-        <Input
-          id="meal-description"
-          label="Que comiste"
-          value={form.description}
-          onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
-        />
-
-        <div style={{ display: "grid", gap: "0.75rem", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))" }}>
-          <Input
-            id="meal-calories"
-            label="Calorias (opcional)"
-            type="number"
-            inputMode="decimal"
-            value={form.calories}
-            onChange={(event) => setForm((current) => ({ ...current, calories: event.target.value }))}
-          />
-          <Input
-            id="meal-protein"
-            label="Proteina g (opcional)"
-            type="number"
-            inputMode="decimal"
-            value={form.protein_g}
-            onChange={(event) => setForm((current) => ({ ...current, protein_g: event.target.value }))}
-          />
-          <Input
-            id="meal-carbs"
-            label="Carbos g (opcional)"
-            type="number"
-            inputMode="decimal"
-            value={form.carbs_g}
-            onChange={(event) => setForm((current) => ({ ...current, carbs_g: event.target.value }))}
-          />
-          <Input
-            id="meal-fat"
-            label="Grasas g (opcional)"
-            type="number"
-            inputMode="decimal"
-            value={form.fat_g}
-            onChange={(event) => setForm((current) => ({ ...current, fat_g: event.target.value }))}
-          />
-        </div>
-
-        {error ? <p className="fc-form-message">{error}</p> : null}
-        <Button loading={saving} onClick={handleAdd}>
-          Agregar comida
-        </Button>
       </div>
     </Card>
   );

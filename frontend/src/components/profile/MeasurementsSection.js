@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Ruler } from "lucide-react";
+import { Plus, Ruler } from "lucide-react";
 
 import Button from "../ui/Button";
 import Card from "../ui/Card";
@@ -100,23 +100,29 @@ function MeasurementsSection({ userId, isSelf, section, onRefresh }) {
 
         {isSelf ? (
           <>
-            <div style={{ display: "grid", gap: "0.75rem", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))" }}>
-              {FIELDS.map((field) => (
-                <Input
-                  key={field.key}
-                  id={`measurement-${field.key}`}
-                  label={field.label}
-                  type="number"
-                  inputMode="decimal"
-                  value={form[field.key] || ""}
-                  onChange={(event) => setForm((current) => ({ ...current, [field.key]: event.target.value }))}
-                />
-              ))}
+            <div className="fc-add-panel">
+              <p className="fc-add-panel__title">
+                <Plus size={15} />
+                Registrar nueva medida
+              </p>
+              <div style={{ display: "grid", gap: "0.75rem", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))" }}>
+                {FIELDS.map((field) => (
+                  <Input
+                    key={field.key}
+                    id={`measurement-${field.key}`}
+                    label={field.label}
+                    type="number"
+                    inputMode="decimal"
+                    value={form[field.key] || ""}
+                    onChange={(event) => setForm((current) => ({ ...current, [field.key]: event.target.value }))}
+                  />
+                ))}
+              </div>
+              {error ? <p className="fc-form-message">{error}</p> : null}
+              <Button loading={saving} onClick={handleSave}>
+                Registrar medida de hoy
+              </Button>
             </div>
-            {error ? <p className="fc-form-message">{error}</p> : null}
-            <Button loading={saving} onClick={handleSave}>
-              Registrar medida de hoy
-            </Button>
             <VisibilitySelector value={section.visibility} onChange={handleVisibilityChange} />
           </>
         ) : null}
