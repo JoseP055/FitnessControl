@@ -66,7 +66,7 @@ function Dashboard() {
         const { data, error } = await supabaseClient
           .from("profiles")
           .select(
-            "user_id, full_name, age, gender, height_cm, weight_kg, goal, experience_level"
+            "user_id, full_name, age, gender, height_cm, weight_kg, goal, goals, experience_level"
           )
           .eq("user_id", user.id)
           .maybeSingle();
@@ -283,7 +283,11 @@ function Dashboard() {
               <div style={{ display: "grid", gap: "0.75rem" }}>
                 <span className="fc-text-eyebrow">Objetivo</span>
                 <div className="fc-metric">
-                  <span className="fc-metric__value">{goalLabel(profile?.goal)}</span>
+                  <span className="fc-metric__value">
+                    {profile?.goals?.length
+                      ? profile.goals.map((value) => goalLabel(value)).join(" + ")
+                      : goalLabel(profile?.goal)}
+                  </span>
                   <span className="fc-metric__label">Foco actual</span>
                 </div>
                 <p className="fc-card-text">

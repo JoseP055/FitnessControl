@@ -8,6 +8,7 @@ import Card from "../components/ui/Card";
 import Input from "../components/ui/Input";
 import PageLoader from "../components/ui/PageLoader";
 import { useAuth } from "../context/AuthContext";
+import { USERNAME_PATTERN } from "../services/socialClient";
 import { supabaseClient } from "../services/supabaseClient";
 
 const stepTransition = {
@@ -21,12 +22,13 @@ function ProfileSetup() {
   const { user, loading } = useAuth();
   const [step, setStep] = useState(0);
   const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
   const [heightCm, setHeightCm] = useState("");
   const [weightKg, setWeightKg] = useState("");
-  const [goal, setGoal] = useState("");
-  const [experience, setExperience] = useState("");
+  const [goals, setGoals] = useState([]);
+  const [experience, setExperience] = useState("principiante");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [loadingExisting, setLoadingExisting] = useState(true);
@@ -84,7 +86,7 @@ function ProfileSetup() {
         const { data, error: queryError } = await supabaseClient
           .from("profiles")
           .select(
-            "user_id, full_name, age, gender, height_cm, weight_kg, goal, experience_level"
+            "user_id, full_name, username, age, gender, height_cm, weight_kg, goal, goals, experience_level"
           )
           .eq("user_id", user.id)
           .maybeSingle();
@@ -96,12 +98,13 @@ function ProfileSetup() {
         if (isMounted && data?.user_id) {
           setIsEditing(true);
           setFullName(data.full_name || "");
+          setUsername(data.username || "");
           setAge(data.age ? String(data.age) : "");
           setGender(data.gender || "");
           setHeightCm(data.height_cm ? String(data.height_cm) : "");
           setWeightKg(data.weight_kg ? String(data.weight_kg) : "");
-          setGoal(data.goal || "");
-          setExperience(data.experience_level || "");
+          setGoals(data.goals?.length ? data.goals : data.goal ? [data.goal] : []);
+          setExperience(data.experience_level || "principiante");
         }
       } finally {
         if (isMounted) {
@@ -137,8 +140,14 @@ function ProfileSetup() {
     setStep((current) => Math.max(current - 1, 0));
   }
 
-  const basicValid = fullName.trim().length >= 2;
-  const goalValid = Boolean(goal);
+  function toggleGoal(value) {
+    setGoals((current) =>
+      current.includes(value) ? current.filter((item) => item !== value) : [...current, value]
+    );
+  }
+
+  const usernameValid = !username.trim() || USERNAME_PATTERN.test(username.trim().toLowerCase());
+  const basicValid = fullName.trim().length >= 2 && age.trim() !== "" && Boolean(gender) && usernameValid;
   const levelValid = Boolean(experience);
 
   async function handleFinish() {
@@ -149,7 +158,7 @@ function ProfileSetup() {
       return;
     }
 
-    if (!basicValid || !goalValid || !levelValid) {
+    if (!basicValid || !levelValid) {
       setError("Completa los campos requeridos para continuar.");
       return;
     }
@@ -159,11 +168,13 @@ function ProfileSetup() {
     const payload = {
       user_id: user.id,
       full_name: fullName.trim(),
-      age: age ? Number.parseInt(age, 10) : null,
-      gender: gender ? gender.trim() : null,
+      username: username.trim() ? username.trim().toLowerCase() : null,
+      age: Number.parseInt(age, 10),
+      gender,
       height_cm: heightCm ? Number.parseFloat(heightCm) : null,
       weight_kg: weightKg ? Number.parseFloat(weightKg) : null,
-      goal,
+      goal: goals[0] || null,
+      goals: goals.length ? goals : null,
       experience_level: experience,
       updated_at: new Date().toISOString(),
     };
@@ -179,7 +190,11 @@ function ProfileSetup() {
 
       navigate("/dashboard?tab=perfil", { replace: true });
     } catch (saveError) {
-      setError(saveError.message || "No se pudo guardar el perfil.");
+      if (saveError.code === "23505") {
+        setError("Ese nombre de usuario ya esta en uso.");
+      } else {
+        setError(saveError.message || "No se pudo guardar el perfil.");
+      }
     } finally {
       setSaving(false);
     }
@@ -220,13 +235,13 @@ function ProfileSetup() {
           <Card glass>
             <motion.div key={steps[step].key} {...stepTransition}>
               {step === 0 ? (
-                <div style={{ display: "grid", gap: "1.25rem" }}>
+                <div style={{ display: "grid", gap: "1.5rem" }}>
                   <div style={{ display: "grid", gap: "0.35rem" }}>
                     <h2 style={{ margin: 0, fontFamily: "var(--font-display)", letterSpacing: "-0.03em", fontSize: "1.5rem" }}>
                       Datos basicos
                     </h2>
                     <p style={{ margin: 0, color: "rgba(242, 238, 245, 0.68)" }}>
-                      Estos datos se usan para personalizar tus recomendaciones.
+                      Nombre, usuario, edad y genero son obligatorios. El resto lo podes completar ahora o mas adelante desde tu perfil.
                     </p>
                   </div>
 
@@ -240,15 +255,29 @@ function ProfileSetup() {
                       required
                     />
                     <Input
+                      id="profile-username"
+                      label="Usuario"
+                      placeholder="tu_usuario"
+                      helperText="Minusculas, numeros y guion bajo. Sirve para que tus amigos te encuentren."
+                      value={username}
+                      onChange={(event) => setUsername(event.target.value.toLowerCase())}
+                    />
+                    {username.trim() && !usernameValid ? (
+                      <p className="fc-form-message" style={{ gridColumn: "1 / -1", margin: 0 }}>
+                        El usuario debe tener 3-24 caracteres: minusculas, numeros y guion bajo.
+                      </p>
+                    ) : null}
+                    <Input
                       id="profile-age"
-                      label="Edad (opcional)"
+                      label="Edad"
                       type="number"
                       inputMode="numeric"
                       value={age}
                       onChange={(event) => setAge(event.target.value)}
+                      required
                     />
                     <div style={{ display: "grid", gap: "0.5rem" }}>
-                      <span className="fc-field__label">Genero (opcional)</span>
+                      <span className="fc-field__label">Genero</span>
                       <div className="fc-option-grid">
                         {genderOptions.map((option) => {
                           const Icon = option.icon;
@@ -269,22 +298,28 @@ function ProfileSetup() {
                         })}
                       </div>
                     </div>
-                    <Input
-                      id="profile-height"
-                      label="Altura (cm, opcional)"
-                      type="number"
-                      inputMode="decimal"
-                      value={heightCm}
-                      onChange={(event) => setHeightCm(event.target.value)}
-                    />
-                    <Input
-                      id="profile-weight"
-                      label="Peso actual (kg, opcional)"
-                      type="number"
-                      inputMode="decimal"
-                      value={weightKg}
-                      onChange={(event) => setWeightKg(event.target.value)}
-                    />
+                  </div>
+
+                  <div style={{ display: "grid", gap: "0.75rem" }}>
+                    <span className="fc-text-eyebrow">Opcional, editable mas adelante</span>
+                    <div style={{ display: "grid", gap: "1rem", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
+                      <Input
+                        id="profile-height"
+                        label="Altura (cm)"
+                        type="number"
+                        inputMode="decimal"
+                        value={heightCm}
+                        onChange={(event) => setHeightCm(event.target.value)}
+                      />
+                      <Input
+                        id="profile-weight"
+                        label="Peso actual (kg)"
+                        type="number"
+                        inputMode="decimal"
+                        value={weightKg}
+                        onChange={(event) => setWeightKg(event.target.value)}
+                      />
+                    </div>
                   </div>
                 </div>
               ) : null}
@@ -293,23 +328,23 @@ function ProfileSetup() {
                 <div style={{ display: "grid", gap: "1.25rem" }}>
                   <div style={{ display: "grid", gap: "0.35rem" }}>
                     <h2 style={{ margin: 0, fontFamily: "var(--font-display)", letterSpacing: "-0.03em", fontSize: "1.5rem" }}>
-                      Objetivo
+                      Objetivo (opcional)
                     </h2>
                     <p style={{ margin: 0, color: "rgba(242, 238, 245, 0.68)" }}>
-                      Elegi el foco principal para tu plan.
+                      Podes elegir uno, varios, o ninguno por ahora.
                     </p>
                   </div>
 
                   <div className="fc-option-grid">
                     {goalOptions.map((option) => {
                       const Icon = option.icon;
-                      const selected = goal === option.value;
+                      const selected = goals.includes(option.value);
                       return (
                         <button
                           key={option.value}
                           type="button"
                           className={`fc-option-card ${selected ? "is-selected" : ""}`}
-                          onClick={() => setGoal(option.value)}
+                          onClick={() => toggleGoal(option.value)}
                         >
                           <span className="fc-option-card__icon">
                             <Icon size={18} />
@@ -380,7 +415,7 @@ function ProfileSetup() {
               ) : null}
             </div>
             {step < steps.length - 1 ? (
-              <Button onClick={next} disabled={(step === 0 && !basicValid) || (step === 1 && !goalValid)}>
+              <Button onClick={next} disabled={step === 0 && !basicValid}>
                 <span className="fc-button__label">
                   Siguiente
                   <ArrowRight size={16} />

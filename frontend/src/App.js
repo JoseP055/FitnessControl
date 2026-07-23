@@ -51,7 +51,7 @@ function PostLoginGate() {
 
         const { data, error: queryError } = await supabaseClient
           .from("profiles")
-          .select("user_id, full_name, goal, experience_level")
+          .select("user_id, full_name, age, gender, experience_level")
           .eq("user_id", user.id)
           .maybeSingle();
 
@@ -62,7 +62,8 @@ function PostLoginGate() {
         const completed =
           Boolean(data?.user_id) &&
           Boolean(data?.full_name) &&
-          Boolean(data?.goal) &&
+          Boolean(data?.age) &&
+          Boolean(data?.gender) &&
           Boolean(data?.experience_level);
 
         setDestination(completed ? "/dashboard" : "/profile-setup");

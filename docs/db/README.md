@@ -18,6 +18,7 @@ Ejecutar en este orden:
 10. `010_social_profile.sql` — Perfil social: avatar/bio/visibilidad por sección en `profiles`, tabla `friendships` (solicitud + aceptación), `personal_records`, `favorite_foods`, `gym_schedule`, función `search_profiles` y bucket de Storage `avatars` + políticas.
 11. `011_profile_identity_and_pr_catalog.sql` — Agrega `public_id` (autogenerado) y `username` (elegido) a `profiles` para buscar amigos de forma precisa, agrega `exercise_id` a `personal_records` para estandarizar los PRs contra el catálogo de `exercises`, y actualiza `search_profiles` para buscar también por username/ID.
 12. `012_nutrition.sql` — Módulo de Nutrición: `nutrition_logs` (comidas por día con macros opcionales) y `water_logs` (agua acumulada por día), ambas con RLS solo-dueño.
+13. `013_profile_goals_multi.sql` — `goal` pasa a ser opcional (nullable) y se agrega `goals` (text[]) para elegir más de un objetivo en el onboarding; `goal` se mantiene poblado con el primero elegido por compatibilidad.
 
 ## Qué verificar después de cada script (Table Editor)
 

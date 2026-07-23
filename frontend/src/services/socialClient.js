@@ -14,7 +14,7 @@ function throwIfError(error, fallbackMessage) {
   }
 }
 
-const USERNAME_PATTERN = /^[a-z0-9_]{3,24}$/;
+export const USERNAME_PATTERN = /^[a-z0-9_]{3,24}$/;
 
 // ---------------------------------------------------------------------------
 // Identidad, avatar y visibilidad
