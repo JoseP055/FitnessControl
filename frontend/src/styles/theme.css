@@ -1165,6 +1165,19 @@ a:focus-visible {
   min-width: 0;
 }
 
+.fc-routine-table-row__exercise-name {
+  margin: 0;
+  width: 100%;
+  padding: 0.95rem 1rem;
+  border: 1px solid rgba(var(--color-text-secondary-rgb), 0.16);
+  border-radius: var(--radius-md);
+  background: rgba(var(--color-bg-rgb), 0.72);
+  color: var(--color-text);
+  font-weight: 600;
+  overflow-wrap: break-word;
+  cursor: default;
+}
+
 .fc-routine-table-row__modes {
   display: flex;
   gap: 0.45rem;

@@ -242,18 +242,6 @@ function RoutineForm() {
     });
   }, [activeDay, catalog, searchTerm, addedExerciseIds]);
 
-  // El select de cada fila tiene que seguir mostrando el ejercicio que ya
-  // tiene asignado, aunque ese ejercicio ya no aparezca en filteredCatalog
-  // (porque filteredCatalog excluye los que ya estan agregados al dia).
-  function getRowSelectableExercises(currentExerciseId) {
-    if (!currentExerciseId || filteredCatalog.some((exercise) => exercise.id === currentExerciseId)) {
-      return filteredCatalog;
-    }
-
-    const currentExercise = catalogById[currentExerciseId];
-    return currentExercise ? [currentExercise, ...filteredCatalog] : filteredCatalog;
-  }
-
   const totalCatalogPages = Math.max(1, Math.ceil(filteredCatalog.length / CATALOG_PAGE_SIZE));
 
   const paginatedCatalog = useMemo(() => {
@@ -421,16 +409,6 @@ function RoutineForm() {
       return;
     }
 
-    if (field === "exercise_id" && value) {
-      const duplicate = activeDay.exercises.some(
-        (item) => item.id !== exerciseRowId && item.exercise_id === value
-      );
-      if (duplicate) {
-        setError(`${catalogById[value]?.name || "Ese ejercicio"} ya esta agregado a este dia.`);
-        return;
-      }
-    }
-
     setError("");
 
     updateDay(activeDay.day_of_week, (day) => ({
@@ -439,21 +417,6 @@ function RoutineForm() {
       exercises: day.exercises.map((item) => {
         if (item.id !== exerciseRowId) {
           return item;
-        }
-
-        if (field === "exercise_id") {
-          const nextExercise = catalogById[value] || null;
-          const defaults = getExerciseDefaults(nextExercise);
-          return {
-            ...item,
-            exercise_id: value,
-            exercise: nextExercise,
-            planning_mode: defaults.planning_mode,
-            sets_planned: defaults.sets_planned,
-            reps_planned: defaults.reps_planned,
-            duration_minutes: defaults.duration_minutes,
-            rest_seconds: defaults.rest_seconds,
-          };
         }
 
         if (field === "planning_mode") {
@@ -1160,20 +1123,9 @@ function RoutineForm() {
                                   </div>
 
                                   <div className="fc-routine-table-row__exercise">
-                                    <select
-                                      className="fc-input fc-select"
-                                      value={item.exercise_id}
-                                      onChange={(event) =>
-                                        updateDraftExercise(item.id, "exercise_id", event.target.value)
-                                      }
-                                    >
-                                      <option value="">Selecciona ejercicio</option>
-                                      {getRowSelectableExercises(item.exercise_id).map((exercise) => (
-                                        <option key={exercise.id} value={exercise.id}>
-                                          {exercise.name}
-                                        </option>
-                                      ))}
-                                    </select>
+                                    <p className="fc-routine-table-row__exercise-name">
+                                      {item.exercise?.name || "Ejercicio sin nombre"}
+                                    </p>
                                     <div className="fc-catalog-item__meta">
                                       <span className="fc-pill">
                                         {item.exercise?.muscle_group_parent || "Sin grupo"}
