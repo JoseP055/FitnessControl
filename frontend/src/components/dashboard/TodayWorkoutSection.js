@@ -7,6 +7,12 @@ import Card from "../ui/Card";
 import { getTodaysTraining, toggleTodaysExercise } from "../../services/api";
 import { downloadWorkoutReportPdf } from "../../utils/workoutReport";
 
+function formatFullDate(isoDate) {
+  const date = new Date(`${isoDate}T00:00:00`);
+  const label = date.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" });
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
 function TodayWorkoutSection() {
   const navigate = useNavigate();
   const [training, setTraining] = useState(null);
@@ -57,7 +63,7 @@ function TodayWorkoutSection() {
         <div style={{ display: "grid", gap: "0.75rem" }}>
           <span className="fc-text-eyebrow">
             <Target size={14} />
-            Hoy
+            Hoy, {formatFullDate(training.date)}
           </span>
           <p className="fc-card-text">No tenes entrenamiento programado para hoy. Aprovecha para descansar.</p>
         </div>
@@ -77,8 +83,11 @@ function TodayWorkoutSection() {
           <div>
             <span className="fc-text-eyebrow">
               <Target size={14} />
-              Hoy toca: {training.routine_name}
+              Hoy, {formatFullDate(training.date)}
             </span>
+            <p className="fc-card-text" style={{ margin: "0.35rem 0 0" }}>
+              Te toca: <strong>{training.routine_name}</strong>
+            </p>
             <div className="fc-helper-list" style={{ marginTop: "0.5rem" }}>
               {training.muscle_groups.map((group) => (
                 <span key={group} className="fc-pill">
