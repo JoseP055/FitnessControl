@@ -184,7 +184,7 @@ function RoutineDetail() {
               return (
                 <Card key={item.id} glass className="fc-routine-exercise-card">
                   <div className="fc-routine-exercise-card__top">
-                    <div>
+                    <div className="fc-routine-exercise-card__name">
                       <span className="fc-text-eyebrow">#{item.exercise_order}</span>
                       <h2 className="fc-section-title">{exercise.name || "Ejercicio"}</h2>
                     </div>

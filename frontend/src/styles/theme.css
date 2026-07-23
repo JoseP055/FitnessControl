@@ -1427,8 +1427,10 @@ a:focus-visible {
 }
 
 .fc-catalog-item__meta {
-  display: grid;
-  justify-items: end;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
   gap: 0.45rem;
 }
 
@@ -1470,10 +1472,20 @@ a:focus-visible {
 
 .fc-routine-exercise-card__top {
   display: flex;
-  gap: 1rem;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
   justify-content: space-between;
   align-items: start;
   margin-bottom: 1rem;
+}
+
+.fc-routine-exercise-card__name {
+  min-width: 0;
+  flex: 1 1 180px;
+}
+
+.fc-routine-exercise-card__name .fc-section-title {
+  overflow-wrap: break-word;
 }
 
 .fc-routine-inline-editor {
