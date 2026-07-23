@@ -1,4 +1,5 @@
 import { supabaseClient } from "./supabaseClient";
+import { getLocalDateIso } from "../utils/date";
 
 const API_URL = (process.env.REACT_APP_API_URL || "").trim().replace(/\/+$/, "");
 const API_TIMEOUT_MS = 6000;
@@ -190,12 +191,12 @@ export async function deleteRoutineExercise(routineId, routineExerciseId) {
 }
 
 export async function getTodaysTraining() {
-  return apiRequest("/routines/today", { method: "GET" });
+  return apiRequest(`/routines/today?local_date=${getLocalDateIso()}`, { method: "GET" });
 }
 
 export async function toggleTodaysExercise(routineExerciseId, completed) {
   return apiRequest(`/routines/today/exercises/${routineExerciseId}`, {
     method: "PUT",
-    body: JSON.stringify({ completed }),
+    body: JSON.stringify({ completed, local_date: getLocalDateIso() }),
   });
 }

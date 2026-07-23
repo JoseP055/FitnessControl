@@ -965,12 +965,22 @@ async def delete_routine_exercise(
 
 class ExerciseCompletionPayload(BaseModel):
     completed: bool
+    local_date: str | None = None
 
 
-def _get_todays_routine_day(user_id: str) -> dict[str, Any] | None:
+def _resolve_today(local_date: str | None) -> date:
+    """Usa la fecha local del dispositivo del usuario si la manda (asi el dia
+    "de hoy" nunca depende de en que zona horaria este el servidor), y cae a
+    la fecha del servidor solo si no se especifica."""
+    if local_date:
+        return _coerce_date(local_date)
+    return date.today()
+
+
+def _get_todays_routine_day(user_id: str, today: date) -> dict[str, Any] | None:
     supabase = get_supabase_client()
-    today_iso = date.today().isoformat()
-    weekday = date.today().weekday()
+    today_iso = today.isoformat()
+    weekday = today.weekday()
 
     routines_result = (
         supabase.table("routines")
@@ -999,12 +1009,12 @@ def _get_todays_routine_day(user_id: str) -> dict[str, Any] | None:
     return None
 
 
-def _resync_day_completion(user_id: str, routine_id: str, routine_day_id: str) -> None:
+def _resync_day_completion(user_id: str, routine_id: str, routine_day_id: str, today: date) -> None:
     """Recalcula el estado (done/pending) de `workout_completions` para HOY en
     base a si todos los ejercicios de ese dia estan marcados en
     `exercise_completions`. Se llama despues de tildar/destildar un ejercicio."""
     supabase = get_supabase_client()
-    today_iso = date.today().isoformat()
+    today_iso = today.isoformat()
 
     all_exercises_result = (
         supabase.table("routine_exercises")
@@ -1061,10 +1071,14 @@ def _resync_day_completion(user_id: str, routine_id: str, routine_day_id: str) -
 
 
 @router.get("/routines/today")
-async def get_todays_training(user_id: str = Depends(get_current_user_id)):
+async def get_todays_training(
+    local_date: str | None = Query(None),
+    user_id: str = Depends(get_current_user_id),
+):
     supabase = get_supabase_client()
-    today_iso = date.today().isoformat()
-    match = _get_todays_routine_day(user_id)
+    today = _resolve_today(local_date)
+    today_iso = today.isoformat()
+    match = _get_todays_routine_day(user_id, today)
 
     if not match:
         return {"date": today_iso, "has_training_today": False}
@@ -1148,7 +1162,8 @@ async def toggle_todays_exercise(
     user_id: str = Depends(get_current_user_id),
 ):
     supabase = get_supabase_client()
-    today_iso = date.today().isoformat()
+    today = _resolve_today(payload.local_date)
+    today_iso = today.isoformat()
 
     exercise_result = (
         supabase.table("routine_exercises")
@@ -1183,6 +1198,6 @@ async def toggle_todays_exercise(
 
     routine_day_id = routine_exercise.get("routine_day_id")
     if routine_day_id:
-        _resync_day_completion(user_id, routine_exercise["routine_id"], routine_day_id)
+        _resync_day_completion(user_id, routine_exercise["routine_id"], routine_day_id, today)
 
     return {"completed": payload.completed}

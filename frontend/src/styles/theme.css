@@ -1120,7 +1120,7 @@ a:focus-visible {
 
 .fc-routine-table-row__top {
   display: grid;
-  grid-template-columns: 72px minmax(0, 1.6fr) auto;
+  grid-template-columns: 72px minmax(0, 1fr);
   gap: 0.75rem;
   align-items: start;
 }
@@ -1161,9 +1161,10 @@ a:focus-visible {
 .fc-routine-table-row__actions {
   display: flex;
   gap: 0.45rem;
-  justify-content: flex-end;
+  justify-content: flex-start;
   flex-wrap: wrap;
   align-items: center;
+  grid-column: 1 / -1;
 }
 
 .fc-mode-chip {
@@ -1456,16 +1457,6 @@ a:focus-visible {
   border-top: 1px solid rgba(var(--color-text-secondary-rgb), 0.12);
 }
 
-@media (max-width: 1200px) {
-  .fc-routine-table-row__top {
-    grid-template-columns: 64px minmax(0, 1fr);
-  }
-
-  .fc-routine-table-row__actions {
-    grid-column: 1 / -1;
-    justify-content: flex-start;
-  }
-}
 
 .fc-danger-zone {
   display: flex;
@@ -2766,5 +2757,34 @@ button.fc-routine-calendar__cell {
   font-family: var(--font-display);
   font-size: clamp(1.6rem, 5vw, 2.4rem);
   letter-spacing: -0.02em;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Reloj/fecha en el sidebar                                                 */
+/* ------------------------------------------------------------------------ */
+
+.fc-live-clock {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(var(--color-text-secondary-rgb), 0.12);
+  background: rgba(var(--color-bg-rgb), 0.4);
+}
+
+.fc-live-clock__date {
+  font-size: var(--font-size-xs);
+  color: rgba(var(--color-text-rgb), 0.6);
+  text-transform: capitalize;
+}
+
+.fc-live-clock__time {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  letter-spacing: -0.02em;
+}
+
+.fc-dashboard.is-collapsed .fc-live-clock {
+  display: none;
 }
 

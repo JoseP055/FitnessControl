@@ -15,6 +15,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../context/AuthContext";
+import LiveClock from "./LiveClock";
 
 const STORAGE_KEY = "fc.sidebar.collapsed";
 
@@ -134,6 +135,8 @@ function AppShell({ activeSection = "resumen", header, children }) {
                 {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
               </button>
             </div>
+
+            <LiveClock />
 
             <div className="fc-dashboard__sidebar-actions">
               <button

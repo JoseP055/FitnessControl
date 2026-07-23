@@ -362,6 +362,14 @@ function RoutineForm() {
       return;
     }
 
+    const alreadyAdded = activeDay.exercises.some(
+      (item) => item.exercise_id === firstAvailableExercise.id
+    );
+    if (alreadyAdded) {
+      setError(`${firstAvailableExercise.name} ya esta agregado a este dia.`);
+      return;
+    }
+
     updateDay(activeDay.day_of_week, (day) => ({
       ...day,
       is_configured: false,
@@ -374,6 +382,18 @@ function RoutineForm() {
     if (!activeDay) {
       return;
     }
+
+    if (field === "exercise_id" && value) {
+      const duplicate = activeDay.exercises.some(
+        (item) => item.id !== exerciseRowId && item.exercise_id === value
+      );
+      if (duplicate) {
+        setError(`${catalogById[value]?.name || "Ese ejercicio"} ya esta agregado a este dia.`);
+        return;
+      }
+    }
+
+    setError("");
 
     updateDay(activeDay.day_of_week, (day) => ({
       ...day,

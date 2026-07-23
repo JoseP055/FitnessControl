@@ -1,4 +1,5 @@
 import { supabaseClient } from "./supabaseClient";
+import { getLocalDateIso } from "../utils/date";
 
 function ensureClient() {
   if (!supabaseClient) {
@@ -15,8 +16,7 @@ function throwIfError(error, fallbackMessage) {
 }
 
 export function todayIso() {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  return getLocalDateIso();
 }
 
 export const DEFAULT_WATER_GOAL_ML = 2000;
