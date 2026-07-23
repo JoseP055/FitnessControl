@@ -19,6 +19,18 @@ export function todayIso() {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 }
 
+export const DEFAULT_WATER_GOAL_ML = 2000;
+const WATER_ML_PER_KG = 33;
+
+// Formula de referencia general: 0.033 L de agua por kg de peso corporal.
+export function estimateWaterGoalMl(weightKg) {
+  if (!weightKg) {
+    return null;
+  }
+
+  return Math.round(weightKg * WATER_ML_PER_KG);
+}
+
 // ---------------------------------------------------------------------------
 // Agua
 // ---------------------------------------------------------------------------

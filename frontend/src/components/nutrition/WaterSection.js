@@ -3,12 +3,16 @@ import { Droplet, Minus, Plus } from "lucide-react";
 
 import Button from "../ui/Button";
 import Card from "../ui/Card";
-import { addWater, getWaterToday } from "../../services/nutritionClient";
+import {
+  DEFAULT_WATER_GOAL_ML,
+  addWater,
+  estimateWaterGoalMl,
+  getWaterToday,
+} from "../../services/nutritionClient";
 
-const DAILY_GOAL_ML = 2000;
 const QUICK_ADDS = [250, 500, 1000];
 
-function WaterSection({ userId }) {
+function WaterSection({ userId, weightKg }) {
   const [amount, setAmount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -53,7 +57,9 @@ function WaterSection({ userId }) {
     }
   }
 
-  const progressPercent = Math.min(100, Math.round((amount / DAILY_GOAL_ML) * 100));
+  const estimatedGoalMl = estimateWaterGoalMl(weightKg);
+  const goalMl = estimatedGoalMl || DEFAULT_WATER_GOAL_ML;
+  const progressPercent = Math.min(100, Math.round((amount / goalMl) * 100));
 
   return (
     <Card glass>
@@ -69,7 +75,7 @@ function WaterSection({ userId }) {
           <>
             <div className="fc-metric">
               <span className="fc-metric__value">{(amount / 1000).toFixed(2)} L</span>
-              <span className="fc-metric__label">Meta: {(DAILY_GOAL_ML / 1000).toFixed(1)} L</span>
+              <span className="fc-metric__label">Meta: {(goalMl / 1000).toFixed(1)} L</span>
             </div>
             <div className="fc-progress">
               <div className="fc-progress__bar" style={{ width: `${progressPercent}%` }} />
@@ -87,6 +93,12 @@ function WaterSection({ userId }) {
                 250 ml
               </Button>
             </div>
+
+            <p className="fc-card-text">
+              {estimatedGoalMl
+                ? "Estimado (peso x 0.033 L/kg). Sumale 350-500 ml extra por cada 30 min de ejercicio intenso, y otro 10-15% con calor o mucha humedad."
+                : "Meta por defecto: completa tu peso en el perfil para un objetivo calculado segun tu peso."}
+            </p>
 
             {error ? <p className="fc-form-message">{error}</p> : null}
           </>

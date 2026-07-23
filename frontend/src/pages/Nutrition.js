@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import AppShell from "../components/layout/AppShell";
+import BodyFatEstimateSection from "../components/nutrition/BodyFatEstimateSection";
 import CalorieEstimateSection from "../components/nutrition/CalorieEstimateSection";
 import MealLogSection from "../components/nutrition/MealLogSection";
 import WaterSection from "../components/nutrition/WaterSection";
@@ -67,7 +68,8 @@ function Nutrition() {
       <div className="fc-dashboard-stack">
         <div className="fc-dashboard-grid">
           <CalorieEstimateSection profile={profile} />
-          <WaterSection userId={user.id} />
+          <BodyFatEstimateSection profile={profile} />
+          <WaterSection userId={user.id} weightKg={profile?.weight_kg} />
         </div>
 
         <MealLogSection userId={user.id} />

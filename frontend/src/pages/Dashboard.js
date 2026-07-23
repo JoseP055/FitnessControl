@@ -11,7 +11,7 @@ import RecentPRsSection from "../components/dashboard/RecentPRsSection";
 import WeightTrendSection from "../components/dashboard/WeightTrendSection";
 import { useAuth } from "../context/AuthContext";
 import { getProfile } from "../services/api";
-import { getWaterToday } from "../services/nutritionClient";
+import { DEFAULT_WATER_GOAL_ML, estimateWaterGoalMl, getWaterToday } from "../services/nutritionClient";
 import { supabaseClient } from "../services/supabaseClient";
 
 function getCurrentWeekRange() {
@@ -268,7 +268,9 @@ function Dashboard() {
                 </span>
                 <div className="fc-metric">
                   <span className="fc-metric__value">{(stats.waterMl / 1000).toFixed(2)} L</span>
-                  <span className="fc-metric__label">Objetivo: 2.0 L</span>
+                  <span className="fc-metric__label">
+                    Objetivo: {((estimateWaterGoalMl(profile?.weight_kg) || DEFAULT_WATER_GOAL_ML) / 1000).toFixed(1)} L
+                  </span>
                 </div>
                 <Button variant="secondary" onClick={() => navigate("/nutrition")}>
                   Ir a nutricion
