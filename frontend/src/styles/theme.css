@@ -2427,8 +2427,8 @@ button.fc-routine-calendar__cell {
 
 .fc-streak-badge {
   display: flex;
-  align-items: baseline;
-  gap: 0.6rem;
+  align-items: center;
+  gap: 0.85rem;
 }
 
 .fc-streak-badge__value {
@@ -2440,6 +2440,100 @@ button.fc-routine-calendar__cell {
 
 .fc-streak-badge__label {
   color: rgba(var(--color-text-rgb), 0.64);
+}
+
+/* ------------------------------------------------------------------------ */
+/* Fueguito de racha: prendido (rojo, animado) o apagado (gris)             */
+/* ------------------------------------------------------------------------ */
+
+.fc-streak-flame {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: color var(--transition-fast), filter var(--transition-fast);
+}
+
+.fc-streak-flame.is-lit {
+  color: rgba(var(--color-danger-rgb), 0.92);
+  background: radial-gradient(circle, rgba(var(--color-danger-rgb), 0.2) 0%, transparent 72%);
+  filter: drop-shadow(0 0 6px rgba(var(--color-danger-rgb), 0.4));
+  animation: fc-flame-flicker 1.6s ease-in-out infinite;
+}
+
+.fc-streak-flame.is-unlit {
+  color: rgba(var(--color-text-secondary-rgb), 0.32);
+}
+
+@keyframes fc-flame-flicker {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.07);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fc-streak-flame.is-lit {
+    animation: none;
+  }
+}
+
+/* ------------------------------------------------------------------------ */
+/* Info tooltip: "i" que revela texto secundario solo al tocarlo            */
+/* ------------------------------------------------------------------------ */
+
+.fc-info-tooltip {
+  position: relative;
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+.fc-info-tooltip__trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(var(--color-text-secondary-rgb), 0.32);
+  background: rgba(var(--color-bg-rgb), 0.5);
+  color: rgba(var(--color-text-secondary-rgb), 0.85);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background var(--transition-fast), color var(--transition-fast);
+}
+
+.fc-info-tooltip__trigger:hover,
+.fc-info-tooltip__trigger[aria-expanded="true"] {
+  border-color: rgba(var(--color-accent-rgb), 0.5);
+  background: rgba(var(--color-accent-rgb), 0.12);
+  color: rgba(var(--color-accent-rgb), 0.95);
+}
+
+.fc-info-tooltip__bubble {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  width: max-content;
+  max-width: 230px;
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--radius-md);
+  background: rgb(var(--color-surface-rgb));
+  border: 1px solid rgba(var(--color-text-secondary-rgb), 0.2);
+  box-shadow: var(--shadow-card);
+  color: rgba(var(--color-text-rgb), 0.82);
+  font-size: var(--font-size-sm);
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  line-height: 1.4;
 }
 
 .fc-day-picker {

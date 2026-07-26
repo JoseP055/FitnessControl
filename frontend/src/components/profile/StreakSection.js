@@ -1,6 +1,6 @@
-import { Flame } from "lucide-react";
-
 import Card from "../ui/Card";
+import InfoTooltip from "../ui/InfoTooltip";
+import StreakFlame from "../ui/StreakFlame";
 import SectionLocked from "./SectionLocked";
 import VisibilitySelector from "./VisibilitySelector";
 import { updateVisibility } from "../../services/socialClient";
@@ -16,21 +16,26 @@ function StreakSection({ userId, isSelf, section, onRefresh }) {
   }
 
   const streak = section.data;
+  const streakCount = streak?.current_streak ?? 0;
 
   return (
     <Card glass>
       <div style={{ display: "grid", gap: "1rem" }}>
         <span className="fc-text-eyebrow">
-          <Flame size={14} />
           Racha
+          <InfoTooltip text="Se calcula sobre los dias programados de tu rutina actual que marcaste como hechos." />
         </span>
 
         {streak ? (
           <div className="fc-streak-badge">
-            <span className="fc-streak-badge__value">{streak.current_streak}</span>
-            <span className="fc-streak-badge__label">
-              {streak.current_streak === 1 ? "dia seguido" : "dias seguidos"} en {streak.routine_name}
-            </span>
+            <StreakFlame count={streakCount} size={38} />
+            <div>
+              <span className="fc-streak-badge__value">{streakCount}</span>
+              <span className="fc-streak-badge__label">
+                {" "}
+                {streakCount === 1 ? "dia seguido" : "dias seguidos"} en {streak.routine_name}
+              </span>
+            </div>
           </div>
         ) : (
           <p className="fc-card-text">Todavia no hay una rutina activa para calcular la racha.</p>

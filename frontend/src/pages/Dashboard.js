@@ -1,12 +1,14 @@
 import { motion } from "framer-motion";
-import { Activity, ArrowRight, ClipboardList, Droplet, Flame } from "lucide-react";
+import { Activity, ArrowRight, ClipboardList, Droplet } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import AppShell from "../components/layout/AppShell";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
+import InfoTooltip from "../components/ui/InfoTooltip";
 import PageLoader from "../components/ui/PageLoader";
+import StreakFlame from "../components/ui/StreakFlame";
 import RecentPRsSection from "../components/dashboard/RecentPRsSection";
 import RoutineProgressSection from "../components/dashboard/RoutineProgressSection";
 import TodayWorkoutSection from "../components/dashboard/TodayWorkoutSection";
@@ -203,6 +205,19 @@ function Dashboard() {
     }
   }
 
+  function getGreetingPrefix() {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Buenos dias";
+    if (hour < 19) return "Buenas tardes";
+    return "Buenas noches";
+  }
+
+  const streakCount = stats.streak?.current_streak ?? 0;
+  const greetingSubtitle =
+    streakCount > 0
+      ? `Llevas ${streakCount} ${streakCount === 1 ? "dia seguido" : "dias seguidos"} entrenando. No cortes la racha hoy.`
+      : "Organiza tu semana, guarda tus avances y manten todo en un solo lugar.";
+
   return (
     <AppShell
       activeSection={activeTab}
@@ -212,10 +227,10 @@ function Dashboard() {
             <span>{initials || "FC"}</span>
           </div>
           <div style={{ display: "grid", gap: "0.25rem" }}>
-            <h1 className="fc-dashboard__title">Hola, {displayName}.</h1>
-            <p className="fc-dashboard__subtitle">
-              Organiza tu semana, guarda tus avances y manten todo en un solo lugar.
-            </p>
+            <h1 className="fc-dashboard__title">
+              {getGreetingPrefix()}, {displayName}.
+            </h1>
+            <p className="fc-dashboard__subtitle">{greetingSubtitle}</p>
           </div>
         </div>
       }
@@ -256,17 +271,22 @@ function Dashboard() {
             <Card glass>
               <div style={{ display: "grid", gap: "0.75rem" }}>
                 <span className="fc-text-eyebrow">
-                  <Flame size={14} />
                   Racha
+                  <InfoTooltip text="Se calcula sobre los dias programados de tu rutina actual que marcaste como hechos." />
                 </span>
-                <div className="fc-metric">
-                  <span className="fc-metric__value">{stats.streak?.current_streak ?? 0}</span>
-                  <span className="fc-metric__label">
-                    {stats.streak?.routine_name ? `dias seguidos en ${stats.streak.routine_name}` : "dias seguidos"}
-                  </span>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
+                  <StreakFlame count={streakCount} size={34} />
+                  <div className="fc-metric">
+                    <span className="fc-metric__value">{streakCount}</span>
+                    <span className="fc-metric__label">
+                      {stats.streak?.routine_name ? `dias seguidos en ${stats.streak.routine_name}` : "dias seguidos"}
+                    </span>
+                  </div>
                 </div>
-                <p className="fc-card-text">
-                  Se calcula sobre los dias programados de tu rutina actual que marcaste como hechos.
+                <p className="fc-card-text" style={{ margin: 0 }}>
+                  {streakCount > 0
+                    ? "Vas muy bien. No cortes la racha hoy."
+                    : "Todavia no arrancaste una racha. Hoy es un buen dia para empezar."}
                 </p>
               </div>
             </Card>
@@ -292,7 +312,10 @@ function Dashboard() {
 
             <Card glass>
               <div style={{ display: "grid", gap: "0.75rem" }}>
-                <span className="fc-text-eyebrow">Objetivo</span>
+                <span className="fc-text-eyebrow">
+                  Objetivo
+                  <InfoTooltip text="Ajustamos la experiencia visual y el seguimiento en funcion de este objetivo." />
+                </span>
                 <div className="fc-metric">
                   <span className="fc-metric__value">
                     {profile?.goals?.length
@@ -301,24 +324,21 @@ function Dashboard() {
                   </span>
                   <span className="fc-metric__label">Foco actual</span>
                 </div>
-                <p className="fc-card-text">
-                  Ajustamos la experiencia visual y el seguimiento en funcion de este objetivo.
-                </p>
               </div>
             </Card>
 
             <Card glass>
               <div style={{ display: "grid", gap: "0.75rem" }}>
-                <span className="fc-text-eyebrow">Nivel</span>
+                <span className="fc-text-eyebrow">
+                  Nivel
+                  <InfoTooltip text="Este dato nos ayuda a ordenar mejor la progresion de tus rutinas." />
+                </span>
                 <div className="fc-metric">
                   <span className="fc-metric__value">
                     {levelLabel(profile?.experience_level)}
                   </span>
                   <span className="fc-metric__label">Experiencia</span>
                 </div>
-                <p className="fc-card-text">
-                  Este dato nos ayuda a ordenar mejor la progresion de tus rutinas.
-                </p>
               </div>
             </Card>
             </div>
