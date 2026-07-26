@@ -2870,6 +2870,12 @@ button.fc-routine-calendar__cell {
   background: rgba(var(--color-bg-rgb), 0.4);
 }
 
+.fc-add-panel--highlight {
+  border-color: rgba(var(--color-accent-rgb), 0.4);
+  background: rgba(var(--color-accent-rgb), 0.08);
+  box-shadow: 0 10px 28px rgba(var(--color-accent-rgb), 0.12);
+}
+
 .fc-add-panel__title {
   margin: 0;
   display: flex;

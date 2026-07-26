@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Calculator, Plus, Ruler, Target } from "lucide-react";
+import { Calculator, Check, Plus, Ruler, Scale, Target } from "lucide-react";
 
 import Button from "../ui/Button";
 import Card from "../ui/Card";
@@ -10,9 +10,11 @@ import { updateVisibility, updateWeightGoal, upsertMeasurement } from "../../ser
 import { supabaseClient } from "../../services/supabaseClient";
 import { estimateBodyFatPercent } from "../../utils/bodyComposition";
 
+// Peso primero: es la medida que se registra con mas frecuencia, el resto
+// se ingresa mas espaciado en el tiempo.
 const FIELDS = [
-  { key: "height_cm", label: "Altura (cm)" },
   { key: "weight_kg", label: "Peso (kg)" },
+  { key: "height_cm", label: "Altura (cm)" },
   { key: "body_fat_percent", label: "% grasa corporal" },
   { key: "chest_cm", label: "Pecho (cm)" },
   { key: "waist_cm", label: "Cintura (cm)" },
@@ -35,6 +37,10 @@ function MeasurementsSection({ userId, isSelf, section, weightGoalKg, onRefresh 
   const [goalInput, setGoalInput] = useState(weightGoalKg ?? "");
   const [savingGoal, setSavingGoal] = useState(false);
   const [goalError, setGoalError] = useState("");
+  const [quickWeight, setQuickWeight] = useState("");
+  const [savingQuickWeight, setSavingQuickWeight] = useState(false);
+  const [quickWeightError, setQuickWeightError] = useState("");
+  const [quickWeightSaved, setQuickWeightSaved] = useState(false);
 
   useEffect(() => {
     setGoalInput(weightGoalKg ?? "");
@@ -130,6 +136,33 @@ function MeasurementsSection({ userId, isSelf, section, weightGoalKg, onRefresh 
     }
   }
 
+  // Registro rapido: solo peso, siempre con la fecha de hoy. Evita tener que
+  // abrir el formulario completo (fecha + 8 campos) para lo que se carga
+  // casi todos los dias.
+  async function handleQuickWeight() {
+    setQuickWeightError("");
+    setQuickWeightSaved(false);
+
+    const parsed = Number.parseFloat(quickWeight);
+    if (!quickWeight || Number.isNaN(parsed) || parsed <= 0) {
+      setQuickWeightError("Ingresa un peso valido.");
+      return;
+    }
+
+    setSavingQuickWeight(true);
+
+    try {
+      await upsertMeasurement(userId, { measurement_date: todayIso(), weight_kg: parsed });
+      setQuickWeight("");
+      setQuickWeightSaved(true);
+      await onRefresh();
+    } catch (saveError) {
+      setQuickWeightError(saveError.message || "No se pudo registrar el peso.");
+    } finally {
+      setSavingQuickWeight(false);
+    }
+  }
+
   async function handleSaveGoal() {
     setGoalError("");
 
@@ -185,6 +218,37 @@ function MeasurementsSection({ userId, isSelf, section, weightGoalKg, onRefresh 
 
         {isSelf ? (
           <>
+            <div className="fc-add-panel fc-add-panel--highlight">
+              <p className="fc-add-panel__title">
+                <Scale size={15} />
+                Registro rapido de peso
+              </p>
+              <div style={{ display: "flex", gap: "0.5rem", alignItems: "flex-end", flexWrap: "wrap" }}>
+                <div style={{ flex: "1 1 160px" }}>
+                  <Input
+                    id="quick-weight-input"
+                    label="Peso de hoy (kg)"
+                    type="number"
+                    inputMode="decimal"
+                    value={quickWeight}
+                    onChange={(event) => {
+                      setQuickWeight(event.target.value);
+                      setQuickWeightSaved(false);
+                    }}
+                  />
+                </div>
+                <Button
+                  loading={savingQuickWeight}
+                  variant={quickWeightSaved ? "success" : "primary"}
+                  onClick={handleQuickWeight}
+                >
+                  {quickWeightSaved ? <Check size={16} /> : <Plus size={16} />}
+                  {quickWeightSaved ? "Registrado" : "Registrar peso"}
+                </Button>
+              </div>
+              {quickWeightError ? <p className="fc-form-message">{quickWeightError}</p> : null}
+            </div>
+
             <div className="fc-add-panel">
               <p className="fc-add-panel__title">
                 <Target size={15} />
