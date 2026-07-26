@@ -1,6 +1,7 @@
 import { PieChart } from "lucide-react";
 
 import Card from "../ui/Card";
+import InfoTooltip from "../ui/InfoTooltip";
 import { estimateBodyFatPercent } from "../../utils/bodyComposition";
 
 function BodyFatEstimateSection({ profile }) {
@@ -12,20 +13,16 @@ function BodyFatEstimateSection({ profile }) {
         <span className="fc-text-eyebrow">
           <PieChart size={14} />
           Grasa corporal (estimado)
+          {percent !== null ? (
+            <InfoTooltip text="Formula de Deurenberg: es una aproximacion, no un diagnostico. No distingue masa muscular de grasa, asi que en personas muy musculosas puede dar mas alto de lo real. Metodos con cinta metrica o mediciones profesionales (pliegues, bioimpedancia, DEXA) son mas precisos." />
+          ) : null}
         </span>
 
         {percent !== null ? (
-          <>
-            <div className="fc-metric">
-              <span className="fc-metric__value">{percent}%</span>
-              <span className="fc-metric__label">Formula de Deurenberg (peso, altura, edad, sexo)</span>
-            </div>
-            <p className="fc-card-text">
-              Es una aproximacion, no un diagnostico: no distingue masa muscular de grasa, asi que en
-              personas muy musculosas puede dar mas alto de lo real. Metodos con cinta metrica (cuello,
-              cintura, cadera) o mediciones profesionales (pliegues, bioimpedancia, DEXA) son mas precisos.
-            </p>
-          </>
+          <div className="fc-metric">
+            <span className="fc-metric__value">{percent}%</span>
+            <span className="fc-metric__label">Peso, altura, edad y sexo</span>
+          </div>
         ) : (
           <p className="fc-card-text">
             Completa tu peso, altura, edad y genero en la configuracion de perfil para ver un estimado.

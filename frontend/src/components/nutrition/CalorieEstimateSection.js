@@ -1,6 +1,7 @@
 import { Flame } from "lucide-react";
 
 import Card from "../ui/Card";
+import InfoTooltip from "../ui/InfoTooltip";
 
 const ACTIVITY_FACTOR = 1.375;
 
@@ -40,21 +41,18 @@ function CalorieEstimateSection({ profile }) {
         <span className="fc-text-eyebrow">
           <Flame size={14} />
           Estimado diario
+          {calories ? (
+            <InfoTooltip text="Calculo aproximado (Mifflin-St Jeor, actividad moderada) en base a tu peso, altura, edad y objetivo. Es un punto de partida, no un plan nutricional profesional." />
+          ) : null}
         </span>
 
         {calories ? (
-          <>
-            <div className="fc-metric">
-              <span className="fc-metric__value">{calories} kcal</span>
-              <span className="fc-metric__label">
-                Estimado para {GOAL_LABEL[profile.goal] || "tu objetivo"}
-              </span>
-            </div>
-            <p className="fc-card-text">
-              Calculo aproximado (Mifflin-St Jeor, actividad moderada) en base a tu peso, altura, edad y
-              objetivo. Es un punto de partida, no un plan nutricional profesional.
-            </p>
-          </>
+          <div className="fc-metric">
+            <span className="fc-metric__value">{calories} kcal</span>
+            <span className="fc-metric__label">
+              Estimado para {GOAL_LABEL[profile.goal] || "tu objetivo"}
+            </span>
+          </div>
         ) : (
           <p className="fc-card-text">
             Completa tu peso, altura y edad en la configuracion de perfil para ver un estimado de calorias.

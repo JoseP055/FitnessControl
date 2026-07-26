@@ -7,6 +7,7 @@ import AppShell from "../components/layout/AppShell";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
+import InfoTooltip from "../components/ui/InfoTooltip";
 import PageLoader from "../components/ui/PageLoader";
 import { deleteRoutine, getRoutines } from "../services/api";
 
@@ -120,10 +121,12 @@ function RoutineList() {
               <span className="fc-text-eyebrow">
                 <Sparkles size={14} />
                 Estado
+                <InfoTooltip text="El wizard nuevo te deja planear duracion, dias, grupos musculares y calendario en un solo flujo." />
               </span>
-              <p className="fc-card-text">
-                El wizard nuevo te deja planear duracion, dias, grupos musculares y calendario en un solo flujo.
-              </p>
+              <div className="fc-metric">
+                <span className="fc-metric__value">Wizard guiado</span>
+                <span className="fc-metric__label">Creacion paso a paso</span>
+              </div>
             </div>
           </Card>
         </div>

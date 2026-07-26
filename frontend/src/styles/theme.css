@@ -2517,10 +2517,8 @@ button.fc-routine-calendar__cell {
 }
 
 .fc-info-tooltip__bubble {
-  position: absolute;
-  z-index: 30;
-  top: calc(100% + 0.5rem);
-  left: 0;
+  position: fixed;
+  z-index: 9999;
   width: max-content;
   max-width: 230px;
   padding: 0.6rem 0.75rem;

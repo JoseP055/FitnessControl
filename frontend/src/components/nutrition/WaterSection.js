@@ -3,6 +3,7 @@ import { Droplet, Minus, Plus } from "lucide-react";
 
 import Button from "../ui/Button";
 import Card from "../ui/Card";
+import InfoTooltip from "../ui/InfoTooltip";
 import {
   DEFAULT_WATER_GOAL_ML,
   addWater,
@@ -67,6 +68,15 @@ function WaterSection({ userId, weightKg }) {
         <span className="fc-text-eyebrow">
           <Droplet size={14} />
           Agua de hoy
+          {!loading ? (
+            <InfoTooltip
+              text={
+                estimatedGoalMl
+                  ? "Estimado (peso x 0.033 L/kg). Sumale 350-500 ml extra por cada 30 min de ejercicio intenso, y otro 10-15% con calor o mucha humedad."
+                  : "Meta por defecto: completa tu peso en el perfil para un objetivo calculado segun tu peso."
+              }
+            />
+          ) : null}
         </span>
 
         {loading ? (
@@ -93,12 +103,6 @@ function WaterSection({ userId, weightKg }) {
                 250 ml
               </Button>
             </div>
-
-            <p className="fc-card-text">
-              {estimatedGoalMl
-                ? "Estimado (peso x 0.033 L/kg). Sumale 350-500 ml extra por cada 30 min de ejercicio intenso, y otro 10-15% con calor o mucha humedad."
-                : "Meta por defecto: completa tu peso en el perfil para un objetivo calculado segun tu peso."}
-            </p>
 
             {error ? <p className="fc-form-message">{error}</p> : null}
           </>

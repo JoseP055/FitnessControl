@@ -15,6 +15,7 @@ import RoutineCalendar from "../components/routines/RoutineCalendar";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
+import InfoTooltip from "../components/ui/InfoTooltip";
 import PageLoader from "../components/ui/PageLoader";
 import { deleteRoutine, getRoutineOverview } from "../services/api";
 
@@ -233,11 +234,11 @@ function RoutineDetail() {
         {(schedule?.legacy_exercises || []).length ? (
           <Card glass>
             <div className="fc-routine-summary">
-              <span className="fc-text-eyebrow">Compatibilidad</span>
+              <span className="fc-text-eyebrow">
+                Compatibilidad
+                <InfoTooltip text="Esta rutina todavia tiene ejercicios del flujo anterior sin dia semanal asignado. Podes mantenerlos como referencia y crear una rutina nueva con el wizard para usar calendario completo." />
+              </span>
               <h2 className="fc-section-title">Ejercicios legacy</h2>
-              <p className="fc-card-text">
-                Esta rutina todavia tiene ejercicios del flujo anterior sin dia semanal asignado. Podes mantenerlos como referencia y crear una rutina nueva con el wizard para usar calendario completo.
-              </p>
             </div>
           </Card>
         ) : null}
