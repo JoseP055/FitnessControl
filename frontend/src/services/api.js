@@ -2,7 +2,18 @@ import { supabaseClient } from "./supabaseClient";
 import { getLocalDateIso } from "../utils/date";
 
 const API_URL = (process.env.REACT_APP_API_URL || "").trim().replace(/\/+$/, "");
-const API_TIMEOUT_MS = 6000;
+// El backend esta en el plan gratuito de Render: si nadie lo usa un rato se
+// "duerme" y la primera request tras eso puede tardar 30-50s en responder
+// mientras arranca de nuevo. Un timeout corto (antes 6s) hacia fallar esa
+// primera request casi siempre; ahora se espera mas por intento y se
+// reintenta solo, en vez de que el usuario tenga que recargar la pagina.
+const API_TIMEOUT_MS = 15000;
+const MAX_ATTEMPTS = 3;
+const RETRY_DELAY_MS = 1500;
+
+function wait(ms) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
 
 function buildRequestUrl(path) {
   if (!API_URL) {
@@ -44,43 +55,59 @@ async function getAuthHeaders() {
 
 async function apiRequest(path, options = {}) {
   const authHeaders = await getAuthHeaders();
-  const controller = new AbortController();
-  const timeoutId = window.setTimeout(() => controller.abort(), API_TIMEOUT_MS);
 
-  try {
-    const response = await fetch(buildRequestUrl(path), {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        ...authHeaders,
-        ...(options.headers || {}),
-      },
-      signal: controller.signal,
-    });
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), API_TIMEOUT_MS);
 
-    const contentType = response.headers.get("content-type") || "";
-    const data = contentType.includes("application/json") ? await response.json() : null;
+    try {
+      const response = await fetch(buildRequestUrl(path), {
+        ...options,
+        headers: {
+          "Content-Type": "application/json",
+          ...authHeaders,
+          ...(options.headers || {}),
+        },
+        signal: controller.signal,
+      });
 
-    if (!response.ok) {
-      const message =
-        data?.detail || data?.supabase?.error || "No se pudo completar la solicitud.";
-      throw new Error(message);
+      const contentType = response.headers.get("content-type") || "";
+      const data = contentType.includes("application/json") ? await response.json() : null;
+
+      if (!response.ok) {
+        const message =
+          data?.detail || data?.supabase?.error || "No se pudo completar la solicitud.";
+        throw new Error(message);
+      }
+
+      return data;
+    } catch (error) {
+      const isTimeout = error?.name === "AbortError";
+      const isNetworkError = error instanceof TypeError;
+
+      // Solo se reintentan timeouts y errores de red (tipico de un cold
+      // start del backend). Un error real (4xx/5xx con mensaje del backend)
+      // se muestra tal cual, sin reintentar.
+      if ((isTimeout || isNetworkError) && attempt < MAX_ATTEMPTS) {
+        await wait(RETRY_DELAY_MS);
+        continue;
+      }
+
+      if (isTimeout) {
+        throw new Error("El backend tardo demasiado en responder.");
+      }
+
+      if (isNetworkError) {
+        throw new Error(getNetworkErrorMessage(path));
+      }
+
+      throw error;
+    } finally {
+      window.clearTimeout(timeoutId);
     }
-
-    return data;
-  } catch (error) {
-    if (error?.name === "AbortError") {
-      throw new Error("El backend tardo demasiado en responder.");
-    }
-
-    if (error instanceof TypeError) {
-      throw new Error(getNetworkErrorMessage(path));
-    }
-
-    throw error;
-  } finally {
-    window.clearTimeout(timeoutId);
   }
+
+  throw new Error("No se pudo completar la solicitud.");
 }
 
 export async function healthCheck() {
