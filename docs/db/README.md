@@ -40,6 +40,10 @@ Ejecutar en este orden:
 - Después de `011_profile_identity_and_pr_catalog.sql`: columnas `public_id` (única, autogenerada) y `username` (única, nullable) en `profiles`; columna `exercise_id` en `personal_records`; función `search_profiles` devolviendo también `username`/`public_id`.
 - Después de `012_nutrition.sql`: tablas `nutrition_logs` y `water_logs` (RLS habilitado), `water_logs` con unique(user_id, log_date).
 
+## Scripts de mantenimiento (no son migraciones numeradas)
+
+- `reset_all_data.sql` — Borra todos los usuarios y todos sus datos (rutinas, perfiles, medidas, records, comidas, horario, amistades, nutricion, ejercicios personalizados), dejando la base como recien instalada. El catalogo global de ejercicios no se toca. **No es reversible** e incluye borrar la cuenta con la que se corre el script. Usar solo para limpiar usuarios de prueba.
+
 ## Nota sobre RLS
 
 - Todas las tablas con `user_id` solo permiten leer/escribir filas del usuario autenticado (`auth.uid() = user_id`).
