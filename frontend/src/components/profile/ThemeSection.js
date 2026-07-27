@@ -8,6 +8,7 @@ const PREVIEW_GRADIENTS = {
   light: "linear-gradient(135deg, #f5f6f8, #2563eb)",
   dark: "linear-gradient(135deg, #0c0c0d, #78787f)",
   gym: "linear-gradient(135deg, #121212, #ff3d00)",
+  esmeralda: "linear-gradient(135deg, #0b0f19, #10b981)",
 };
 
 function ThemeSection() {

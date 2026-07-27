@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, MailCheck, Sparkles } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
+import logo from "../assets/logo.png";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import Input from "../components/ui/Input";
@@ -87,6 +88,10 @@ function Register() {
           <div style={{ position: "relative" }}>
             <span className="fc-hero-orb fc-hero-orb--primary" />
             <span className="fc-hero-orb fc-hero-orb--accent" />
+
+            <div className="fc-auth-logo">
+              <img src={logo} alt="FitnessControl" />
+            </div>
 
             <span className="fc-text-eyebrow">
               <Sparkles size={14} />

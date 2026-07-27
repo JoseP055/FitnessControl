@@ -14,6 +14,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
+import logo from "../../assets/logo.png";
 import { useAuth } from "../../context/AuthContext";
 import LiveClock from "./LiveClock";
 
@@ -125,7 +126,9 @@ function AppShell({ activeSection = "resumen", header, children }) {
         >
           <div className="fc-dashboard__sidebar-top">
             <div className="fc-dashboard__brand">
-              <div className="fc-dashboard__logo">FC</div>
+              <div className="fc-dashboard__logo">
+                <img src={logo} alt="FitnessControl" />
+              </div>
               <button
                 type="button"
                 className="fc-sidebar-toggle fc-sidebar-toggle--desktop"

@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 const STORAGE_KEY = "fc.theme";
 
-export const THEME_PRESETS = ["original", "light", "dark", "gym"];
+export const THEME_PRESETS = ["original", "light", "dark", "gym", "esmeralda"];
 
 const ThemeContext = createContext(null);
 
