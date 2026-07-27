@@ -5,6 +5,7 @@ import { useAuth } from "./context/AuthContext";
 import PageLoader from "./components/ui/PageLoader";
 import Dashboard from "./pages/Dashboard";
 import FocusMode from "./pages/FocusMode";
+import ForgotPassword from "./pages/ForgotPassword";
 import Friends from "./pages/Friends";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
@@ -12,6 +13,7 @@ import Nutrition from "./pages/Nutrition";
 import Profile from "./pages/Profile";
 import ProfileSetup from "./pages/ProfileSetup";
 import Register from "./pages/Register";
+import ResetPassword from "./pages/ResetPassword";
 import RoutineDetail from "./pages/RoutineDetail";
 import RoutineEditForm from "./pages/RoutineEditForm";
 import RoutineForm from "./pages/RoutineForm";
@@ -218,6 +220,11 @@ function App() {
         path="/register"
         element={session ? <Navigate to="/" replace /> : <Register />}
       />
+      <Route
+        path="/forgot-password"
+        element={session ? <Navigate to="/" replace /> : <ForgotPassword />}
+      />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route
         path="*"
         element={

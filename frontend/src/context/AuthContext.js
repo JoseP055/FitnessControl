@@ -96,6 +96,32 @@ export function AuthProvider({ children }) {
     }
   }
 
+  async function requestPasswordReset(email) {
+    if (!supabaseClient) {
+      throw new Error("El cliente de Supabase no esta configurado.");
+    }
+
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+
+    if (error) {
+      throw error;
+    }
+  }
+
+  async function updatePassword(newPassword) {
+    if (!supabaseClient) {
+      throw new Error("El cliente de Supabase no esta configurado.");
+    }
+
+    const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
+
+    if (error) {
+      throw error;
+    }
+  }
+
   const value = useMemo(
     () => ({
       user,
@@ -104,6 +130,8 @@ export function AuthProvider({ children }) {
       signUp,
       signIn,
       signOut,
+      requestPasswordReset,
+      updatePassword,
     }),
     [loading, session, user]
   );

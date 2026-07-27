@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, ShieldCheck } from "lucide-react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { ArrowLeft, ArrowRight, KeyRound } from "lucide-react";
+import { Link } from "react-router-dom";
 
 import logo from "../assets/logo.png";
 import Button from "../components/ui/Button";
@@ -18,26 +18,24 @@ const panelTransition = {
   },
 };
 
-function Login() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { signIn } = useAuth();
+function ForgotPassword() {
+  const { requestPasswordReset } = useAuth();
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(event) {
     event.preventDefault();
     setError("");
+    setMessage("");
     setSubmitting(true);
 
     try {
-      await signIn(email, password);
-      const redirectTo = location.state?.from?.pathname || "/";
-      navigate(redirectTo, { replace: true });
-    } catch (signInError) {
-      setError(signInError.message || "No se pudo iniciar sesion.");
+      await requestPasswordReset(email.trim());
+      setMessage("Si el email existe, te enviamos un enlace para restablecer tu contrasena.");
+    } catch (resetError) {
+      setError(resetError.message || "No se pudo enviar el correo de recuperacion.");
     } finally {
       setSubmitting(false);
     }
@@ -61,28 +59,28 @@ function Login() {
               <img src={logo} alt="FitnessControl" />
             </Link>
             <span className="fc-text-eyebrow">
-              <ShieldCheck size={14} />
-              Acceso seguro
+              <KeyRound size={14} />
+              Recuperar acceso
             </span>
             <h2
               style={{
                 margin: 0,
                 fontFamily: "var(--font-display)",
-                fontSize: "clamp(1.8rem, 4vw, 2.5rem)",
+                fontSize: "clamp(1.6rem, 4vw, 2.2rem)",
                 letterSpacing: "-0.04em",
               }}
             >
-              Iniciar sesion
+              Olvidaste tu contrasena?
             </h2>
             <p style={{ margin: 0, color: "rgba(242, 238, 245, 0.66)", textAlign: "center" }}>
-              Inicia sesion para continuar donde lo dejaste.
+              Ingresa tu email y te mandamos un enlace para crear una nueva.
             </p>
           </div>
 
           <form className="fc-form" onSubmit={handleSubmit}>
             <div className="fc-form__row">
               <Input
-                id="login-email"
+                id="forgot-email"
                 label="Email"
                 type="email"
                 placeholder="vos@ejemplo.com"
@@ -91,26 +89,11 @@ function Login() {
                 autoComplete="email"
                 required
               />
-
-              <Input
-                id="login-password"
-                label="Password"
-                type="password"
-                placeholder="Tu contrasena"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                autoComplete="current-password"
-                required
-              />
-
-              <Link className="fc-inline-link" to="/forgot-password" style={{ justifySelf: "end" }}>
-                Olvidaste tu contrasena?
-              </Link>
             </div>
 
             <Button type="submit" loading={submitting}>
               <span className="fc-button__label">
-                Entrar ahora
+                Enviar enlace
                 <ArrowRight size={16} />
               </span>
             </Button>
@@ -119,14 +102,15 @@ function Login() {
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{
-              opacity: error ? 1 : 0,
-              height: error ? "auto" : 0,
-              marginTop: error ? "1rem" : 0,
+              opacity: message || error ? 1 : 0,
+              height: message || error ? "auto" : 0,
+              marginTop: message || error ? "1rem" : 0,
             }}
             transition={{ duration: 0.2 }}
           >
+            {message ? <p style={{ margin: 0, color: "rgba(242, 238, 245, 0.75)" }}>{message}</p> : null}
             {error ? (
-              <div className="fc-form-message" role="alert">
+              <div className="fc-form-message" role="alert" style={{ marginTop: message ? "0.75rem" : 0 }}>
                 <div className="fc-dot" aria-hidden="true" />
                 <span>{error}</span>
               </div>
@@ -134,9 +118,9 @@ function Login() {
           </motion.div>
 
           <div style={{ marginTop: "1.5rem" }} className="fc-login-footer">
-            <span>Todavia no tenes cuenta?</span>
-            <Link className="fc-inline-link" to="/register">
-              Crear cuenta
+            <Link className="fc-inline-link" to="/login">
+              <ArrowLeft size={14} style={{ verticalAlign: "-2px", marginRight: "0.3rem" }} />
+              Volver a iniciar sesion
             </Link>
           </div>
         </Card>
@@ -145,4 +129,4 @@ function Login() {
   );
 }
 
-export default Login;
+export default ForgotPassword;

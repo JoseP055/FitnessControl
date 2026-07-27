@@ -358,6 +358,32 @@ a:focus-visible {
   color: rgba(var(--color-text-rgb), 0.76);
 }
 
+.fc-input-wrapper {
+  position: relative;
+}
+
+.fc-input-wrapper .fc-input {
+  padding-right: 2.75rem;
+}
+
+.fc-input-toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.75rem;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  padding: 0.25rem;
+  background: transparent;
+  border: none;
+  color: rgba(var(--color-text-secondary-rgb), 0.75);
+  cursor: pointer;
+}
+
+.fc-input-toggle:hover {
+  color: rgba(var(--color-text-rgb), 0.9);
+}
+
 .fc-input,
 .fc-textarea {
   width: 100%;
