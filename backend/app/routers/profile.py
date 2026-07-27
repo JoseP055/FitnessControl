@@ -83,6 +83,22 @@ def _count_friends(user_id: str) -> int:
     return result.count or 0
 
 
+def _get_friend_ids(user_id: str) -> list[str]:
+    supabase = get_supabase_client()
+    result = (
+        supabase.table("friendships")
+        .select("requester_id, addressee_id")
+        .eq("status", "accepted")
+        .or_(f"requester_id.eq.{user_id},addressee_id.eq.{user_id}")
+        .execute()
+    )
+    rows = getattr(result, "data", None) or []
+    return [
+        row["addressee_id"] if row["requester_id"] == user_id else row["requester_id"]
+        for row in rows
+    ]
+
+
 def _is_visible(visibility: str, friendship_status: str | None, is_self: bool) -> bool:
     if is_self:
         return True
@@ -256,3 +272,47 @@ async def get_profile(user_id: str, viewer_id: str = Depends(get_current_user_id
         },
         "sections": sections,
     }
+
+
+@router.get("/profile/{user_id}/friends")
+async def get_profile_friends(user_id: str, viewer_id: str = Depends(get_current_user_id)):
+    _get_profile_or_404(user_id)
+
+    friend_ids = _get_friend_ids(user_id)
+    if not friend_ids:
+        return {"friends": []}
+
+    supabase = get_supabase_client()
+    result = (
+        supabase.table("profiles")
+        .select("user_id, full_name, avatar_url, username, public_id")
+        .in_("user_id", friend_ids)
+        .execute()
+    )
+    profiles_by_id = {row["user_id"]: row for row in (getattr(result, "data", None) or [])}
+
+    friends = []
+    for friend_id in friend_ids:
+        friend_profile = profiles_by_id.get(friend_id)
+        if not friend_profile:
+            continue
+
+        if friend_id == viewer_id:
+            status = "self"
+        else:
+            status = _get_friendship_status(viewer_id, friend_id)
+
+        friends.append(
+            {
+                "user_id": friend_id,
+                "full_name": friend_profile.get("full_name"),
+                "avatar_url": friend_profile.get("avatar_url"),
+                "username": friend_profile.get("username"),
+                "public_id": friend_profile.get("public_id"),
+                "friendship_status": status,
+            }
+        )
+
+    friends.sort(key=lambda item: (item.get("full_name") or "").lower())
+
+    return {"friends": friends}

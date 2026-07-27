@@ -6,6 +6,7 @@ import AppShell from "../components/layout/AppShell";
 import Button from "../components/ui/Button";
 import PageLoader from "../components/ui/PageLoader";
 import FavoriteFoodsSection from "../components/profile/FavoriteFoodsSection";
+import FriendsListSection from "../components/profile/FriendsListSection";
 import GymScheduleSection from "../components/profile/GymScheduleSection";
 import MeasurementsSection from "../components/profile/MeasurementsSection";
 import PersonalRecordsSection from "../components/profile/PersonalRecordsSection";
@@ -100,6 +101,8 @@ function Profile() {
         />
 
         {error ? <p className="fc-form-message">{error}</p> : null}
+
+        <FriendsListSection userId={targetUserId} viewerId={user.id} isSelf={isSelf} />
 
         <div className="fc-dashboard-grid">
           <StreakSection
