@@ -30,6 +30,7 @@ function Profile() {
   const [friendshipId, setFriendshipId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [friendsListOpen, setFriendsListOpen] = useState(false);
 
   const load = useCallback(async () => {
     setError("");
@@ -98,11 +99,14 @@ function Profile() {
           friendshipId={friendshipId}
           friendsCount={profileData.friends_count}
           onRefresh={load}
+          onToggleFriendsList={() => setFriendsListOpen((current) => !current)}
         />
 
         {error ? <p className="fc-form-message">{error}</p> : null}
 
-        <FriendsListSection userId={targetUserId} viewerId={user.id} isSelf={isSelf} />
+        {isSelf || friendsListOpen ? (
+          <FriendsListSection userId={targetUserId} viewerId={user.id} isSelf={isSelf} />
+        ) : null}
 
         <div className="fc-dashboard-grid">
           <StreakSection

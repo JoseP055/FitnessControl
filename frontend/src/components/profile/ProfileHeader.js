@@ -26,7 +26,17 @@ function initialsFromName(name) {
     .join("");
 }
 
-function ProfileHeader({ userId, viewerId, identity, isSelf, friendshipStatus, friendshipId, friendsCount, onRefresh }) {
+function ProfileHeader({
+  userId,
+  viewerId,
+  identity,
+  isSelf,
+  friendshipStatus,
+  friendshipId,
+  friendsCount,
+  onRefresh,
+  onToggleFriendsList,
+}) {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
   const [editing, setEditing] = useState(false);
@@ -334,10 +344,10 @@ function ProfileHeader({ userId, viewerId, identity, isSelf, friendshipStatus, f
                   </button>
                 ) : null}
                 <span
-                  className={`fc-pill ${isSelf ? "fc-friends-count" : ""}`}
-                  role={isSelf ? "button" : undefined}
-                  tabIndex={isSelf ? 0 : undefined}
-                  onClick={isSelf ? () => navigate("/friends") : undefined}
+                  className="fc-pill fc-friends-count"
+                  role="button"
+                  tabIndex={0}
+                  onClick={isSelf ? () => navigate("/friends") : onToggleFriendsList}
                 >
                   <Users size={12} />
                   {friendsCount ?? 0} {friendsCount === 1 ? "amigo" : "amigos"}

@@ -49,8 +49,16 @@ function FriendsListSection({ userId, viewerId, isSelf }) {
   }
 
   function buildActions(friend) {
-    if (isSelf || friend.friendship_status === "friends") {
+    if (friend.friendship_status === "self") {
+      return [{ label: "Vos", variant: "ghost", disabled: true }];
+    }
+
+    if (isSelf) {
       return [{ label: "Amigos", variant: "ghost", disabled: true }];
+    }
+
+    if (friend.friendship_status === "friends") {
+      return [{ label: "Amigo en comun", variant: "ghost", disabled: true }];
     }
 
     if (friend.friendship_status === "pending_sent") {
