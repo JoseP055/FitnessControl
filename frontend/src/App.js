@@ -6,6 +6,7 @@ import PageLoader from "./components/ui/PageLoader";
 import Dashboard from "./pages/Dashboard";
 import FocusMode from "./pages/FocusMode";
 import Friends from "./pages/Friends";
+import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Nutrition from "./pages/Nutrition";
 import Profile from "./pages/Profile";
@@ -112,9 +113,13 @@ function App() {
       <Route
         path="/"
         element={
-          <ProtectedRoute>
-            <PostLoginGate />
-          </ProtectedRoute>
+          session ? (
+            <ProtectedRoute>
+              <PostLoginGate />
+            </ProtectedRoute>
+          ) : (
+            <Home />
+          )
         }
       />
       <Route
@@ -218,7 +223,7 @@ function App() {
         element={
           <main>
             <p>Ruta no encontrada.</p>
-            <Link to={session ? "/" : "/login"}>Volver</Link>
+            <Link to="/">Volver</Link>
           </main>
         }
       />

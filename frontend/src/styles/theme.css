@@ -155,40 +155,22 @@ a:focus-visible {
   pointer-events: none;
 }
 
-.fc-auth-layout {
+.fc-auth-page--single {
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
-  gap: var(--space-8);
+  place-items: center;
   min-height: 100vh;
-  padding: var(--space-8);
-}
-
-.fc-auth-hero,
-.fc-auth-panel {
-  min-height: calc(100vh - var(--space-16));
-}
-
-.fc-auth-hero {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: clamp(1.5rem, 3vw, 3rem);
-  border: 1px solid rgba(var(--color-text-secondary-rgb), 0.08);
-  border-radius: 28px;
-  background: linear-gradient(
-    180deg,
-    rgba(var(--color-surface-rgb), 0.3) 0%,
-    rgba(var(--color-bg-rgb), 0.08) 100%
-  );
-  backdrop-filter: blur(10px);
+  padding: var(--space-6);
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .fc-auth-panel {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
 }
 
 .fc-text-eyebrow {
@@ -239,59 +221,91 @@ a:focus-visible {
   background: rgba(var(--color-accent-rgb), 0.2);
 }
 
-.fc-auth-metric-grid {
-  display: grid;
-  gap: var(--space-4);
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.fc-auth-metric {
-  padding: var(--space-4);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: rgba(var(--color-bg-rgb), 0.45);
-  backdrop-filter: blur(18px);
-}
-
-.fc-auth-metric strong {
-  display: block;
-  font-family: var(--font-display);
-  font-size: 1.625rem;
-  font-weight: 600;
-}
-
-.fc-auth-metric span {
-  color: rgba(var(--color-text-rgb), 0.62);
-  font-size: var(--font-size-sm);
-}
-
-.fc-abstract-visual {
-  position: relative;
-  height: min(42vh, 420px);
-  min-height: 260px;
-  border-radius: 30px;
-  border: 1px solid rgba(var(--color-text-secondary-rgb), 0.1);
-  background:
-    linear-gradient(180deg, rgba(var(--color-surface-rgb), 0.65), rgba(var(--color-bg-rgb), 0.35)),
-    radial-gradient(circle at 20% 20%, rgba(var(--color-primary-rgb), 0.28), transparent 24%),
-    radial-gradient(circle at 68% 40%, rgba(var(--color-accent-rgb), 0.18), transparent 20%);
-  overflow: hidden;
-}
-
-.fc-abstract-grid {
-  position: absolute;
-  inset: 0;
-  background-image: linear-gradient(
-      rgba(var(--color-text-rgb), 0.06) 1px,
-      transparent 1px
-    ),
-    linear-gradient(90deg, rgba(var(--color-text-rgb), 0.06) 1px, transparent 1px);
-  background-size: 44px 44px;
-  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.8), transparent);
-}
-
 .fc-auth-card {
   width: min(100%, 28rem);
+}
+
+/* ------------------------------------------------------------------------ */
+/* Landing page (pantalla inicial antes de iniciar sesion / registrarse)     */
+/* ------------------------------------------------------------------------ */
+
+.fc-landing {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: var(--space-6);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.fc-landing__content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 30rem;
+  display: grid;
+  justify-items: center;
+  gap: 0.85rem;
+  text-align: center;
+}
+
+.fc-landing__logo {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: var(--shadow-glow);
+}
+
+.fc-landing__logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fc-landing__heading {
+  margin-top: 0.35rem;
+  font-size: clamp(1.9rem, 6vw, 3rem);
+}
+
+.fc-landing__subheading {
+  max-width: 26rem;
+  font-size: var(--font-size-md);
+}
+
+.fc-landing__features {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 0.35rem 0;
+}
+
+.fc-landing__feature {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: rgba(var(--color-bg-rgb), 0.45);
+  color: rgba(var(--color-text-rgb), 0.82);
+  font-size: var(--font-size-sm);
+  backdrop-filter: blur(12px);
+}
+
+.fc-landing__actions {
+  display: grid;
+  gap: 0.6rem;
+  width: 100%;
+  max-width: 19rem;
+  margin-top: 0.5rem;
+}
+
+.fc-landing__actions .fc-button {
+  width: 100%;
 }
 
 .fc-card {
@@ -536,19 +550,6 @@ a:focus-visible {
   box-shadow: 0 0 18px rgba(var(--color-decorative-rgb), 0.45);
 }
 
-.fc-auth-quote {
-  padding-top: var(--space-6);
-  border-top: 1px solid rgba(var(--color-text-secondary-rgb), 0.08);
-  color: rgba(var(--color-text-rgb), 0.7);
-}
-
-.fc-auth-quote strong {
-  display: block;
-  margin-bottom: var(--space-2);
-  color: var(--color-text);
-  font-size: var(--font-size-sm);
-}
-
 .fc-stepper {
   display: flex;
   gap: 0.55rem;
@@ -702,9 +703,9 @@ a:focus-visible {
 }
 
 .fc-auth-logo {
+  display: block;
   width: 60px;
   height: 60px;
-  margin-bottom: 1.25rem;
   border-radius: 18px;
   overflow: hidden;
   box-shadow: var(--shadow-glow);
@@ -2234,24 +2235,6 @@ button.fc-routine-calendar__cell {
   .fc-routine-table-row__header {
     flex-wrap: wrap;
   }
-
-  .fc-auth-layout {
-    grid-template-columns: 1fr;
-    padding: var(--space-5);
-  }
-
-  .fc-auth-hero,
-  .fc-auth-panel {
-    min-height: auto;
-  }
-
-  .fc-auth-hero {
-    gap: var(--space-6);
-  }
-
-  .fc-abstract-visual {
-    height: 280px;
-  }
 }
 
 @media (max-width: 640px) {
@@ -2320,12 +2303,8 @@ button.fc-routine-calendar__cell {
     align-items: stretch;
   }
 
-  .fc-auth-layout {
+  .fc-auth-page--single {
     padding: var(--space-4);
-  }
-
-  .fc-auth-metric-grid {
-    grid-template-columns: 1fr;
   }
 
   .fc-login-footer {
